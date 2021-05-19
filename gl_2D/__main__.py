@@ -25,11 +25,10 @@ if __name__ == "__main__":
            fragment_shader = shaders.fragment_shader)
     # test = gtk_stuff.VMWindow(vertex_shader=shaders.vertex_shader_triangles,
     #        fragment_shader = shaders.fragment_shader_triangles, draw_type="triangles")
-    data = GLContainer([])
-    data.xyz    = np.array([[0, 0, -0.01], [1, 1, 0], [-1, 1, 0], [-1, -1, 0], [1, -1, 0]], dtype=np.float32)*198
-    data.colors = np.array([[1, 0, 0], [0, 1, 0], [ 0, 0, 1], [ 1,  1, 0], [1,  0, 1]], dtype=np.float32)
-    data.radii = np.random.randint(20,50,5).astype(np.float32)
-    data.build_dirs()
+    xyz    = np.array([[0, 0.001, 0], [1, 1, 0], [-1, 1, 0], [-1, -1, 0], [1, -1, 0]], dtype=np.float32)*198
+    colors = np.array([[1, 0, 0], [0, 1, 0], [ 0, 0, 1], [ 1,  1, 0], [1,  0, 1]], dtype=np.float32)
+    radii = np.random.randint(20,50,5).astype(np.float32)
+    data = GLContainer(xyz, colors, radii)
     test.load_data(data)
     wind = Gtk.Window()
     wind.add(test)

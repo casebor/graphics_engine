@@ -43,6 +43,7 @@ class VMWindow(Gtk.GLArea):
         self.gl_data = kwargs.get("data", None)
         self.gl_programs_compiled = False
         self.gl_program = None
+        self.animation = False
     
     def initialize(self, area):
         """ Function doc """
@@ -389,14 +390,25 @@ class VMWindow(Gtk.GLArea):
     
     def _pressed_p(self):
         print(self.gl_data.xyz)
-        # print(self.gl_data.colors)
-        # print(self.gl_data.dir)
+        print(self.gl_data.colors)
+        print(self.gl_data.direc)
         # print(self.proj_mat)
         # print(self.model_mat)
         # print(self.view_mat)
         # print(self.get_cam_pos())
     
-    def _pressed_Right(self):
-        self.gl_data.update_pos(5)
-        self.queue_draw()
+    def _pressed_r(self):
+        import time
+        self.animation = True
+        while self.animation:
+            self.gl_data.update_pos(1)
+            self.get_window().invalidate_rect(None, False)
+            self.get_window().process_updates(False)
+            # time.sleep(.05)
+        self.queue_render()
+    
+    def _pressed_s(self):
+        import time
+        self.animation = False
+        self.queue_render()
     
