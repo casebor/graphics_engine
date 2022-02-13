@@ -1475,7 +1475,6 @@ class VisMolSession (ShowHideVisMol):
         return vismol_object
         #self.vismol_objects.append(vismol_object)
     
-    """
     def delete_by_index(self, index = None):
         """ Function doc """
         self.viewing_selections = []
@@ -1629,7 +1628,6 @@ class VisMolSession (ShowHideVisMol):
         frame = self.glwidget.vm_widget.frame
         return frame
     
-    """   
     def get_vobject_dict (self):
         """ Function doc """
         Vobjects_dic = {}
@@ -1642,7 +1640,6 @@ class VisMolSession (ShowHideVisMol):
             Vobjects_dic[index] = name
     
         return Vobjects_dic
-    """
    
     def viewing_selection_mode(self, sel_type = "atom"):
         """ Function doc """        
@@ -1653,7 +1650,6 @@ class VisMolSession (ShowHideVisMol):
         #print(sel_type)
         self.selections[self.current_selection]._selection_mode = sel_type
     
-    """
     def selection_function (self, pickedID):
         """ Function doc """
         #print("selection_function")
@@ -1669,7 +1665,6 @@ class VisMolSession (ShowHideVisMol):
         
         else:
             self.selections[self.current_selection].selection_function_viewing(selected)
-    """
     
     def _selection_function (self, selected, _type = None, disable = True):
         #"""     P I C K I N G     S E L E C T I O N S     """
