@@ -1,27 +1,36 @@
-#import vModel.atom_types as at 
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+#  __main__.py
+#  
+#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
+#  
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#  
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#  
+#  
 
-#GTK3EasyMol/VISMOL/Model/atom_types.py
-from   vModel import MolecularProperties
-from   vModel.MolecularProperties import ATOM_TYPES , ATOM_TYPES_list , ATOM_TYPES_BY_ATOMICNUMBER
-
-
-
-class AtomDict(dict):
-    """ Class doc """
-    
-    def __init__ (self):
-        """ Class initialiser """
-        pass
-
-
-
-
-
+import numpy as np
+from vModel import MolecularProperties
+from vModel.MolecularProperties import ATOM_TYPES
+from vModel.MolecularProperties import ATOM_TYPES_list
+from vModel.MolecularProperties import ATOM_TYPES_BY_ATOMICNUMBER
 
 
 class Atom:
     """ Class doc """
-    
     def __init__ (self, name         = 'Xx',
                         index        = None, 
                         symbol       = None, 
@@ -45,17 +54,17 @@ class Atom:
                         occupancy    = 0.0 ,
                         bfactor      = 0.0 , 
                         charge       = 0.0 ,
-						bonds_indexes= []  ,
-                        Vobject      = None):
+                        bonds_indexes= []  ,
+                        vismol_object= None):
  
         #if pos is None:
         #    pos = np.array([0.0, 0.0, 0.0])
-		
+        
         
         self.pos        = pos     # - coordinates of the first frame
         self.index      = index   # - Remember that the "index" attribute refers to the numbering of atoms 
                                   # (it is not a zero base, it starts at 1 for the first atom)
-					    
+                        
         self.name       = name    #
         
         if symbol:
@@ -67,7 +76,7 @@ class Atom:
         self.resi       = resi    #
         self.resn       = resn    #
         self.chain      = chain   #
-        self.Vobject    = Vobject
+        self.vismol_object    = vismol_object
         self.residue    = residue    
         
         
@@ -133,16 +142,14 @@ class Atom:
         
 
     
-    def coords (self, frame = None):
+    def coords(self, frame=None):
         """ Function doc """
         if frame is None:
-            frame  = self.Vobject.vismolSession.glwidget.vm_widget.frame
-
-        coords = [self.Vobject.frames[frame][(self.index-1)*3  ],
-                  self.Vobject.frames[frame][(self.index-1)*3+1],
-                  self.Vobject.frames[frame][(self.index-1)*3+2],]
-
-        return coords
+            frame  = self.vismol_object.vismolSession.glwidget.vm_widget.frame
+        x = self.vismol_object.frames[frame][(self.index-1)*3  ]
+        y = self.vismol_object.frames[frame][(self.index-1)*3+1]
+        z = self.vismol_object.frames[frame][(self.index-1)*3+2]
+        return np.array([x, y, z])
 
     def get_grid_position (self, gridsize = 3, frame = None):
         """ Function doc """
@@ -157,7 +164,7 @@ class Atom:
 
     #def get_color (self):
     #    """ Function doc """
-    #    #self.at = Vobject.vismolSession.vConfig.atom_types
+    #    #self.at = vismol_object.vismolSession.vConfig.atom_types
     #
     #    self.color   = self.at.get_color(self.symbol)
  
@@ -172,7 +179,7 @@ class Atom:
         self.color_id = [r/255.0, g/255.0, b/255.0]
         #print ('pickedID',pickedID, self.atom_id)
         #return pickedID
-        #self.Vobject.vismolSession.atom_dic_id[pickedID] = self
+        #self.vismol_object.vismolSession.atom_dic_id[pickedID] = self
 
 
 
@@ -192,31 +199,31 @@ class Atom:
             given, it returns the default dummy value of atom X.
         """
         try:
-            color = color =self.Vobject.color_palette[name]
+            color = color =self.vismol_object.color_palette[name]
             #color = ATOM_TYPES[name][1]
         except KeyError:
             if name[0] == 'H':# or name in self.hydrogen:
                 #color = ATOM_TYPES['H'][1]
-                color = self.Vobject.color_palette['H']
+                color = self.vismol_object.color_palette['H']
             
             elif name[0] == 'C':
                 #color = ATOM_TYPES['C'][1]
-                color = self.Vobject.color_palette['C']
+                color = self.vismol_object.color_palette['C']
             
             elif name[0] == 'O':
                 #color = ATOM_TYPES['O'][1]
-                color = self.Vobject.color_palette['O']
+                color = self.vismol_object.color_palette['O']
             
             elif name[0] == 'N':
                 #color = ATOM_TYPES['N'][1]
-                color = self.Vobject.color_palette['N']
+                color = self.vismol_object.color_palette['N']
                 
             elif name[0] == 'S':
                 #color = ATOM_TYPES['S'][1]
-                color = self.Vobject.color_palette['S']
+                color = self.vismol_object.color_palette['S']
             else:
                 #color = ATOM_TYPES['X'][1]
-                color = self.Vobject.color_palette['X']
+                color = self.vismol_object.color_palette['X']
                 
         color = [int(color[0]*250), int(color[1]*250), int(color[2]*250)]
         return color
@@ -228,31 +235,31 @@ class Atom:
             given, it returns the default dummy value of atom X.
         """
         try:
-            color = color =self.Vobject.color_palette[name]
+            color = color =self.vismol_object.color_palette[name]
             #color = ATOM_TYPES[name][1]
         except KeyError:
             if name[0] == 'H':# or name in self.hydrogen:
                 #color = ATOM_TYPES['H'][1]
-                color = self.Vobject.color_palette['H']
+                color = self.vismol_object.color_palette['H']
             
             elif name[0] == 'C':
                 #color = ATOM_TYPES['C'][1]
-                color = self.Vobject.color_palette['C']
+                color = self.vismol_object.color_palette['C']
             
             elif name[0] == 'O':
                 #color = ATOM_TYPES['O'][1]
-                color = self.Vobject.color_palette['O']
+                color = self.vismol_object.color_palette['O']
             
             elif name[0] == 'N':
                 #color = ATOM_TYPES['N'][1]
-                color = self.Vobject.color_palette['N']
+                color = self.vismol_object.color_palette['N']
                 
             elif name[0] == 'S':
                 #color = ATOM_TYPES['S'][1]
-                color = self.Vobject.color_palette['S']
+                color = self.vismol_object.color_palette['S']
             else:
                 #color = ATOM_TYPES['X'][1]
-                color = self.Vobject.color_palette['X']
+                color = self.vismol_object.color_palette['X']
                 ##print(name)
         return color
 

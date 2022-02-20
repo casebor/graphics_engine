@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  VisMolFont.py
+#  VismolFont.py
 #  
 #  Copyright 2017 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
 #  
@@ -31,8 +31,8 @@ import glCore
 fontpath = os.path.split(glCore.__file__)[:-1]
 fontpath = os.path.join(*fontpath, "Fonts", "VeraMono.ttf")
 
-class VisMolFont():
-    """ VisMolFont stores the data created using the freetype python binding
+class VismolFont():
+    """ VismolFont stores the data created using the freetype python binding
         library, such as filename, character width, character height, character
         resolution, font color, etc.
     """

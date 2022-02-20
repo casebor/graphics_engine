@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  VisMolGLCore.py
+#  VismolGLCore.py
 #  
 #  Copyright 2017 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
 #  
@@ -22,81 +22,71 @@
 #  
 #  
 
-import math
 import numpy as np
-import ctypes
 from OpenGL import GL
 
 import glCore.shapes as shapes
-import glCore.glaxis as glaxis
-import glCore.glcamera as cam
+import glCore.GLAxis as glaxis
+import glCore.GLCamera as cam
 import glCore.operations as op
-import glCore.sphere_data as sph_d
-#import glCore.vismol_shaders as vm_shader
 import glCore.matrix_operations as mop
-import glCore.selection_box as sb
+import glCore.SelectionBox as sb
 import glCore.draw_dynamic_line as dl
 import glCore.sphere_representation as sph_r
-
+import glCore.VismolFont as vmf
 import glCore.shaders.sticks                  as sticksShaders
-#import glCore.shaders.new_lines              as linesShaders
 import glCore.shaders.lines                   as linesShaders
 import glCore.shaders.spheres                 as spheresShaders
 import glCore.shaders.surface                 as surfacesShaders
 import glCore.shaders.wires                   as wiresShaders
-                                                     
 import glCore.shaders.dots                    as dotsShaders
 import glCore.shaders.freetype                as freetypeShaders
-
-import glCore.vismol_font as vmf
-
 import glCore.shaders.freetype                as sh
-
 import glCore.shaders.picked_and_picking      as pickedShaders
 import glCore.shaders.nonbond                 as nonbondShaders
 import glCore.shaders.glumpy                  as glumpyShaders
 import glCore.shaders.cartoon_triangle_shader as cartoonShaders
 
 class ShaderConfigObj:
-	""" Class doc """
-	
-	def __init__ (self, vismol_glCore):
-		""" Class initialiser """
-		pass
-
-	def define_line_shaders (self):
-		""" Function doc """
-		
-	def define_dot_shaders (self):
-		""" Function doc """
-	
-	def define_stick_shaders (self):
-		""" Function doc """
-
-	def define_sphere_shaders (self):
-		""" Function doc """
-		
-
-
-
-class VisMolGLCore():
+    """ Class doc """
     
-    def __init__(self, widget, vismolSession = None, width=640.0, height=420.0):
+    def __init__ (self, vismol_glCore):
+        """ Class initialiser """
+        pass
+
+    def define_line_shaders (self):
+        """ Function doc """
+        
+    def define_dot_shaders (self):
+        """ Function doc """
+    
+    def define_stick_shaders (self):
+        """ Function doc """
+
+    def define_sphere_shaders (self):
+        """ Function doc """
+        
+
+
+
+class VismolGLCore():
+    
+    def __init__(self, widget, vismol_session = None, width=640.0, height=420.0):
         """ Constructor of the class.
             
             Keyword arguments:
-            vismolSession - 
+            vismol_session - 
         """
         self.parent_widget = widget
-        self.vismolSession = vismolSession
-        self.vConfig = self.vismolSession.vConfig
+        self.vismol_session = vismol_session
+        self.vConfig = self.vismol_session.vConfig
         self.width = np.float32(width)
         self.height = np.float32(height)
         self.sel_lines_buffers = None # this is not permanent - should be removed after some bug fixing 
         self.shader_programs = {}
         
         # Remove it later
-        self.vm_font        = vmf.VisMolFont(color    =[1,1,1,0.6])
+        self.vm_font = vmf.VismolFont(color=[1,1,1,0.6])
 
     def initialize(self):
         """ Enables the buffers and other charasteristics of the OpenGL context.
@@ -290,9 +280,9 @@ class VisMolGLCore():
                 self.picking = True
                 self.button = 1
                 self.queue_draw()
-                #print (self.vismolSession.selections[self.vismolSession.current_selection].selected_objects)
-                #for vobject in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
-                #    print (vobject.name, self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[vobject], 'selection_function_viewing button1' )
+                #print (self.vismol_session.selections[self.vismol_session.current_selection].selected_objects)
+                #for vobject in self.vismol_session.selections[self.vismol_session.current_selection].selected_objects:
+                #    print (vobject.name, self.vismol_session.selections[self.vismol_session.current_selection].selected_objects[vobject], 'selection_function_viewing button1' )
             if middle:
                 if self.atom_picked is not None:
                     self.button = 2
@@ -308,13 +298,13 @@ class VisMolGLCore():
                 
                 # Checks if there is anything in the selection list
                 # If {} means that there are no selection points on the screen
-                # Checks if vismolSession.current_selection has any selection. Also needs to check whether "picking" mode is enabled.
-                if self.vismolSession.selections[self.vismolSession.current_selection].selected_objects == {} or self.vismolSession._picking_selection_mode:
+                # Checks if vismol_session.current_selection has any selection. Also needs to check whether "picking" mode is enabled.
+                if self.vismol_session.selections[self.vismol_session.current_selection].selected_objects == {} or self.vismol_session._picking_selection_mode:
                     '''
                     Checks if the list of atoms selected by the picking function has any elements. 
                     If the list is empty, the pick menu is not shown.
                     '''
-                    if self.vismolSession._picking_selection_mode and self.vismolSession.picking_selections.picking_selections_list != [None,None,None,None]:
+                    if self.vismol_session._picking_selection_mode and self.vismol_session.picking_selections.picking_selections_list != [None,None,None,None]:
                         print('Picking is active')
                         info = None
                         menu_type = 'pick_menu'
@@ -337,7 +327,7 @@ class VisMolGLCore():
                                   self.atom_picked.index, 
                                   self.atom_picked.bonds_indexes)
                                   
-                            label = '{} / {} / {}({}) / {}({} / {})'.format( self.atom_picked.Vobject.name,
+                            label = '{} / {} / {}({}) / {}({} / {})'.format( self.atom_picked.vismol_object.name,
                                                                         self.atom_picked.chain,
                                                                         self.atom_picked.resn, 
                                                                         self.atom_picked.resi, 
@@ -361,8 +351,8 @@ class VisMolGLCore():
                     When a selection (viewing selection) is active, the selection menu is passed as an option.
                     '''
                     print('selection is  active')
-                    print(self.vismolSession.selections[self.vismolSession.current_selection].selected_objects)
-                    info = self.vismolSession.selections[self.vismolSession.current_selection].get_selection_info()
+                    print(self.vismol_session.selections[self.vismol_session.current_selection].selected_objects)
+                    info = self.vismol_session.selections[self.vismol_session.current_selection].get_selection_info()
                     menu_type = 'sele_menu'
                 
                 '''The right button (button = 3) always opens one of the available menus.'''
@@ -411,40 +401,40 @@ class VisMolGLCore():
                 if down:
                     self.model_mat = mop.my_glTranslatef(self.model_mat, np.array([0.0, 0.0, self.scroll]))
                 
-                for index , visObj in self.vismolSession.vismol_objects_dic.items():
-                #for visObj in self.vismolSession.vismol_objects:
+                for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+                #for vismol_object in self.vismol_session.vismol_objects:
                     if up:
-                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, -self.scroll]))
+                        vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, np.array([0.0, 0.0, -self.scroll]))
                     if down:
-                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, self.scroll]))
+                        vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, np.array([0.0, 0.0, self.scroll]))
                 
-                for key in self.vismolSession.vismol_geometric_object_dic.keys():
-                    visObj = self.vismolSession.vismol_geometric_object_dic[key]
-                    if visObj:
+                for key in self.vismol_session.vismol_geometric_object_dic.keys():
+                    vismol_object = self.vismol_session.vismol_geometric_object_dic[key]
+                    if vismol_object:
                         if up:
-                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, -self.scroll]))
+                            vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, np.array([0.0, 0.0, -self.scroll]))
                         if down:
-                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, self.scroll]))
+                            vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, np.array([0.0, 0.0, self.scroll]))
             
             
             else:
-                for index , visObj in self.vismolSession.vismol_objects_dic.items():
-                #for visObj in self.vismolSession.vismol_objects:
-                    if visObj.editing:
+                for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+                #for vismol_object in self.vismol_session.vismol_objects:
+                    if vismol_object.editing:
                         if up:
-                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, -self.scroll]))
+                            vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, np.array([0.0, 0.0, -self.scroll]))
                         if down:
-                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, self.scroll]))
+                            vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, np.array([0.0, 0.0, self.scroll]))
                 
                 ## same as the lines above but now using the geometric representations (dotted lines and so)
-                for key in self.vismolSession.vismol_geometric_object_dic.keys():
-                    visObj = self.vismolSession.vismol_geometric_object_dic[key]
-                    if visObj:
-                        if visObj.editing:
+                for key in self.vismol_session.vismol_geometric_object_dic.keys():
+                    vismol_object = self.vismol_session.vismol_geometric_object_dic[key]
+                    if vismol_object:
+                        if vismol_object.editing:
                             if up:
-                                visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, -self.scroll]))
+                                vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, np.array([0.0, 0.0, -self.scroll]))
                             if down:
-                                visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, self.scroll]))
+                                vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, np.array([0.0, 0.0, self.scroll]))
         
         else:
             pos_z = self.glcamera.get_position()[2]
@@ -471,7 +461,7 @@ class VisMolGLCore():
     
     def _rotate_view(self, dx, dy, x, y):
         """ Function doc """
-        angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
+        angle = np.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
         if self.shift:
             if self.show_dynamic_line:
                 self.dynamic_line.end = self.get_viewport_pos(float(self.mouse_x), float(self.mouse_y))
@@ -495,28 +485,28 @@ class VisMolGLCore():
             else:
                 rot_mat = mop.my_glRotatef(np.identity(4), angle, np.array([-dy, -dx, 0.0]))
             if self.editing_mols:
-                for index , visObj in self.vismolSession.vismol_objects_dic.items():
-                #for visObj in self.vismolSession.vismol_objects:
-                    if visObj.editing:
-                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+                for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+                #for vismol_object in self.vismol_session.vismol_objects:
+                    if vismol_object.editing:
+                        vismol_object.model_mat = mop.my_glMultiplyMatricesf(vismol_object.model_mat, rot_mat)
                 
-                for key in self.vismolSession.vismol_geometric_object_dic.keys():
-                    visObj = self.vismolSession.vismol_geometric_object_dic[key]
-                    if visObj:
-                        if visObj.editing:
-                            visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+                for key in self.vismol_session.vismol_geometric_object_dic.keys():
+                    vismol_object = self.vismol_session.vismol_geometric_object_dic[key]
+                    if vismol_object:
+                        if vismol_object.editing:
+                            vismol_object.model_mat = mop.my_glMultiplyMatricesf(vismol_object.model_mat, rot_mat)
             
             else:
                 self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
-                for index , visObj in self.vismolSession.vismol_objects_dic.items():
-                #for visObj in self.vismolSession.vismol_objects:
-                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+                for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+                #for vismol_object in self.vismol_session.vismol_objects:
+                    vismol_object.model_mat = mop.my_glMultiplyMatricesf(vismol_object.model_mat, rot_mat)
 
-                for key in self.vismolSession.vismol_geometric_object_dic.keys():
-                    visObj = self.vismolSession.vismol_geometric_object_dic[key]
-                    if visObj:
-                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-                        #print(visObj)
+                for key in self.vismol_session.vismol_geometric_object_dic.keys():
+                    vismol_object = self.vismol_session.vismol_geometric_object_dic[key]
+                    if vismol_object:
+                        vismol_object.model_mat = mop.my_glMultiplyMatricesf(vismol_object.model_mat, rot_mat)
+                        #print(vismol_object)
 
             
             
@@ -550,26 +540,26 @@ class VisMolGLCore():
         if not self.editing_mols:
             self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_mat)
             
-            for index , visObj in self.vismolSession.vismol_objects_dic.items():
-            #for visObj in self.vismolSession.vismol_objects:
-                visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
+            for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+            #for vismol_object in self.vismol_session.vismol_objects:
+                vismol_object.model_mat = mop.my_glMultiplyMatricesf(vismol_object.model_mat, pan_mat)
             
-            for key in self.vismolSession.vismol_geometric_object_dic.keys():
-                visObj = self.vismolSession.vismol_geometric_object_dic[key]
-                if visObj:
-                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
+            for key in self.vismol_session.vismol_geometric_object_dic.keys():
+                vismol_object = self.vismol_session.vismol_geometric_object_dic[key]
+                if vismol_object:
+                    vismol_object.model_mat = mop.my_glMultiplyMatricesf(vismol_object.model_mat, pan_mat)
             self.zero_reference_point = mop.get_xyz_coords(self.model_mat)
         
         else:
-            for index , visObj in self.vismolSession.vismol_objects_dic.items():
-            #for visObj in self.vismolSession.vismol_objects:
-                if visObj.editing:
-                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
-            for key in self.vismolSession.vismol_geometric_object_dic.keys():
-                visObj = self.vismolSession.vismol_geometric_object_dic[key]
-                if visObj:
-                    if visObj.editing:
-                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
+            for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+            #for vismol_object in self.vismol_session.vismol_objects:
+                if vismol_object.editing:
+                    vismol_object.model_mat = mop.my_glMultiplyMatricesf(vismol_object.model_mat, pan_mat)
+            for key in self.vismol_session.vismol_geometric_object_dic.keys():
+                vismol_object = self.vismol_session.vismol_geometric_object_dic[key]
+                if vismol_object:
+                    if vismol_object.editing:
+                        vismol_object.model_mat = mop.my_glMultiplyMatricesf(vismol_object.model_mat, pan_mat)
 
 
         self.drag_pos_x = px
@@ -603,29 +593,29 @@ class VisMolGLCore():
         
 
     '''
-    def _draw_freetype(self, visObj = None):
+    def _draw_freetype(self, vismol_object = None):
         """ Function doc """
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glUseProgram(self.freetype_program)
-        visObj.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
-        visObj.vm_font.load_font_params(self.freetype_program)
-        GL.glBindVertexArray(visObj.vm_font.vao)
-        texto = visObj.name
-        point = np.array(visObj.mass_center,np.float32)
+        vismol_object.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
+        vismol_object.vm_font.load_font_params(self.freetype_program)
+        GL.glBindVertexArray(vismol_object.vm_font.vao)
+        texto = vismol_object.name
+        point = np.array(vismol_object.mass_center,np.float32)
         point = np.array((point[0],point[1],point[2],1),np.float32)
-        point = np.dot(point, visObj.model_mat)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, visObj.vm_font.texture_id)
+        point = np.dot(point, vismol_object.model_mat)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, vismol_object.vm_font.texture_id)
         for i,c in enumerate(texto):
             c_id = ord(c)
             x = c_id%16
             y = c_id//16-2
-            xyz_pos = np.array([point[0]+i*visObj.vm_font.char_width, point[1], point[2]],np.float32)
-            uv_coords = np.array([x*visObj.vm_font.text_u, y*visObj.vm_font.text_v, (x+1)*visObj.vm_font.text_u, (y+1)*visObj.vm_font.text_v],np.float32)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[0])
+            xyz_pos = np.array([point[0]+i*vismol_object.vm_font.char_width, point[1], point[2]],np.float32)
+            uv_coords = np.array([x*vismol_object.vm_font.text_u, y*vismol_object.vm_font.text_v, (x+1)*vismol_object.vm_font.text_u, (y+1)*vismol_object.vm_font.text_v],np.float32)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.vm_font.vbos[0])
             GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize*len(xyz_pos), xyz_pos, GL.GL_DYNAMIC_DRAW)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[1])
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.vm_font.vbos[1])
             GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize*len(uv_coords), uv_coords, GL.GL_DYNAMIC_DRAW)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glDrawArrays(GL.GL_POINTS, 0, 1)
@@ -658,23 +648,23 @@ class VisMolGLCore():
         GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1], self.bckgrnd_color[2],self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         
-        #for visObj in self.vismolSession.vismol_objects:
-        for index, visObj in self.vismolSession.vismol_objects_dic.items():
-            # for all the visObj in all created visObjs  
+        #for vismol_object in self.vismol_session.vismol_objects:
+        for index, vismol_object in self.vismol_session.vismol_objects_dic.items():
+            # for all the vismol_object in all created vismol_objects  
 
-            if visObj.active:
-                # visObj.active = False means that nothing is showed 
-                if visObj.frames != []:
-                    for rep_name in visObj.representations:
+            if vismol_object.active:
+                # vismol_object.active = False means that nothing is showed 
+                if vismol_object.frames != []:
+                    for rep_name in vismol_object.representations:
                         # if the representation doen't exists , ignore
-                        if visObj.representations[rep_name] is None:
+                        if vismol_object.representations[rep_name] is None:
                             pass
                             #print('rep_name',rep_name)
                         
                         else:
                             # only shows the representation if representations[rep_name].active = True
-                            if visObj.representations[rep_name].active:
-                                visObj.representations[rep_name].draw_representation()
+                            if vismol_object.representations[rep_name].active:
+                                vismol_object.representations[rep_name].draw_representation()
                             else:
                                 pass
 
@@ -684,34 +674,34 @@ class VisMolGLCore():
                         
                         
         '''checks if the picking function is active. Viewing and picking selections cannot be displayed at the same time.'''
-        if self.vismolSession._picking_selection_mode:
-            #print('self.vismolSession._picking_selection_mode')
+        if self.vismol_session._picking_selection_mode:
+            #print('self.vismol_session._picking_selection_mode')
             self._draw_picking_label()
 
-            #print(self.vismolSession.vismol_geometric_object_dic.keys())
-            for rep_name in self.vismolSession.vismol_geometric_object_dic.keys():
-                #print(self.vismolSession.vismol_geometric_object_dic[rep_name]) 
-                if self.vismolSession.vismol_geometric_object_dic[rep_name]:
+            #print(self.vismol_session.vismol_geometric_object_dic.keys())
+            for rep_name in self.vismol_session.vismol_geometric_object_dic.keys():
+                #print(self.vismol_session.vismol_geometric_object_dic[rep_name]) 
+                if self.vismol_session.vismol_geometric_object_dic[rep_name]:
                     
-                    if self.vismolSession.vismol_geometric_object_dic[rep_name].representations['dotted_lines'].active:                 
-                        #print(rep_name,self.vismolSession.vismol_geometric_object_dic[rep_name].representations['dotted_lines'].active)
-                        self.vismolSession.vismol_geometric_object_dic[rep_name].representations['dotted_lines'].draw_representation()
+                    if self.vismol_session.vismol_geometric_object_dic[rep_name].representations['dotted_lines'].active:                 
+                        #print(rep_name,self.vismol_session.vismol_geometric_object_dic[rep_name].representations['dotted_lines'].active)
+                        self.vismol_session.vismol_geometric_object_dic[rep_name].representations['dotted_lines'].draw_representation()
                     else:
                         pass
 
 
         
         else:
-            for visObj in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
+            for vismol_object in self.vismol_session.selections[self.vismol_session.current_selection].selected_objects:
                 '''
                 Here are represented the blue 
                 dots referring to the atom's selections 
                 '''
-                if visObj.selection_dots_vao is None:
-                    shapes._make_gl_selection_dots(self.picking_dots_program, vismol_object = visObj)
+                if vismol_object.selection_dots_vao is None:
+                    shapes._make_gl_selection_dots(self.picking_dots_program, vismol_object = vismol_object)
                 
                 '''#Extracting the indexes for each vismol_object that was selected'''
-                indexes = self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[visObj]
+                indexes = self.vismol_session.selections[self.vismol_session.current_selection].selected_objects[vismol_object]
                 #print(type(indexes), indexes)
                
                 size =  self.vConfig.gl_parameters['dot_sel_size']
@@ -719,18 +709,18 @@ class VisMolGLCore():
 
                 GL.glUseProgram(self.picking_dots_program)
                 GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                self.load_matrices(self.picking_dots_program, visObj.model_mat)
+                self.load_matrices(self.picking_dots_program, vismol_object.model_mat)
                 #print ('line510')
 
-                #self._draw_picking_dots(visObj = visObj, indexes = False)
-                GL.glBindVertexArray(visObj.selection_dots_vao)
+                #self._draw_picking_dots(vismol_object = vismol_object, indexes = False)
+                GL.glBindVertexArray(vismol_object.selection_dots_vao)
                 
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[0])
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.selection_dot_buffers[0])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), 
                                 indexes, GL.GL_STATIC_DRAW)
                 
-                frame = self._safe_frame_exchange(visObj)
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[1])
+                frame = self._safe_frame_exchange(vismol_object)
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.selection_dot_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.itemsize*int(len(frame)), 
                                 frame, GL.GL_STATIC_DRAW)
 
@@ -776,10 +766,10 @@ class VisMolGLCore():
         
         
         
-        for atom in  self.vismolSession.picking_selections.picking_selections_list:
+        for atom in  self.vismol_session.picking_selections.picking_selections_list:
             if atom:
                 #print (number, atom.name)
-                frame = self._get_visObj_frame(atom.Vobject)
+                frame = self._get_vismol_object_frame(atom.vismol_object)
                     
                 texto = '#'+str(number)
                 point = np.array(atom.coords (frame),np.float32)
@@ -967,7 +957,7 @@ class VisMolGLCore():
         #    self.shader_programs['glumpy']     = self.load_shaders(glumpyShaders.shader_type[_type]['sel_vertex_shader'  ],
         #                                                           glumpyShaders.shader_type[_type]['sel_fragment_shader'])
         #    self.shader_programs['glumpy_sel'] = self.load_shaders(glumpyShaders.shader_type[_type]['sel_vertex_shader'  ],
-								#glumpyShaders.shader_type[_type]['sel_fragment_shader'])
+                                #glumpyShaders.shader_type[_type]['sel_fragment_shader'])
 
 
 
@@ -1192,20 +1182,20 @@ class VisMolGLCore():
         
         GL.glClearColor(1,1,1,1)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        #for visObj in self.vismolSession.vismol_objects:
-        for index , visObj in self.vismolSession.vismol_objects_dic.items():
+        #for vismol_object in self.vismol_session.vismol_objects:
+        for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
 
-            if visObj.active:
-                #visObj has few different types of representations                
-                for rep_name in visObj.representations:
-                    # checking all the representations in visObj.representations dictionary
-                    if visObj.representations[rep_name] is None:
+            if vismol_object.active:
+                #vismol_object has few different types of representations                
+                for rep_name in vismol_object.representations:
+                    # checking all the representations in vismol_object.representations dictionary
+                    if vismol_object.representations[rep_name] is None:
                         pass
                     else:
                         pass
-                        #  visObj.representations[rep_name] may be active or not  True/False
-                        if visObj.representations[rep_name].active:
-                            visObj.representations[rep_name].draw_background_sel_representation()#line_width_factor = 0.1)
+                        #  vismol_object.representations[rep_name] may be active or not  True/False
+                        if vismol_object.representations[rep_name].active:
+                            vismol_object.representations[rep_name].draw_background_sel_representation()#line_width_factor = 0.1)
                         else:
                             pass
         
@@ -1228,7 +1218,7 @@ class VisMolGLCore():
                 pass
             else:
                 #print(pickedID)
-                self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
+                self.atom_picked = self.vismol_session.atom_dic_id[pickedID]
                 '''
                 The disable variable does not allow, if the selected 
                 atom is already in the selected list, to be removed. 
@@ -1236,7 +1226,7 @@ class VisMolGLCore():
                 The disable variable is "False" for when we use 
                 selection by area (selection box)
                 '''
-                self.vismolSession._selection_function (selected = self.atom_picked, disable = False) #selected, _type = None, disable = True
+                self.vismol_session._selection_function (selected = self.atom_picked, disable = False) #selected, _type = None, disable = True
         self.selection_box_picking = False
         #return True
     
@@ -1245,19 +1235,19 @@ class VisMolGLCore():
         """ Function doc """
         GL.glClearColor(1,1,1,1)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        #for visObj in self.vismolSession.vismol_objects:
-        for index , visObj in self.vismolSession.vismol_objects_dic.items():
-            if visObj.active:
-                #visObj has few different types of representations
+        #for vismol_object in self.vismol_session.vismol_objects:
+        for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+            if vismol_object.active:
+                #vismol_object has few different types of representations
                 
-                for rep_name in visObj.representations:
-                    # checking all the representations in visObj.representations dictionary
-                    if visObj.representations[rep_name] is None:
+                for rep_name in vismol_object.representations:
+                    # checking all the representations in vismol_object.representations dictionary
+                    if vismol_object.representations[rep_name] is None:
                         pass
                     else:
-                        #  visObj.representations[rep_name] may be active or not  True/False
-                        if visObj.representations[rep_name].active:
-                            visObj.representations[rep_name].draw_background_sel_representation()
+                        #  vismol_object.representations[rep_name] may be active or not  True/False
+                        if vismol_object.representations[rep_name].active:
+                            vismol_object.representations[rep_name].draw_background_sel_representation()
                         else:
                             pass
 
@@ -1268,7 +1258,7 @@ class VisMolGLCore():
 
         #converting RGB values to atoms address (unique id)
         pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
-        if self.vismolSession._picking_selection_mode:
+        if self.vismol_session._picking_selection_mode:
             print('_picking_selection_mode = True',data, pickedID)
 
         '''
@@ -1278,8 +1268,8 @@ class VisMolGLCore():
         if pickedID == 16777215:
             self.atom_picked = None
             if self.button ==1:
-                self.vismolSession._selection_function (self.atom_picked)
-                #print('_selection_function 965', self.vismolSession.selections[self.vismolSession.current_selection].active )
+                self.vismol_session._selection_function(self.atom_picked)
+                #print('_selection_function 965', self.vismol_session.selections[self.vismol_session.current_selection].active )
                 self.button = None
         else:
             try:
@@ -1290,15 +1280,16 @@ class VisMolGLCore():
                 rare, but can impair viewing if it is not properly ignored
                 
                 '''
-                self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
-                if self.button ==1:
-                    #print('_selection_function 978', self.vismolSession.selections[self.vismolSession.current_selection].active )
-                    self.vismolSession._selection_function (self.atom_picked)
-                    #print('_selection_function 980', self.vismolSession.selections[self.vismolSession.current_selection].active )
+                self.atom_picked = self.vismol_session.atom_dic_id[pickedID]
+                if self.button == 1:
+                    #print('_selection_function 978', self.vismol_session.selections[self.vismol_session.current_selection].active )
+                    self.vismol_session._selection_function(self.atom_picked)
+                    #print('_selection_function 980', self.vismol_session.selections[self.vismol_session.current_selection].active )
 
                     self.button = None
-            except:
+            except KeyError as ke:
                 print('pickedID', pickedID, 'not found')
+                print(ke)
                 self.button = None
         self.picking = False
         return True
@@ -1387,7 +1378,7 @@ class VisMolGLCore():
         bck_col = GL.glGetUniformLocation(program, 'alias_color')
         GL.glUniform3fv(bck_col, 1, self.bckgrnd_color[:3])
     
-    def _safe_frame_exchange (self, visObj):
+    def _safe_frame_exchange (self, vismol_object):
         """ Function doc 
         
         This function checks if the number of the called frame will not exceed 
@@ -1401,30 +1392,30 @@ class VisMolGLCore():
         else:
             pass
         
-        if self.frame >= (len (visObj.frames)-1):
-            #print (type(self.frame),self.frame,  type(len (visObj.frames)-1),len (visObj.frames)-1)
-            frame = visObj.frames[len (visObj.frames)-1]
-            #position = len (visObj.frames)-1
-            #frame2 = visObj.frames[position-1]
+        if self.frame >= (len (vismol_object.frames)-1):
+            #print (type(self.frame),self.frame,  type(len (vismol_object.frames)-1),len (vismol_object.frames)-1)
+            frame = vismol_object.frames[len (vismol_object.frames)-1]
+            #position = len (vismol_object.frames)-1
+            #frame2 = vismol_object.frames[position-1]
             #print (type(frame), type(frame2), position)
 
         else:
-            frame = visObj.frames[self.frame]
-            #position = len (visObj.frames)-1
-            #frame2 = visObj.frames[position-1]
+            frame = vismol_object.frames[self.frame]
+            #position = len (vismol_object.frames)-1
+            #frame2 = vismol_object.frames[position-1]
             #print (type(frame), type(frame2), position)
         
         return frame
 
-    def _get_visObj_frame (self, visObj):
+    def _get_vismol_object_frame (self, vismol_object):
         """ Function doc """
         if self.frame <  0:
             self.frame = 0
         else:
             pass
         
-        if self.frame >= (len (visObj.frames)-1):
-            frame = len (visObj.frames)-1
+        if self.frame >= (len (vismol_object.frames)-1):
+            frame = len (vismol_object.frames)-1
         else:
             frame = self.frame
         return frame
@@ -1444,32 +1435,32 @@ class VisMolGLCore():
 
 
 
-    def _draw_picking_dots(self, visObj = None,  indexes = False):  # not used !!!
+    def _draw_picking_dots(self, vismol_object = None,  indexes = False):  # not used !!!
         """ Function doc
         """
         #print (100/abs(self.dist_cam_zrp))
         GL.glPointSize(100/abs(self.dist_cam_zrp))
-        if visObj.picking_dots_vao is not None:
-            GL.glBindVertexArray(visObj.picking_dots_vao)
+        if vismol_object.picking_dots_vao is not None:
+            GL.glBindVertexArray(vismol_object.picking_dots_vao)
             
             if self.modified_view:
                 pass
 
             else:
-                frame = self._safe_frame_exchange(visObj)
+                frame = self._safe_frame_exchange(vismol_object)
 
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.picking_dot_buffers[1])
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.picking_dot_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.itemsize*int(len(frame)), 
                                 frame, GL.GL_STATIC_DRAW)
                 if indexes:
-                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.picking_dot_buffers[2])
-                    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.picking_dot_buffers[2])
+                    GL.glBufferData(GL.GL_ARRAY_BUFFER, vismol_object.color_indexes.itemsize*int(len(vismol_object.color_indexes)), vismol_object.color_indexes, GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(vismol_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
     
 
     
-    def _draw_freetype(self, visObj = None):
+    def _draw_freetype(self, vismol_object = None):
         """ Function doc """
         pass
         '''
@@ -1477,29 +1468,29 @@ class VisMolGLCore():
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glUseProgram(self.freetype_program)
-        visObj.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
-        visObj.vm_font.load_font_params(self.freetype_program)
-        GL.glBindVertexArray(visObj.vm_font.vao)
-        #texto = visObj.name
+        vismol_object.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
+        vismol_object.vm_font.load_font_params(self.freetype_program)
+        GL.glBindVertexArray(vismol_object.vm_font.vao)
+        #texto = vismol_object.name
         
 
 
         xyz_pos   = []
         uv_coords = []
         chars     = 0 
-        for atom in visObj.atoms:
+        for atom in vismol_object.atoms:
             #GL.glUseProgram(self.freetype_program)
-            #visObj.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
-            #visObj.vm_font.load_font_params(self.freetype_program)
-            #GL.glBindVertexArray(visObj.vm_font.vao)
+            #vismol_object.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
+            #vismol_object.vm_font.load_font_params(self.freetype_program)
+            #GL.glBindVertexArray(vismol_object.vm_font.vao)
 
             texto = atom.name
             point = np.array(atom.coords (self.frame),np.float32)
             point = np.array((point[0],point[1],point[2],1),np.float32)
-            point = np.dot(point, visObj.model_mat)
+            point = np.dot(point, vismol_object.model_mat)
 
             #print(point)
-            GL.glBindTexture(GL.GL_TEXTURE_2D, visObj.vm_font.texture_id)
+            GL.glBindTexture(GL.GL_TEXTURE_2D, vismol_object.vm_font.texture_id)
             for i,c in enumerate(texto):
                 chars += 1
                 c_id = ord(c)
@@ -1507,38 +1498,38 @@ class VisMolGLCore():
                 y = c_id//16-2
                 
                 
-                xyz_pos.append(point[0]+i*visObj.vm_font.char_width)
+                xyz_pos.append(point[0]+i*vismol_object.vm_font.char_width)
                 xyz_pos.append(point[1])
                 xyz_pos.append(point[2])
                 
-                #xyz_pos   = np.array([point[0]+i*visObj.vm_font.char_width, 
+                #xyz_pos   = np.array([point[0]+i*vismol_object.vm_font.char_width, 
                 #                      point[1], 
                 #                      point[2]],
                 #                      np.float32)
                                       
-                uv_coords.append(x*visObj.vm_font.text_u)
-                uv_coords.append(y*visObj.vm_font.text_v)
-                uv_coords.append((x+1)*visObj.vm_font.text_u)
-                uv_coords.append((y+1)*visObj.vm_font.text_v)
+                uv_coords.append(x*vismol_object.vm_font.text_u)
+                uv_coords.append(y*vismol_object.vm_font.text_v)
+                uv_coords.append((x+1)*vismol_object.vm_font.text_u)
+                uv_coords.append((y+1)*vismol_object.vm_font.text_v)
  
                 
-                #uv_coords = np.array([x*visObj.vm_font.text_u, 
-                #                      y*visObj.vm_font.text_v, 
-                #                      (x+1)*visObj.vm_font.text_u, 
-                #                      (y+1)*visObj.vm_font.text_v],
+                #uv_coords = np.array([x*vismol_object.vm_font.text_u, 
+                #                      y*vismol_object.vm_font.text_v, 
+                #                      (x+1)*vismol_object.vm_font.text_u, 
+                #                      (y+1)*vismol_object.vm_font.text_v],
                 #                      np.float32)
         
         #print('xyz_pos  ',len(xyz_pos))
         #print('uv_coords',len(uv_coords))
-        #print('atoms    ',len(visObj.atoms))
+        #print('atoms    ',len(vismol_object.atoms))
         #print('chars    ',chars)
         
         xyz_pos   = np.array(xyz_pos  , np.float32)
         uv_coords = np.array(uv_coords, np.float32)
         #print (xyz_pos)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[0])
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.vm_font.vbos[0])
         GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize*len(xyz_pos), xyz_pos, GL.GL_DYNAMIC_DRAW)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[1])
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.vm_font.vbos[1])
         GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize*len(uv_coords), uv_coords, GL.GL_DYNAMIC_DRAW)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         
@@ -1553,24 +1544,24 @@ class VisMolGLCore():
         
         
         '''
-        texto = visObj.atoms[0].name
+        texto = vismol_object.atoms[0].name
         #print(texto)
-        #point = np.array(visObj.mass_center,np.float32)
-        point = np.array(visObj.atoms[0].coords (self.frame),np.float32)
+        #point = np.array(vismol_object.mass_center,np.float32)
+        point = np.array(vismol_object.atoms[0].coords (self.frame),np.float32)
         
         point = np.array((point[0],point[1],point[2],1),np.float32)
-        point = np.dot(point, visObj.model_mat)
+        point = np.dot(point, vismol_object.model_mat)
         #print(point)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, visObj.vm_font.texture_id)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, vismol_object.vm_font.texture_id)
         for i,c in enumerate(texto):
             c_id = ord(c)
             x = c_id%16
             y = c_id//16-2
-            xyz_pos = np.array([point[0]+i*visObj.vm_font.char_width, point[1], point[2]],np.float32)
-            uv_coords = np.array([x*visObj.vm_font.text_u, y*visObj.vm_font.text_v, (x+1)*visObj.vm_font.text_u, (y+1)*visObj.vm_font.text_v],np.float32)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[0])
+            xyz_pos = np.array([point[0]+i*vismol_object.vm_font.char_width, point[1], point[2]],np.float32)
+            uv_coords = np.array([x*vismol_object.vm_font.text_u, y*vismol_object.vm_font.text_v, (x+1)*vismol_object.vm_font.text_u, (y+1)*vismol_object.vm_font.text_v],np.float32)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.vm_font.vbos[0])
             GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize*len(xyz_pos), xyz_pos, GL.GL_DYNAMIC_DRAW)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[1])
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.vm_font.vbos[1])
             GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize*len(uv_coords), uv_coords, GL.GL_DYNAMIC_DRAW)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glDrawArrays(GL.GL_POINTS, 0, 1)
@@ -1583,27 +1574,27 @@ class VisMolGLCore():
         
         
         GL.glUseProgram(self.freetype_program)
-        visObj.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
-        visObj.vm_font.load_font_params(self.freetype_program)
-        GL.glBindVertexArray(visObj.vm_font.vao)
-        texto = visObj.atoms[1].name
+        vismol_object.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
+        vismol_object.vm_font.load_font_params(self.freetype_program)
+        GL.glBindVertexArray(vismol_object.vm_font.vao)
+        texto = vismol_object.atoms[1].name
         #print(texto)
-        #point = np.array(visObj.mass_center,np.float32)
-        point = np.array(visObj.atoms[1].coords (self.frame),np.float32)
+        #point = np.array(vismol_object.mass_center,np.float32)
+        point = np.array(vismol_object.atoms[1].coords (self.frame),np.float32)
         
         point = np.array((point[0],point[1],point[2],1),np.float32)
-        point = np.dot(point, visObj.model_mat)
+        point = np.dot(point, vismol_object.model_mat)
         #print(point)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, visObj.vm_font.texture_id)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, vismol_object.vm_font.texture_id)
         for i,c in enumerate(texto):
             c_id = ord(c)
             x = c_id%16
             y = c_id//16-2
-            xyz_pos = np.array([point[0]+i*visObj.vm_font.char_width, point[1], point[2]],np.float32)
-            uv_coords = np.array([x*visObj.vm_font.text_u, y*visObj.vm_font.text_v, (x+1)*visObj.vm_font.text_u, (y+1)*visObj.vm_font.text_v],np.float32)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[0])
+            xyz_pos = np.array([point[0]+i*vismol_object.vm_font.char_width, point[1], point[2]],np.float32)
+            uv_coords = np.array([x*vismol_object.vm_font.text_u, y*vismol_object.vm_font.text_v, (x+1)*vismol_object.vm_font.text_u, (y+1)*vismol_object.vm_font.text_v],np.float32)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.vm_font.vbos[0])
             GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize*len(xyz_pos), xyz_pos, GL.GL_DYNAMIC_DRAW)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[1])
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.vm_font.vbos[1])
             GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize*len(uv_coords), uv_coords, GL.GL_DYNAMIC_DRAW)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glDrawArrays(GL.GL_POINTS, 0, 1)
@@ -1632,7 +1623,7 @@ class VisMolGLCore():
     def _pressed_Control_L(self):
         """ Function doc
         """
-        #self.vismolSession._hide_lines (visObj = self.vismolSession.vismol_objects[0], 
+        #self.vismol_session._hide_lines (vismol_object = self.vismol_session.vismol_objects[0], 
         #                               indexes = range(0,20))
         self.ctrl = True
         return True
@@ -1646,7 +1637,7 @@ class VisMolGLCore():
     def _pressed_Shift_L(self):
         """ Function doc
         """
-        #self.vismolSession._show_lines (visObj = self.vismolSession.vismol_objects[0], 
+        #self.vismol_session._show_lines (vismol_object = self.vismol_session.vismol_objects[0], 
         #                               indexes = range(0,20))
         self.shift = True
         return True
@@ -1679,8 +1670,8 @@ class VisMolGLCore():
     def center_on_atom(self, atom):
         """ Function doc
         """
-        frame_index  =  self._get_visObj_frame(atom.Vobject)
-        self.center_on_coordinates(atom.Vobject, atom.coords(frame_index))
+        frame_index  =  self._get_vismol_object_frame(atom.vismol_object)
+        self.center_on_coordinates(atom.vismol_object, atom.coords(frame_index))
         return True
     
     def center_on_coordinates(self, vismol_object, atom_pos):
@@ -1709,14 +1700,14 @@ class VisMolGLCore():
             for i in range(15):
                 to_move = unit_vec * step
                 
-                for index , visObj in self.vismolSession.vismol_objects_dic.items():
-                #for visObj in self.vismolSession.vismol_objects:
-                    visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move)
+                for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+                #for vismol_object in self.vismol_session.vismol_objects:
+                    vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, -to_move)
                 
-                for key in self.vismolSession.vismol_geometric_object_dic.keys():
-                    visObj = self.vismolSession.vismol_geometric_object_dic[key]
-                    if visObj:
-                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move)
+                for key in self.vismol_session.vismol_geometric_object_dic.keys():
+                    vismol_object = self.vismol_session.vismol_geometric_object_dic[key]
+                    if vismol_object:
+                        vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, -to_move)
                 
                 # WARNING: Method only works with GTK!!!
                 self.parent_widget.get_window().invalidate_rect(None, False)
@@ -1724,16 +1715,16 @@ class VisMolGLCore():
                 # WARNING: Method only works with GTK!!!
                 time.sleep(self.vConfig.gl_parameters['center_on_coord_sleep_time'])
             
-            for index , visObj in self.vismolSession.vismol_objects_dic.items():
-            #for visObj in self.vismolSession.vismol_objects:
-                model_pos = visObj.model_mat.T.dot(pos)[:3]
-                visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos)
+            for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+            #for vismol_object in self.vismol_session.vismol_objects:
+                model_pos = vismol_object.model_mat.T.dot(pos)[:3]
+                vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, -model_pos)
             
-            for key in self.vismolSession.vismol_geometric_object_dic.keys():
-                visObj = self.vismolSession.vismol_geometric_object_dic[key]
-                if visObj:
-                    model_pos = visObj.model_mat.T.dot(pos)[:3]
-                    visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos)            
+            for key in self.vismol_session.vismol_geometric_object_dic.keys():
+                vismol_object = self.vismol_session.vismol_geometric_object_dic[key]
+                if vismol_object:
+                    model_pos = vismol_object.model_mat.T.dot(pos)[:3]
+                    vismol_object.model_mat = mop.my_glTranslatef(vismol_object.model_mat, -model_pos)            
             
             self.queue_draw()
         return True
@@ -1742,10 +1733,10 @@ class VisMolGLCore():
         """ Function doc
         """
         print(self.model_mat,"<== widget model_mat")
-        for index , visObj in self.vismolSession.vismol_objects_dic.items():
-        #for visObj in self.vismolSession.vismol_objects:
+        for index , vismol_object in self.vismol_session.vismol_objects_dic.items():
+        #for vismol_object in self.vismol_session.vismol_objects:
             print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            print(visObj.model_mat,"<== visObj model_mat")
+            print(vismol_object.model_mat,"<== vismol_object model_mat")
     
     def queue_draw(self):
         """ Function doc """

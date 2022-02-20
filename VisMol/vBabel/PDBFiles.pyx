@@ -1,48 +1,40 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
 import os
 import time
 import multiprocessing
 import numpy as np
-#import vModel.atom_types as at 
-#import vModel.cDistances as cdist
-from   vModel.Atom import Atom
-from   vModel import VismolObject
-from   vModel import MolecularProperties
-from   vModel.MolecularProperties import ATOM_TYPES
-from   vModel.MolecularProperties import COLOR_PALETTE
-
+from vModel.Atom import Atom
+from vModel import VismolObject
+from vModel import MolecularProperties
+from vModel.MolecularProperties import ATOM_TYPES
+from vModel.MolecularProperties import COLOR_PALETTE
 from pprint import pprint
 
-cpdef load_pdb_file (infile = None, gridsize = 3, vismolSession =  None, frames_only = False):
-    """ Function doc 
-
-    gridsize =
-
-    The longest covalent bond I can find is the bismuth-iodine single bond.
-    The order of bond lengths is single > double > triple.
-    The largest atoms should form the longest covalent bonds. 
-    So we look at atoms in the lower right corner of the Periodic Table.
-    The most likely candidates are Pb, Bi, and I.
-    The experimental bond lengths are:
-    Bi-I = 281 pm; Pb-I = 279 pm; I-I = 266.5 pm.
-    So the polar covalent Bi-I bond is the longest covalent measured so far.
-
+cpdef load_pdb_file(infile=None, gridsize=3, vismol_session=None, frames_only=False):
+    """ The longest covalent bond I can find is the bismuth-iodine single bond.
+        The order of bond lengths is single > double > triple.
+        The largest atoms should form the longest covalent bonds. 
+        So we look at atoms in the lower right corner of the Periodic Table.
+        The most likely candidates are Pb, Bi, and I.
+        The experimental bond lengths are:
+        Bi-I = 281 pm; Pb-I = 279 pm; I-I = 266.5 pm.
+        So the polar covalent Bi-I bond is the longest covalent measured so far.
     """
     #-------------------------------------------------------------------------------------------
     #                                P D B     P A R S E R 
     #-------------------------------------------------------------------------------------------
-    print ('\P D B     P A R S E R')
-    initial          = time.time()
-    
-    
-    
-    at  =  MolecularProperties.AtomTypes()
-    with open(infile, 'r') as pdb_file:
+    print ("\P D B     P A R S E R")
+    initial = time.time()
+    at = MolecularProperties.AtomTypes()
+    with open(infile, "r") as pdb_file:
         pdbtext = pdb_file.read()
-        if 'ENDMDL' in pdbtext:
-            rawframes = pdbtext.split('ENDMDL')
+        if "ENDMDL" in pdbtext:
+            rawframes = pdbtext.split("ENDMDL")
         else:
             #pass
-            rawframes = pdbtext.split('END')
+            rawframes = pdbtext.split("END")
             #print (rawframes)
         
         
@@ -66,14 +58,14 @@ cpdef load_pdb_file (infile = None, gridsize = 3, vismolSession =  None, frames_
     name = os.path.basename(infile)
     
     final = time.time() 
-    print ('\P D B     P A R S E R end -  total time: ', final - initial, '\n')
+    print ("\P D B     P A R S E R end -  total time: ", final - initial, "\n")
         
     
     vismol_object  = VismolObject.VismolObject(name            = name, 
                                                atoms           = atoms, 
-                                               vismolSession   = vismolSession, 
+                                               vismol_session   = vismol_session, 
                                                trajectory      = frames)
-    '''
+    """
     #-------------------------------------------------------------------------------------------
     #                                Bonded and NB lists 
     #-------------------------------------------------------------------------------------------
@@ -94,7 +86,7 @@ cpdef load_pdb_file (infile = None, gridsize = 3, vismolSession =  None, frames_
     #vismol_object._generate_atom_unique_color_id()
     #vismol_object.index_bonds       = bonds_full_indices
     #vismol_object.import_bonds(bonds_pair_of_indices)
-	'''
+	"""
 
     #-------------------------------------------------------------------------------------------
     return vismol_object
@@ -148,13 +140,13 @@ iCode = ""
 
     """
 
-    pdb_file_lines  = rawframe.split('\n')   
+    pdb_file_lines  = rawframe.split("\n")   
     atoms           = []
     atom_obj_list   = []
     
     cdef int index           = 0
     for line in pdb_file_lines:
-        if line[:4] == 'ATOM' or line[:6] == 'HETATM':
+        if line[:4] == "ATOM" or line[:6] == "HETATM":
             
             at_name    = line[12:16].strip()
             at_pos     = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
@@ -179,15 +171,15 @@ iCode = ""
             #cov_rad  = at.get_cov_rad (at_symbol)
             #gridpos  = [int(at_pos[0]/gridsize), int(at_pos[1]/gridsize), int(at_pos[2]/gridsize)]
             atoms.append({
-                          'index'      : index      , 
-                          'name'       : at_name    , 
-                          'resi'       : at_resi    , 
-                          'resn'       : at_resn    , 
-                          'chain'      : at_ch      , 
-                          'symbol'     : at_symbol  , 
-                          'occupancy'  : at_occup   , 
-                          'bfactor'    : at_bfactor , 
-                          'charge'     : at_charge   
+                          "index"      : index      , 
+                          "name"       : at_name    , 
+                          "resi"       : at_resi    , 
+                          "resn"       : at_resn    , 
+                          "chain"      : at_ch      , 
+                          "symbol"     : at_symbol  , 
+                          "occupancy"  : at_occup   , 
+                          "bfactor"    : at_bfactor , 
+                          "charge"     : at_charge   
                           })
             index += 1
     return atoms, atom_obj_list
@@ -219,16 +211,16 @@ cpdef get_list_of_frames_from_pdb_rawframes (rawframes = None):
 
 cpdef get_pdb_frame_coordinates (str frame):
     """ Function doc """
-    #print ('\nstarting: parse_pdb - building atom list')
+    #print ("\nstarting: parse_pdb - building atom list")
     #initial          = time.time()
-    pdb_file_lines    = frame.split('\n')
+    pdb_file_lines    = frame.split("\n")
     
     #cdef float *frame_coordinates
     frame_coordinates = []
     
     
     for line in pdb_file_lines:
-        if line[:4] == 'ATOM' or line[:6] == 'HETATM':
+        if line[:4] == "ATOM" or line[:6] == "HETATM":
             #at_name  = line[12:16].strip()
             frame_coordinates.append(float(line[30:38]))
             frame_coordinates.append(float(line[38:46]))

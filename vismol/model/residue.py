@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 
-import vModel.Vectors as vectors
 import numpy as np
-from   vModel.MolecularProperties import solvent_dictionary
-from   vModel.MolecularProperties import residues_dictionary
+import model.Vectors as vectors
+from model.molecular_properties import solvent_dictionary
+from model.molecular_properties import residues_dictionary
+
 
 class Residue:
     """ Class doc """

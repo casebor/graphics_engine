@@ -63,7 +63,7 @@ class Representation:
     def _make_gl_index_buffer(self, indexes):
         """ Function doc """
         ind_vbo = GL.glGenBuffers(1)
-        self.visObj.vismolSession.vismolSession_vbos.append(ind_vbo)
+        self.vismol_object.vismol_session.vismol_session_vbos.append(ind_vbo)
 
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
         GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.nbytes, indexes, GL.GL_DYNAMIC_DRAW)
@@ -107,7 +107,7 @@ class Representation:
     def _make_gl_size_buffer (self, dot_sizes, program):
         """ Function doc """
         size_vbo = GL.glGenBuffers(1)
-        self.visObj.vismolSession.vismolSession_vbos.append(size_vbo)
+        self.vismol_object.vismol_session.vismol_session_vbos.append(size_vbo)
         
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, size_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, dot_sizes.nbytes, dot_sizes, GL.GL_STATIC_DRAW)
@@ -120,8 +120,8 @@ class Representation:
     
     def _set_colors_to_buffer (self, col_vbo = True):
         """ Function doc """
-        frame = self.visObj.colors
-        #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.line_buffers[1])
+        frame = self.vismol_object.colors
+        #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.line_buffers[1])
         
         if col_vbo:
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 
@@ -138,8 +138,8 @@ class Representation:
         ''' This function assigns the coordinates to 
         be drawn by the function  "draw_representation"'''
         
-        frame = self.glCore._safe_frame_exchange(self.visObj)
-        #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.line_buffers[1])
+        frame = self.glCore._safe_frame_exchange(self.vismol_object)
+        #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vismol_object.line_buffers[1])
         
         if coord_vbo:
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 
@@ -256,14 +256,14 @@ class Representation:
 class LinesRepresentation (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'lines', active = True, _type = 'mol', visObj = None, glCore = None, indexes = []):
+    def __init__ (self, name = 'lines', active = True, _type = 'mol', vismol_object = None, glCore = None, indexes = []):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
-        self.vismolSession      = visObj.vismolSession
+        self.vismol_object             = vismol_object
+        self.vismol_session      = vismol_object.vismol_session
         
         self.glCore             = glCore
         self.indexes            = indexes
@@ -296,7 +296,7 @@ class LinesRepresentation (Representation):
         #    pass
         #else:
         #    print ('_make_gl_vao_and_vbos',indexes)
-        #    indexes = np.array(self.visObj.index_bonds,dtype=np.uint32)
+        #    indexes = np.array(self.vismol_object.index_bonds,dtype=np.uint32)
 
         self.shader_program     = self.glCore.shader_programs[self.name]
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
@@ -304,20 +304,20 @@ class LinesRepresentation (Representation):
         if indexes:
             self.indexes = np.array(indexes,dtype=np.uint32)
         else:
-            self.indexes = np.array(self.visObj.index_bonds,dtype=np.uint32)
+            self.indexes = np.array(self.vismol_object.index_bonds,dtype=np.uint32)
         
-        #print(self.visObj.index_bonds,self.visObj.frames[0], self.visObj.colors )
-        #indexes = np.array(self.visObj.index_bonds,dtype=np.uint32)
-        coords  = self.visObj.frames[0]
-        colors  = self.visObj.colors
-        #colors  = self.visObj.colors_rainbow
+        #print(self.vismol_object.index_bonds,self.vismol_object.frames[0], self.vismol_object.colors )
+        #indexes = np.array(self.vismol_object.index_bonds,dtype=np.uint32)
+        coords  = self.vismol_object.frames[0]
+        colors  = self.vismol_object.colors
+        #colors  = self.vismol_object.colors_rainbow
 
         self._make_gl_representation_vao_and_vbos (indexes    = self.indexes,
                                                    coords     = coords ,
                                                    colors     = colors ,
                                                    dot_sizes  = None   ,
                                                    )
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = self.indexes    ,
                                                        coords     = coords     ,
                                                        colors     = colors_idx ,
@@ -326,34 +326,33 @@ class LinesRepresentation (Representation):
 
 
 
-    def draw_representation (self):
+    def draw_representation(self):
         """ Function doc """
-        self._check_VAO_and_VBOs ()
+        self._check_VAO_and_VBOs()
         self._enable_anti_alis_to_lines()
         GL.glUseProgram(self.shader_program)
         
-        line_width = self.visObj.vismolSession.vConfig.gl_parameters['line_width']
+        line_width = self.vismol_object.vismol_session.vConfig.gl_parameters['line_width']
         line_width = (line_width*200/abs(self.glCore.dist_cam_zrp)/2)**0.5  #40/abs(self.glCore.dist_cam_zrp)
         GL.glLineWidth(line_width)
 
 
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
 
         if self.glCore.modified_view:
             pass
-
         else:
             '''
             This function checks if the number of the called frame will not exceed 
             the limit of frames that each object has. Allowing two objects with 
             different trajectory sizes to be manipulated at the same time within the 
             glArea'''
-            self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-            #print(self.visObj.name)
-            #self.define_new_indexes_to_VBO ( self.visObj.index_bonds)
-            GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+            self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
+            #print(self.vismol_object.name)
+            #self.define_new_indexes_to_VBO ( self.vismol_object.index_bonds)
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
 
         GL.glBindVertexArray(0)
         #GL.glLineWidth(1)
@@ -371,12 +370,12 @@ class LinesRepresentation (Representation):
         #    self._make_gl_vao_and_vbos ()
         #else:
         #    pass
-        line_width = self.visObj.vismolSession.vConfig.gl_parameters['line_width_selection'] 
+        line_width = self.vismol_object.vismol_session.vConfig.gl_parameters['line_width_selection'] 
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glUseProgram(self.sel_shader_program)
         GL.glLineWidth(line_width)#*line_width_factor) # line_width_factor -> turn the lines thicker
 
-        self.glCore.load_matrices(self.sel_shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.sel_shader_program, self.vismol_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
 
         if self.glCore.modified_view:
@@ -391,13 +390,13 @@ class LinesRepresentation (Representation):
             '''
             self._set_coordinates_to_buffer (coord_vbo = False, sel_coord_vbo = True)
 
-            #frame = self.glCore._safe_frame_exchange(self.visObj)
+            #frame = self.glCore._safe_frame_exchange(self.vismol_object)
             #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_coord_vbo)
             #
             #GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes,
             #                frame, 
             #                GL.GL_STATIC_DRAW)              
-            GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)  
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)  
         GL.glBindVertexArray(0)
         GL.glLineWidth(2)
         GL.glUseProgram(0)
@@ -411,13 +410,13 @@ class LinesRepresentation (Representation):
 class DynamicBonds (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'sticks', active = True, _type = 'mol', visObj = None, glCore = None,  indexes = [] ):
+    def __init__ (self, name = 'sticks', active = True, _type = 'mol', vismol_object = None, glCore = None,  indexes = [] ):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
 
         # representation 	
@@ -441,14 +440,14 @@ class DynamicBonds (Representation):
         self.sel_shader_program = None
         
         if indexes == []:
-            self.indexes = np.array(self.visObj.index_bonds, dtype=np.uint32)
+            self.indexes = np.array(self.vismol_object.index_bonds, dtype=np.uint32)
         else:
             self.indexes = np.array(indexes, dtype=np.uint32)
             
     def _make_gl_vao_and_vbos (self, indexes = []):
         """ Function doc """
         #if indexes == []:
-        #    self.indexes = np.array(self.visObj.index_bonds, dtype=np.uint32)
+        #    self.indexes = np.array(self.vismol_object.index_bonds, dtype=np.uint32)
         #else:
         #    self.indexes = np.array(indexes, dtype=np.uint32)
         
@@ -457,16 +456,16 @@ class DynamicBonds (Representation):
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
         
         
-        #indexes = np.array(self.visObj.index_bonds, dtype=np.uint32)
-        coords  = self.visObj.frames[0]
-        colors  = self.visObj.colors
+        #indexes = np.array(self.vismol_object.index_bonds, dtype=np.uint32)
+        coords  = self.vismol_object.frames[0]
+        colors  = self.vismol_object.colors
 
         self._make_gl_representation_vao_and_vbos (indexes    = self.indexes,
                                                    coords     = coords ,
                                                    colors     = colors ,
                                                    dot_sizes  = None   ,
                                                    )
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = self.indexes    ,
                                                        coords     = coords     ,
                                                        colors     = colors_idx ,
@@ -481,7 +480,7 @@ class DynamicBonds (Representation):
         GL.glUseProgram(self.shader_program)
         GL.glLineWidth(40/abs(self.glCore.dist_cam_zrp))
 
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         self.glCore.load_lights(self.shader_program)
 
@@ -499,16 +498,16 @@ class DynamicBonds (Representation):
             
             frame = self.glCore.frame
             #try:
-            #print (frame, self.visObj.dynamic_bons[frame])
-            #self.define_new_indexes_to_VBO ( self.visObj.index_bonds)
-            if frame < len(self.visObj.dynamic_bons):
-                self.define_new_indexes_to_VBO ( self.visObj.dynamic_bons[frame])
+            #print (frame, self.vismol_object.dynamic_bons[frame])
+            #self.define_new_indexes_to_VBO ( self.vismol_object.index_bonds)
+            if frame < len(self.vismol_object.dynamic_bons):
+                self.define_new_indexes_to_VBO ( self.vismol_object.dynamic_bons[frame])
                 self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-                GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.dynamic_bons[frame])*2), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.dynamic_bons[frame])*2), GL.GL_UNSIGNED_INT, None)
             else:
-                self.define_new_indexes_to_VBO ( self.visObj.dynamic_bons[-1])
+                self.define_new_indexes_to_VBO ( self.vismol_object.dynamic_bons[-1])
                 self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-                GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.dynamic_bons[-1])*2), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.dynamic_bons[-1])*2), GL.GL_UNSIGNED_INT, None)
             #except:
             #    pass
             
@@ -530,7 +529,7 @@ class DynamicBonds (Representation):
         GL.glDisable(GL.GL_LINE_SMOOTH)
         GL.glDisable(GL.GL_BLEND)
 
-        self.glCore.load_matrices(self.sel_shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.sel_shader_program, self.vismol_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
 
         if self.glCore.modified_view:
@@ -545,14 +544,14 @@ class DynamicBonds (Representation):
             '''
             frame = self.glCore.frame
 
-            if frame < len(self.visObj.dynamic_bons):
-                self.define_new_indexes_to_VBO ( self.visObj.dynamic_bons[frame])
+            if frame < len(self.vismol_object.dynamic_bons):
+                self.define_new_indexes_to_VBO ( self.vismol_object.dynamic_bons[frame])
                 self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-                GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.dynamic_bons[frame])*2), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.dynamic_bons[frame])*2), GL.GL_UNSIGNED_INT, None)
             else:
-                self.define_new_indexes_to_VBO ( self.visObj.dynamic_bons[-1])
+                self.define_new_indexes_to_VBO ( self.vismol_object.dynamic_bons[-1])
                 self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-                GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.dynamic_bons[-1])*2), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.dynamic_bons[-1])*2), GL.GL_UNSIGNED_INT, None)
             
             
             
@@ -560,14 +559,14 @@ class DynamicBonds (Representation):
             
             
             ##try:
-            ##print (frame, self.visObj.dynamic_bons[frame])
-            ##self.define_new_indexes_to_VBO ( self.visObj.index_bonds)
-            #self.define_new_indexes_to_VBO ( self.visObj.dynamic_bons[frame])
+            ##print (frame, self.vismol_object.dynamic_bons[frame])
+            ##self.define_new_indexes_to_VBO ( self.vismol_object.index_bonds)
+            #self.define_new_indexes_to_VBO ( self.vismol_object.dynamic_bons[frame])
             #self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-            #GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.dynamic_bons[frame])*2), GL.GL_UNSIGNED_INT, None)
+            #GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.dynamic_bons[frame])*2), GL.GL_UNSIGNED_INT, None)
             
             #self._set_coordinates_to_buffer (coord_vbo = False, sel_coord_vbo = True)
-            #GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+            #GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
@@ -579,13 +578,13 @@ class DynamicBonds (Representation):
 class SticksRepresentation (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'sticks', active = True, _type = 'mol', visObj = None, glCore = None,  indexes = [] ):
+    def __init__ (self, name = 'sticks', active = True, _type = 'mol', vismol_object = None, glCore = None,  indexes = [] ):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
 
         # representation 	
@@ -616,7 +615,7 @@ class SticksRepresentation (Representation):
     def _make_gl_vao_and_vbos (self, indexes = []):
         """ Function doc """
         #if indexes == []:
-        #    self.indexes = np.array(self.visObj.index_bonds, dtype=np.uint32)
+        #    self.indexes = np.array(self.vismol_object.index_bonds, dtype=np.uint32)
         #else:
         #    self.indexes = np.array(indexes, dtype=np.uint32)
         
@@ -625,16 +624,16 @@ class SticksRepresentation (Representation):
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
         
         
-        #indexes = np.array(self.visObj.index_bonds, dtype=np.uint32)
-        coords  = self.visObj.frames[0]
-        colors  = self.visObj.colors
+        #indexes = np.array(self.vismol_object.index_bonds, dtype=np.uint32)
+        coords  = self.vismol_object.frames[0]
+        colors  = self.vismol_object.colors
 
         self._make_gl_representation_vao_and_vbos (indexes    = self.indexes,
                                                    coords     = coords ,
                                                    colors     = colors ,
                                                    dot_sizes  = None   ,
                                                    )
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = self.indexes    ,
                                                        coords     = coords     ,
                                                        colors     = colors_idx ,
@@ -649,7 +648,7 @@ class SticksRepresentation (Representation):
         GL.glUseProgram(self.shader_program)
         GL.glLineWidth(40/abs(self.glCore.dist_cam_zrp))
 
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         self.glCore.load_lights(self.shader_program)
 
@@ -665,7 +664,7 @@ class SticksRepresentation (Representation):
             different trajectory sizes to be manipulated at the same time within the 
             glArea'''
             self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-            GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
@@ -684,7 +683,7 @@ class SticksRepresentation (Representation):
         GL.glDisable(GL.GL_LINE_SMOOTH)
         GL.glDisable(GL.GL_BLEND)
 
-        self.glCore.load_matrices(self.sel_shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.sel_shader_program, self.vismol_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
 
         if self.glCore.modified_view:
@@ -698,7 +697,7 @@ class SticksRepresentation (Representation):
             glArea
             '''
             self._set_coordinates_to_buffer (coord_vbo = False, sel_coord_vbo = True)
-            GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
@@ -709,18 +708,18 @@ class SticksRepresentation (Representation):
 class RibbonsRepresentation (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'ribbon', active = True, _type = 'mol', visObj = None, glCore = None):
+    def __init__ (self, name = 'ribbon', active = True, _type = 'mol', vismol_object = None, glCore = None):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
         
         
-        if self.visObj.c_alpha_bonds == []:
-            self.visObj.get_backbone_indexes ()
+        if self.vismol_object.c_alpha_bonds == []:
+            self.vismol_object.get_backbone_indexes ()
             #self.active  = False
             
             print('self.active  = False')
@@ -759,7 +758,7 @@ class RibbonsRepresentation (Representation):
         #    pass
         #else:
         #    print ('_make_gl_vao_and_vbos',indexes)
-        #    indexes = np.array(self.visObj.index_bonds,dtype=np.uint32)
+        #    indexes = np.array(self.vismol_object.index_bonds,dtype=np.uint32)
 
         self.shader_program     = self.glCore.shader_programs[self.name]
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
@@ -767,7 +766,7 @@ class RibbonsRepresentation (Representation):
         indexes = []
         
         # c_alpha_bonds
-        for bond in self.visObj.c_alpha_bonds:
+        for bond in self.vismol_object.c_alpha_bonds:
             i = bond.atom_index_i
             j = bond.atom_index_j
             #print (i, j)
@@ -780,16 +779,16 @@ class RibbonsRepresentation (Representation):
             
             indexes = np.array(indexes,dtype=np.uint32)
 
-            coords  = self.visObj.frames[0]
-            #colors  = self.visObj.colors
-            colors  = self.visObj.colors_rainbow
+            coords  = self.vismol_object.frames[0]
+            #colors  = self.vismol_object.colors
+            colors  = self.vismol_object.colors_rainbow
 
             self._make_gl_representation_vao_and_vbos (indexes    = indexes,
                                                        coords     = coords ,
                                                        colors     = colors ,
                                                        dot_sizes  = None   ,
                                                        )
-            colors_idx = self.visObj.color_indexes
+            colors_idx = self.vismol_object.color_indexes
             self._make_gl_sel_representation_vao_and_vbos (indexes    = indexes    ,
                                                            coords     = coords     ,
                                                            colors     = colors_idx ,
@@ -804,13 +803,13 @@ class RibbonsRepresentation (Representation):
         self._enable_anti_alis_to_lines()
         GL.glUseProgram(self.shader_program)
         
-        ribbon_width = self.visObj.vismolSession.vConfig.gl_parameters['ribbon_width']
+        ribbon_width = self.vismol_object.vismol_session.vConfig.gl_parameters['ribbon_width']
         LineWidth = ((ribbon_width*20)/abs(self.glCore.dist_cam_zrp)/2)  #40/abs(self.glCore.dist_cam_zrp)
         #print(LineWidth)
         GL.glLineWidth(LineWidth)
 
 
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
 
@@ -824,7 +823,7 @@ class RibbonsRepresentation (Representation):
             different trajectory sizes to be manipulated at the same time within the 
             glArea'''
             self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-            GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
 
         GL.glBindVertexArray(0)
         #GL.glLineWidth(1)
@@ -842,12 +841,12 @@ class RibbonsRepresentation (Representation):
         #    self._make_gl_vao_and_vbos ()
         #else:
         #    pass
-        line_width = self.visObj.vismolSession.vConfig.gl_parameters['line_width_selection'] 
+        line_width = self.vismol_object.vismol_session.vConfig.gl_parameters['line_width_selection'] 
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glUseProgram(self.sel_shader_program)
         GL.glLineWidth(line_width)
 
-        self.glCore.load_matrices(self.sel_shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.sel_shader_program, self.vismol_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
 
         if self.glCore.modified_view:
@@ -862,14 +861,14 @@ class RibbonsRepresentation (Representation):
             '''
             self._set_coordinates_to_buffer (coord_vbo = False, sel_coord_vbo = True)
 
-            #frame = self.glCore._safe_frame_exchange(self.visObj)
+            #frame = self.glCore._safe_frame_exchange(self.vismol_object)
             #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_coord_vbo)
             #
             #GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes,
             #                frame, 
             #                GL.GL_STATIC_DRAW)              
             print('aquioh')
-            GL.glDrawElements(GL.GL_LINES, int(len(self.visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)  
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vismol_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)  
         GL.glBindVertexArray(0)
         GL.glLineWidth(1)
         GL.glUseProgram(0)
@@ -883,13 +882,13 @@ class RibbonsRepresentation (Representation):
 class NonBondedRepresentation (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'nonbonded', active = True, _type = 'mol', visObj = None, glCore = None, indexes = None):
+    def __init__ (self, name = 'nonbonded', active = True, _type = 'mol', vismol_object = None, glCore = None, indexes = None):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
         self.indexes            = indexes
               
@@ -921,22 +920,22 @@ class NonBondedRepresentation (Representation):
             pass        
         
         else:
-            self.indexes = np.array(self.visObj.non_bonded_atoms, dtype=np.uint32)
+            self.indexes = np.array(self.vismol_object.non_bonded_atoms, dtype=np.uint32)
         
         self.shader_program     = self.glCore.shader_programs[self.name]
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
         
-        #indexes = np.array(self.visObj.index_bonds, dtype=np.uint32)
-        #indexes = np.array(self.visObj.non_bonded_atoms, dtype=np.uint32)
-        coords  = self.visObj.frames[0]
-        colors  = self.visObj.colors
+        #indexes = np.array(self.vismol_object.index_bonds, dtype=np.uint32)
+        #indexes = np.array(self.vismol_object.non_bonded_atoms, dtype=np.uint32)
+        coords  = self.vismol_object.frames[0]
+        colors  = self.vismol_object.colors
 
         self._make_gl_representation_vao_and_vbos (indexes    = self.indexes,
                                                    coords     = coords ,
                                                    colors     = colors ,
                                                    dot_sizes  = None   ,
                                                    )
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = self.indexes    ,
                                                        coords     = coords     ,
                                                        colors     = colors_idx ,
@@ -948,12 +947,12 @@ class NonBondedRepresentation (Representation):
         self._check_VAO_and_VBOs ()
         self._enable_anti_alis_to_lines()
 
-        line_width = self.visObj.vismolSession.vConfig.gl_parameters['line_width']
+        line_width = self.vismol_object.vismol_session.vConfig.gl_parameters['line_width']
         
         GL.glUseProgram(self.shader_program)
         GL.glLineWidth(line_width*20/abs(self.glCore.dist_cam_zrp))
 
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
 
@@ -967,7 +966,7 @@ class NonBondedRepresentation (Representation):
             different trajectory sizes to be manipulated at the same time within the 
             glArea'''
             self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.visObj.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_POINTS, int(len(self.vismol_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
 
         GL.glBindVertexArray(0)
         GL.glLineWidth(1)
@@ -984,7 +983,7 @@ class NonBondedRepresentation (Representation):
         GL.glUseProgram(self.sel_shader_program)
         GL.glLineWidth(20)
 
-        self.glCore.load_matrices(self.sel_shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.sel_shader_program, self.vismol_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
 
         if self.glCore.modified_view:
@@ -998,7 +997,7 @@ class NonBondedRepresentation (Representation):
             glArea
             '''
             self._set_coordinates_to_buffer (coord_vbo = False, sel_coord_vbo = True)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.visObj.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_POINTS, int(len(self.vismol_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         GL.glLineWidth(1)
@@ -1012,13 +1011,13 @@ class NonBondedRepresentation (Representation):
 class DotsRepresentation (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'dots', active = True, _type = 'mol', visObj = None, glCore = None, indexes = []):
+    def __init__ (self, name = 'dots', active = True, _type = 'mol', vismol_object = None, glCore = None, indexes = []):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
         
         
@@ -1046,7 +1045,7 @@ class DotsRepresentation (Representation):
         self.sel_shader_program = None
         
         if indexes == []:
-            self.indexes = np.array(range(len(self.visObj.atoms)), dtype=np.uint32)
+            self.indexes = np.array(range(len(self.vismol_object.atoms)), dtype=np.uint32)
         else:
             self.indexes = np.array(indexes, dtype=np.uint32)
 
@@ -1056,7 +1055,7 @@ class DotsRepresentation (Representation):
         #    pass
         #else:
         
-        #dot_qtty  = int(len(self.visObj.frames[0])/3)
+        #dot_qtty  = int(len(self.vismol_object.frames[0])/3)
         #indexes = []
         #for i in range(dot_qtty):
         #    indexes.append(i)
@@ -1066,10 +1065,10 @@ class DotsRepresentation (Representation):
         self.shader_program     = self.glCore.shader_programs[self.name]
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
         
-        #indexes = np.array(self.visObj.index_bonds, dtype=np.uint32)
-        #indexes = np.array(self.visObj.idex, dtype=np.uint32)
-        coords  = self.visObj.frames[0]
-        colors  = self.visObj.colors
+        #indexes = np.array(self.vismol_object.index_bonds, dtype=np.uint32)
+        #indexes = np.array(self.vismol_object.idex, dtype=np.uint32)
+        coords  = self.vismol_object.frames[0]
+        colors  = self.vismol_object.colors
 
 
         self._make_gl_representation_vao_and_vbos (indexes    = indexes,
@@ -1077,7 +1076,7 @@ class DotsRepresentation (Representation):
                                                    colors     = colors ,
                                                    dot_sizes  = None   ,
                                                    )
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = indexes    ,
                                                        coords     = coords     ,
                                                        colors     = colors_idx ,
@@ -1089,13 +1088,13 @@ class DotsRepresentation (Representation):
         self._check_VAO_and_VBOs ()
         self._enable_anti_alis_to_lines()
         #print ('DotsRepresentation')
-        height = self.visObj.vismolSession.glwidget.vm_widget.height
+        height = self.vismol_object.vismol_session.glwidget.vm_widget.height
 
         GL.glUseProgram(self.shader_program)
         #1*self.height dot_size
         #GL.glLineWidth(40/abs(self.glCore.dist_cam_zrp))
         GL.glPointSize(1.5*height/abs(self.glCore.dist_cam_zrp)) # dot size not included yet
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
 
@@ -1109,7 +1108,7 @@ class DotsRepresentation (Representation):
             different trajectory sizes to be manipulated at the same time within the 
             glArea'''
             self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.visObj.atoms)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_POINTS, int(len(self.vismol_object.atoms)), GL.GL_UNSIGNED_INT, None)
 
         #GL.glBindVertexArray(0)
         #GL.glLineWidth(1)
@@ -1127,7 +1126,7 @@ class DotsRepresentation (Representation):
         GL.glUseProgram(self.sel_shader_program)
         GL.glPointSize(200/abs(self.glCore.dist_cam_zrp))
         #GL.glLineWidth(20)
-        self.glCore.load_matrices(self.sel_shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.sel_shader_program, self.vismol_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
 
         if self.glCore.modified_view:
@@ -1142,7 +1141,7 @@ class DotsRepresentation (Representation):
             '''
             #print(self.name,'draw_background_sel_representation')
             self._set_coordinates_to_buffer (coord_vbo = False, sel_coord_vbo = True)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.visObj.atoms)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_POINTS, int(len(self.vismol_object.atoms)), GL.GL_UNSIGNED_INT, None)
 
 
 
@@ -1152,7 +1151,7 @@ class SpheresRepresentation (Representation):
     def __init__ (self, name = 'spheres', 
                       active = True, 
                        _type = 'mol', 
-                      visObj = None, 
+                      vismol_object = None, 
                       glCore = None,  
                      indexes = None
                        #atoms = None,
@@ -1164,7 +1163,7 @@ class SpheresRepresentation (Representation):
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
         
         self.atomic_indexes     = indexes
@@ -1172,16 +1171,16 @@ class SpheresRepresentation (Representation):
         
         # --------------------------------
         #self.level              = level
-        self.level              = self.visObj.vismolSession.vConfig.gl_parameters['sphere_quality']
-        self.scale              = self.visObj.vismolSession.vConfig.gl_parameters['sphere_scale']
+        self.level              = self.vismol_object.vismol_session.vConfig.gl_parameters['sphere_quality']
+        self.scale              = self.vismol_object.vismol_session.vConfig.gl_parameters['sphere_scale']
         
         
         if self.atomic_indexes is None:
-            self.atoms          = self.visObj.atoms
+            self.atoms          = self.vismol_object.atoms
         else:
             self.atoms = []
             for index in self.atomic_indexes:
-                self.atoms.append(self.visObj.atoms[index])
+                self.atoms.append(self.vismol_object.atoms[index])
             
             #self.atoms          = atoms
         
@@ -1219,7 +1218,7 @@ class SpheresRepresentation (Representation):
         """ Function doc """
 
         for index in indexes:
-            self.atoms.append(self.visObj.atoms[index])
+            self.atoms.append(self.vismol_object.atoms[index])
             self.atomic_indexes.append(index)
         
         self._create_sphere_data() 
@@ -1269,7 +1268,7 @@ class SpheresRepresentation (Representation):
         self.centers_list = []
         self.frames = []
         frame =0
-        #for frame in range(len(self.visObj.frames)-1):
+        #for frame in range(len(self.vismol_object.frames)-1):
         
         for a, atom in enumerate( self.atoms ):
             pos = atom.coords (frame)
@@ -1303,12 +1302,12 @@ class SpheresRepresentation (Representation):
 
         init = time.time()
 
-        if len(self.visObj.frames) > 1:
+        if len(self.vismol_object.frames) > 1:
             '''
             import concurrent.futures
             with concurrent.futures.ProcessPoolExecutor() as executor:
                 
-                frames  = self.visObj.frames[1:]
+                frames  = self.vismol_object.frames[1:]
                 nframes = len(frames)
                 
                 atoms   = [self.atoms]*nframes
@@ -1328,7 +1327,7 @@ class SpheresRepresentation (Representation):
             #'''
 
             '''
-            for frame in range(1,len(self.visObj.frames)-1):
+            for frame in range(1,len(self.vismol_object.frames)-1):
                 
                 coords, centers = _create_frame_sphere_data (frame      , 
                                                              self.atoms ,
@@ -1348,7 +1347,7 @@ class SpheresRepresentation (Representation):
             #'''
             
             #'''
-            for frame in range(1,len(self.visObj.frames)-1):
+            for frame in range(1,len(self.vismol_object.frames)-1):
                 coords  = sphd.sphere_vertices[self.level]*qtty
                 centers = sphd.sphere_vertices[self.level]*qtty
                 for a, atom in enumerate( self.atoms ):
@@ -1377,7 +1376,7 @@ class SpheresRepresentation (Representation):
         """ Function doc """
         init = time.time()
         #cdef Py_ssize_t a, i, qtty, elems, offset, inds_e
-        qtty = int(len(self.visObj.atoms))
+        qtty = int(len(self.vismol_object.atoms))
         nucleus = [0.0, 0.0, 0.0]*qtty
         colores = [0.0, 0.0, 0.0]*qtty
         coords = sphd.sphere_vertices[level]*qtty
@@ -1386,7 +1385,7 @@ class SpheresRepresentation (Representation):
         elems = int(len(sphd.sphere_vertices[level])/3)
         offset = int(len(sphd.sphere_vertices[level]))
         inds_e = int(len(sphd.sphere_triangles[level]))
-        for a,atom in enumerate(self.visObj.atoms):
+        for a,atom in enumerate(self.vismol_object.atoms):
             colors[a*offset:(a+1)*offset] = [atom.color_id[0],atom.color_id[1],atom.color_id[2]]*elems
             for i in range(elems):
                 coords[a*offset+i*3] *= atom.radius * self.scale
@@ -1486,9 +1485,9 @@ class SpheresRepresentation (Representation):
         self.shader_program     = self.glCore.shader_programs[self.name]
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
         
-        #indexes = np.array(self.visObj.index_bonds,dtype=np.uint32)
-        #coords  = self.visObj.frames[0]
-        #colors  = self.visObj.colors
+        #indexes = np.array(self.vismol_object.index_bonds,dtype=np.uint32)
+        #coords  = self.vismol_object.frames[0]
+        #colors  = self.vismol_object.colors
 
         #self._make_gl_representation_vao_and_vbos (indexes    = indexes,
         #                                           coords     = coords ,
@@ -1531,7 +1530,7 @@ class SpheresRepresentation (Representation):
         
         
         
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = self.indexes    ,
                                                        coords     = self.coords     ,
                                                        colors     = colors_idx ,
@@ -1547,7 +1546,7 @@ class SpheresRepresentation (Representation):
         GL.glCullFace(GL.GL_BACK)
         
         GL.glUseProgram          (self.shader_program )
-        self.glCore.load_matrices(self.shader_program , self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program , self.vismol_object.model_mat)
         self.glCore.load_lights  (self.shader_program )
         self.glCore.load_fog     (self.shader_program )
         
@@ -1557,9 +1556,9 @@ class SpheresRepresentation (Representation):
                 pass
             
             else:
-                #self.centers = self.glCore._safe_frame_exchange(self.visObj)
+                #self.centers = self.glCore._safe_frame_exchange(self.vismol_object)
                 
-                frame = self.glCore._get_visObj_frame (self.visObj)
+                frame = self.glCore._get_vismol_object_frame (self.vismol_object)
                 self.coords = self.frames[frame]
                 self.centers =self.centers_list[frame]
                 
@@ -1600,12 +1599,12 @@ class SpheresRepresentation (Representation):
 class GlumpyRepresentation (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'glumpy', active = True, _type = 'mol', visObj = None, glCore = None, scale=1.0):
+    def __init__ (self, name = 'glumpy', active = True, _type = 'mol', vismol_object = None, glCore = None, scale=1.0):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
         self.scale              = scale
 
@@ -1634,9 +1633,9 @@ class GlumpyRepresentation (Representation):
         self.shader_program     = self.glCore.shader_programs[self.name]
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
         
-        coords  = self.visObj.frames[0]
-        colors  = self.visObj.colors
-        radii   = [self.scale] * len(self.visObj.frames[0])
+        coords  = self.vismol_object.frames[0]
+        colors  = self.vismol_object.colors
+        radii   = [self.scale] * len(self.vismol_object.frames[0])
         radii   = np.array(radii)
         # print ('radii', radii)
 
@@ -1648,7 +1647,7 @@ class GlumpyRepresentation (Representation):
                                                    colors     = colors ,
                                                    dot_sizes  = None  ,
                                                    )
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = indexes    ,
                                                        coords     = coords     ,
                                                        colors     = colors_idx ,
@@ -1661,14 +1660,14 @@ class GlumpyRepresentation (Representation):
         self._enable_anti_alis_to_lines()
         GL.glUseProgram(self.shader_program)
         #GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-        height = self.visObj.vismolSession.glwidget.vm_widget.height
-        dist_cam_zrp = self.visObj.vismolSession.glwidget.vm_widget.dist_cam_zrp
+        height = self.vismol_object.vismol_session.glwidget.vm_widget.height
+        dist_cam_zrp = self.vismol_object.vismol_session.glwidget.vm_widget.dist_cam_zrp
         
         #GL.glPointSize((50*height/(abs(dist_cam_zrp)))**0.5)
         #GL.glPointSize(55)
         #print('passei aqui')
         
-        xyz_coords = self.glCore.glcamera.get_modelview_position(self.visObj.model_mat)
+        xyz_coords = self.glCore.glcamera.get_modelview_position(self.vismol_object.model_mat)
         u_campos = GL.glGetUniformLocation(self.shader_program, 'u_campos')
         GL.glUniform3fv(u_campos, 1, xyz_coords)
         
@@ -1682,7 +1681,7 @@ class GlumpyRepresentation (Representation):
         
         
         
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         if self.glCore.modified_view:
@@ -1694,7 +1693,7 @@ class GlumpyRepresentation (Representation):
             different trajectory sizes to be manipulated at the same time within the 
             glArea'''
             self._set_coordinates_to_buffer (coord_vbo = True, sel_coord_vbo = False)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.visObj.atoms)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_POINTS, int(len(self.vismol_object.atoms)), GL.GL_UNSIGNED_INT, None)
         GL.glDisable(GL.GL_DEPTH_TEST)
         
             
@@ -1703,7 +1702,7 @@ class GlumpyRepresentation (Representation):
         self._check_VAO_and_VBOs ()
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glUseProgram(self.sel_shader_program)
-        self.glCore.load_matrices(self.sel_shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.sel_shader_program, self.vismol_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         if self.glCore.modified_view:
             pass
@@ -1716,7 +1715,7 @@ class GlumpyRepresentation (Representation):
             '''
             #print(self.name,'draw_background_sel_representation')
             self._set_coordinates_to_buffer (coord_vbo = False, sel_coord_vbo = True)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.visObj.atoms)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_POINTS, int(len(self.vismol_object.atoms)), GL.GL_UNSIGNED_INT, None)
 
 
 
@@ -1727,12 +1726,12 @@ class GlumpyRepresentation (Representation):
 
 
 class CartoonRepresentation (Representation):
-    def __init__ (self, name = 'cartoon', active = True, _type = 'mol', visObj = None, glCore = None, indexes = []):
+    def __init__ (self, name = 'cartoon', active = True, _type = 'mol', vismol_object = None, glCore = None, indexes = []):
         self.name               = name
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
         
         # representation 	
@@ -1757,7 +1756,7 @@ class CartoonRepresentation (Representation):
         self.sel_shader_program = None
         
         
-        coords, normals, indexes, colors = cartoon.cartoon(visObj, spline_detail=5)
+        coords, normals, indexes, colors = cartoon.cartoon(vismol_object, spline_detail=5)
         
         coords = coords.flatten()
         normals = normals.flatten()
@@ -1776,7 +1775,7 @@ class CartoonRepresentation (Representation):
         #    pass
         #else:
         
-        #dot_qtty  = int(len(self.visObj.frames[0])/3)
+        #dot_qtty  = int(len(self.vismol_object.frames[0])/3)
         #indexes = []
         #for i in range(dot_qtty):
         #    indexes.append(i)
@@ -1850,7 +1849,7 @@ class CartoonRepresentation (Representation):
         
         
         
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self.sel_vao = True
         '''
         self._make_gl_sel_representation_vao_and_vbos (indexes    = indexes    ,
@@ -1874,11 +1873,11 @@ class CartoonRepresentation (Representation):
         
         GL.glUseProgram(self.shader_program )
         
-        #print (self.visObj.model_mat,view)
+        #print (self.vismol_object.model_mat,view)
         
-        m_normal = np.array(np.matrix(np.dot(view, self.visObj.model_mat)).I.T)
+        m_normal = np.array(np.matrix(np.dot(view, self.vismol_object.model_mat)).I.T)
         
-        self.glCore.load_matrices(self.shader_program , self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program , self.vismol_object.model_mat)
         self.glCore.load_lights  (self.shader_program )
         self.glCore.load_fog     (self.shader_program )
         GL.glBindVertexArray(self.vao)
@@ -1893,13 +1892,13 @@ class CartoonRepresentation (Representation):
         
         '''
         #print ('DotsRepresentation')
-        height = self.visObj.vismolSession.glwidget.vm_widget.height
+        height = self.vismol_object.vismol_session.glwidget.vm_widget.height
         
         GL.glUseProgram(self.shader_program)
         #1*self.height dot_size
         #GL.glLineWidth(40/abs(self.glCore.dist_cam_zrp))
         GL.glPointSize(0.1*height/abs(self.glCore.dist_cam_zrp)) # dot size not included yet
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         '''
@@ -1942,13 +1941,13 @@ class CartoonRepresentation (Representation):
 class SurfaceRepresentation (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'surface', active = True, _type = 'mol', visObj = None, glCore = None, indexes = []):
+    def __init__ (self, name = 'surface', active = True, _type = 'mol', vismol_object = None, glCore = None, indexes = []):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
 
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
         
         
@@ -2102,7 +2101,7 @@ class SurfaceRepresentation (Representation):
         #    pass
         #else:
         
-        #dot_qtty  = int(len(self.visObj.frames[0])/3)
+        #dot_qtty  = int(len(self.vismol_object.frames[0])/3)
         #indexes = []
         #for i in range(dot_qtty):
         #    indexes.append(i)
@@ -2111,8 +2110,8 @@ class SurfaceRepresentation (Representation):
         self.shader_program     = self.glCore.shader_programs[self.name]
         self.sel_shader_program = self.glCore.shader_programs[self.name+'_sel']
         
-        #indexes = np.array(self.visObj.index_bonds, dtype=np.uint32)
-        #indexes = np.array(self.visObj.idex, dtype=np.uint32)
+        #indexes = np.array(self.vismol_object.index_bonds, dtype=np.uint32)
+        #indexes = np.array(self.vismol_object.idex, dtype=np.uint32)
 
         coords  = np.array(self.coords2, dtype=np.float32)
         colors  = np.array(self.colors2, dtype=np.float32)
@@ -2139,7 +2138,7 @@ class SurfaceRepresentation (Representation):
         
         
         
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = indexes    ,
                                                        coords     = coords     ,
                                                        colors     = colors_idx ,
@@ -2161,11 +2160,11 @@ class SurfaceRepresentation (Representation):
         
         GL.glUseProgram(self.shader_program )
         
-        #print (self.visObj.model_mat,view)
+        #print (self.vismol_object.model_mat,view)
         
-        m_normal = np.array(np.matrix(np.dot(view, self.visObj.model_mat)).I.T)
+        m_normal = np.array(np.matrix(np.dot(view, self.vismol_object.model_mat)).I.T)
         
-        self.glCore.load_matrices(self.shader_program , self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program , self.vismol_object.model_mat)
         self.glCore.load_lights  (self.shader_program )
         self.glCore.load_fog     (self.shader_program )
         GL.glBindVertexArray(self.vao)
@@ -2180,13 +2179,13 @@ class SurfaceRepresentation (Representation):
         
         '''
         #print ('DotsRepresentation')
-        height = self.visObj.vismolSession.glwidget.vm_widget.height
+        height = self.vismol_object.vismol_session.glwidget.vm_widget.height
         
         GL.glUseProgram(self.shader_program)
         #1*self.height dot_size
         #GL.glLineWidth(40/abs(self.glCore.dist_cam_zrp))
         GL.glPointSize(0.1*height/abs(self.glCore.dist_cam_zrp)) # dot size not included yet
-        self.glCore.load_matrices(self.shader_program, self.visObj.model_mat)
+        self.glCore.load_matrices(self.shader_program, self.vismol_object.model_mat)
         self.glCore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         '''
@@ -2224,12 +2223,12 @@ class SurfaceRepresentation (Representation):
 class WiresRepresentation (Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'wires', active = True, _type = 'mol', visObj = None, glCore = None, indexes = []):
+    def __init__ (self, name = 'wires', active = True, _type = 'mol', vismol_object = None, glCore = None, indexes = []):
         """ Class initialiser """
         self.name               = name
         self.active             = active
         self.type               = _type
-        self.visObj             = visObj
+        self.vismol_object             = vismol_object
         self.glCore             = glCore
         
         # representation    
@@ -2286,7 +2285,7 @@ class WiresRepresentation (Representation):
                                                    colors     = colors ,
                                                    dot_sizes  = None   ,
                                                    )
-        colors_idx = self.visObj.color_indexes
+        colors_idx = self.vismol_object.color_indexes
         self._make_gl_sel_representation_vao_and_vbos (indexes    = indexes    ,
                                                        coords     = coords     ,
                                                        colors     = colors_idx ,
@@ -2307,8 +2306,8 @@ class WiresRepresentation (Representation):
         #
         #view = self.glCore.glcamera.view_matrix
         #GL.glUseProgram(self.shader_program )
-        #m_normal = np.array(np.matrix(np.dot(view, self.visObj.model_mat)).I.T)
-        #self.glCore.load_matrices(self.shader_program , self.visObj.model_mat)
+        #m_normal = np.array(np.matrix(np.dot(view, self.vismol_object.model_mat)).I.T)
+        #self.glCore.load_matrices(self.shader_program , self.vismol_object.model_mat)
         ##self.glCore.load_lights  (self.shader_program )
         #self.glCore.load_fog     (self.shader_program )
         #GL.glBindVertexArray(self.vao)
@@ -2338,9 +2337,9 @@ class WiresRepresentation (Representation):
 class LabelRepresentation:
     """ Class doc """
     
-    def __init__ (self, name = 'labels', active = True, _type = 'mol', visObj = None, glCore = None, indexes = []):
+    def __init__ (self, name = 'labels', active = True, _type = 'mol', vismol_object = None, glCore = None, indexes = []):
         """ Class initialiser """
-        self.visObj = visObj
+        self.vismol_object = vismol_object
         self.name   = name
         self.active = True
         self.glCore = glCore
@@ -2350,16 +2349,16 @@ class LabelRepresentation:
         
     def _check_VAO_and_VBOs (self, indexes = None):
         """ Function doc """
-        if self.visObj.vm_font.vao is None:
-            self.visObj.vm_font.make_freetype_font()
-            self.visObj.vm_font.make_freetype_texture(self.glCore.freetype_program)
+        if self.vismol_object.vm_font.vao is None:
+            self.vismol_object.vm_font.make_freetype_font()
+            self.vismol_object.vm_font.make_freetype_texture(self.glCore.freetype_program)
         
         if self.chars == 0:
             print('self._build_buffer()')
             self._build_buffer()
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.visObj.vm_font.vbos[0])
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vismol_object.vm_font.vbos[0])
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.xyz_pos.itemsize*len(self.xyz_pos), self.xyz_pos, GL.GL_DYNAMIC_DRAW)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.visObj.vm_font.vbos[1])
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vismol_object.vm_font.vbos[1])
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.uv_coords.itemsize*len(self.uv_coords), self.uv_coords, GL.GL_DYNAMIC_DRAW)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
 
@@ -2368,31 +2367,31 @@ class LabelRepresentation:
         self.chars     = 0
         self.xyz_pos   = []
         self.uv_coords = []
-        for atom in self.visObj.atoms:
+        for atom in self.vismol_object.atoms:
             
             texto = atom.name
             point = np.array(atom.coords (self.glCore.frame),np.float32)
             point = np.array((point[0],point[1],point[2],1),np.float32)
-            point = np.dot(point, self.visObj.model_mat)
+            point = np.dot(point, self.vismol_object.model_mat)
 
-            GL.glBindTexture(GL.GL_TEXTURE_2D, self.visObj.vm_font.texture_id)
+            GL.glBindTexture(GL.GL_TEXTURE_2D, self.vismol_object.vm_font.texture_id)
             for i,c in enumerate(texto):
                 self.chars += 1
                 c_id = ord(c)
                 x = c_id%16
                 y = c_id//16-2
-                self.xyz_pos.append(point[0]+i*self.visObj.vm_font.char_width)
+                self.xyz_pos.append(point[0]+i*self.vismol_object.vm_font.char_width)
                 self.xyz_pos.append(point[1])
                 self.xyz_pos.append(point[2])
 
-                self.uv_coords.append(x*self.visObj.vm_font.text_u)
-                self.uv_coords.append(y*self.visObj.vm_font.text_v)
-                self.uv_coords.append((x+1)*self.visObj.vm_font.text_u)
-                self.uv_coords.append((y+1)*self.visObj.vm_font.text_v)
+                self.uv_coords.append(x*self.vismol_object.vm_font.text_u)
+                self.uv_coords.append(y*self.vismol_object.vm_font.text_v)
+                self.uv_coords.append((x+1)*self.vismol_object.vm_font.text_u)
+                self.uv_coords.append((y+1)*self.vismol_object.vm_font.text_v)
             #print(texto)
         #print('xyz_pos  ',len(self.xyz_pos))
         #print('uv_coords',len(self.uv_coords))
-        #print('atoms    ',len(self.visObj.atoms))
+        #print('atoms    ',len(self.vismol_object.atoms))
         #print('chars    ',self.chars)
         
         self.xyz_pos   = np.array(self.xyz_pos  , np.float32)
@@ -2411,10 +2410,10 @@ class LabelRepresentation:
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glUseProgram(self.glCore.freetype_program)
         
-        self.visObj.vm_font.load_matrices(self.glCore.freetype_program, self.glCore.glcamera.view_matrix, self.glCore.glcamera.projection_matrix)
-        self.visObj.vm_font.load_font_params(self.glCore.freetype_program)
+        self.vismol_object.vm_font.load_matrices(self.glCore.freetype_program, self.glCore.glcamera.view_matrix, self.glCore.glcamera.projection_matrix)
+        self.vismol_object.vm_font.load_font_params(self.glCore.freetype_program)
         
-        GL.glBindVertexArray(self.visObj.vm_font.vao)
+        GL.glBindVertexArray(self.vismol_object.vm_font.vao)
         GL.glDrawArrays(GL.GL_POINTS, 0, self.chars)
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)

@@ -25,20 +25,18 @@
 import gi, sys
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
-from GTKGUI import VismolMain
-from vCore.VismolSession import VismolSession
+from gui.vismol_main import VismolMainWindow
+from core.vismol_session import VismolSession
 
 
 def main():
     """ Function doc """
-    vismol_session = VismolSession(glwidget=True, toolkit="gtk3")
-    # vismolSession.insert_glmenu()
-    
+    vm_session = VismolSession(glwidget=True, toolkit="gtk3")
     if len(sys.argv) >= 2:
             filein = sys.argv[-1]
     else:
         filein = None
-    gui = VismolMain.VismolMainWindow(vismol_session=vismol_session, filein=filein)
+    vm_main = VismolMainWindow(vismol_session=vm_session, filein=filein)
     return 0
 
 if __name__ == "__main__":

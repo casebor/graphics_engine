@@ -25,7 +25,7 @@
 import math
 import numpy as np
 import ctypes
-import glCore.VisMolGLCore as vismol_widget
+import glCore.VismolGLCore as vismol_widget
 #import glCore.shapes as shapes
 #import glCore.glaxis as glaxis
 #import glCore.glcamera as cam
@@ -281,7 +281,7 @@ class GtkGLAreaWidget(Gtk.GLArea):
         add a function to change the shaders.
     """
     
-    def __init__(self, vismolSession = None, width=640, height=420):
+    def __init__(self, vismol_session=None, width=640, height=420):
         """ Constructor of the class, needs two String objects,
             the vertex and fragment shaders.
             
@@ -318,8 +318,8 @@ class GtkGLAreaWidget(Gtk.GLArea):
                                                                
         self.Vismol_selection_modes_ListStore = Gtk.ListStore(str)
         
-        self.vm_widget = vismol_widget.VisMolGLCore(self, vismolSession, np.float32(width), np.float32(height))
-        self.vismolSession = vismolSession
+        self.vm_widget = vismol_widget.VismolGLCore(self, vismol_session, np.float32(width), np.float32(height))
+        self.vismol_session = vismol_session
         
         
         self.glMenu_sele = None

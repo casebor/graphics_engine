@@ -24,12 +24,12 @@ extensions = [
     Extension("VisMol.vModel.cDistances",
               sources=["VisMol/vModel/cDistances.pyx"],
               include_dirs=[np.get_include()]),
-    Extension("VisMol.vModel.VismolObject",
-              sources=["VisMol/vModel/VismolObject.pyx"],
-              include_dirs=[np.get_include()]),
-    Extension("VisMol.vModel.Atom",
-              sources=["VisMol/vModel/Atom.pyx"],
-              include_dirs=[np.get_include()])
+    # Extension("VisMol.vModel.VismolObject",
+    #           sources=["VisMol/vModel/VismolObject.pyx"],
+    #           include_dirs=[np.get_include()]),
+    # Extension("VisMol.vModel.Atom",
+    #           sources=["VisMol/vModel/Atom.pyx"],
+    #           include_dirs=[np.get_include()])
 ]
 
 setup(

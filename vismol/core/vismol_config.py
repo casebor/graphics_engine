@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  vConfig.py
+#  vismol_config.py
 #  
-#  Copyright 2020 Fernando <fernando@winter>
+#  Copyright 2022 Fernando <fernando@winter>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -25,12 +25,12 @@
 import os
 import json
 
-class VisMolConfig:
+class VismolConfig:
     """ Class doc """
     
-    def __init__ (self, vSession):
+    def __init__ (self, vismol_session):
         """ Class initialiser """
-        self.vSession = vSession
+        self.vismol_session = vismol_session
         self.gl_parameters = {"background_color": [0.0, 0.0, 0.0, 1.0],
                               "color_type": 0,
                               "dot_size": 20,
@@ -67,13 +67,13 @@ class VisMolConfig:
     
     def save_easyhybrid_config(self):
         """ Function doc """
-        config = os.path.join(os.environ["HOME"], ".VisMol", "VisMolConfig.json")
+        config = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
         with open(config, "w") as config_file:
             json.dump(self.gl_parameters, config_file, indent=2)
     
     def load_easyhybrid_config(self):
         """ Function doc """
-        config = os.path.join(os.environ["HOME"], ".VisMol", "VisMolConfig.json")
+        config = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
         with open(config, "r") as config_file:
             self.gl_parameters = json.load(config_file)
     
