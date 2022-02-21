@@ -32,12 +32,12 @@ import libgl.shapes as shapes
 from core.vismol_config import VismolConfig
 from core.vismol_selections import VismolPickingSelection as VMPick
 from core.vismol_selections import VismolViewingSelection as VMSele
-from model.representations import DotsRepresentation
-from model.representations import LinesRepresentation
-from model.representations import SticksRepresentation
-from model.representations import SpheresRepresentation
-from model.representations import NonBondedRepresentation
-from gui.vismol_widget import GtkGLAreaWidget
+from libgl.representations import DotsRepresentation
+from libgl.representations import LinesRepresentation
+from libgl.representations import SticksRepresentation
+from libgl.representations import SpheresRepresentation
+from libgl.representations import NonBondedRepresentation
+from gui.vismol_widget import VismolWidget
 from gui.gtk_widgets.player import PlayerFrame
 from gui.gtk_widgets.filechooser import FileChooser
 from gui.gtk_widgets.vismol_tools import VismolStatusBar
@@ -59,7 +59,7 @@ class ShowHideVisMol:
             atoms = []
         for atom in atoms:
             #               B O N D S
-            if rep_type in ["lines", "sticks", "ribbons"]:
+            if rep_type in ["lines", "sticks", "ribbon"]:
                 if rep_type == "lines":
                     if show:
                         atom.lines = True
@@ -99,7 +99,7 @@ class ShowHideVisMol:
             atoms.append(vismol_object.atoms[atom_index])
         self.change_attributes_for_selected_atoms(rep_type=rep_type, atoms=atoms, show=show)
         
-        if rep_type in ["lines", "sticks", "ribbons"]:
+        if rep_type in ["lines", "sticks", "ribbon"]:
             indexes_bonds = []
             for bond in vismol_object.bonds:
                 if rep_type == "lines":
@@ -114,7 +114,7 @@ class ShowHideVisMol:
                         indexes_bonds.append(bond.atom_index_j)
                     else:
                         pass
-                elif rep_type == "ribbons":
+                elif rep_type == "ribbon":
                     raise NotImplementedError("Not implementer for ribbon yet.")
             
             if vismol_object.representations[rep_type] is None:
@@ -198,7 +198,7 @@ class ShowHideVisMol:
         self.change_attributes_for_selected_atoms(rep_type=rep_type, atoms=selection.selected_atoms,
                                                   show=show)
         for vismol_object in selection.selected_objects:
-            if rep_type in ["lines","sticks","ribbons"]:
+            if rep_type in ["lines","sticks","ribbon"]:
                 indexes_bonds = []
                 for bond in vismol_object.bonds:
                     if rep_type == "lines":
@@ -294,7 +294,6 @@ class VismolSession(ShowHideVisMol):
         self.main_session = None
         self.toolkit = toolkit
         self.vm_config = VismolConfig(self)
-        self.vm_objects = [] # old Vobjects - include molecules
         self.vm_objects_dic = {} # old Vobjects dic - include molecules
         self.vm_object_counter = 0  # Each vismol object has a unique access key (int), which is generated in the method: add_vismol_object_to_vismol_session.
         self.vm_geometric_object = []
@@ -321,7 +320,7 @@ class VismolSession(ShowHideVisMol):
         if glwidget:
             if toolkit == "gtk3":
                 self.selection_box_frame = None
-                self.vm_widget = GtkGLAreaWidget(self)
+                self.vm_widget = VismolWidget(self)
                 self.vm_widget.vm_glcore.queue_draw()
                 self.gtk_widgets_update_list = []
                 """This gtk list is declared in the VismolGLWidget file 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-vertex_shader_glumpy_0  = """
+vertex_shader_impostor_0  = """
 #version 330
 
 uniform mat4 model_mat;
@@ -33,7 +33,7 @@ void main (void)
     gl_PointSize = f_size + 5.0;
 }
 """
-fragment_shader_glumpy_0 = """
+fragment_shader_impostor_0 = """
 #version 330
 
 uniform mat4 model_mat;
@@ -111,7 +111,7 @@ void main()
 
 
 
-vertex_shader_glumpy_1 = """
+vertex_shader_impostor_1 = """
 #version 330
 
 uniform mat4 model_mat;
@@ -142,7 +142,7 @@ void main (void)
     gl_PointSize = f_size + 5.0;
 }
 """
-fragment_shader_glumpy_1 = """
+fragment_shader_impostor_1 = """
 #version 330
 
 uniform mat4 model_mat;
@@ -486,26 +486,26 @@ void main() {
 
 
 shader_type ={
-			0: { 'vertex_shader'      : vertex_shader_glumpy_0  ,
-			     'fragment_shader'    : fragment_shader_glumpy_0,
-				 'sel_vertex_shader'  : vertex_shader_glumpy_0  ,
-                 'sel_fragment_shader': fragment_shader_glumpy_0
+			0: { 'vertex_shader'      : vertex_shader_impostor_0  ,
+			     'fragment_shader'    : fragment_shader_impostor_0,
+				 'sel_vertex_shader'  : vertex_shader_impostor_0  ,
+                 'sel_fragment_shader': fragment_shader_impostor_0
 
 			   },
 			
 			
-			1: {'vertex_shader'      : vertex_shader_glumpy_1  ,
-			    'fragment_shader'    : fragment_shader_glumpy_1,
-			    'sel_vertex_shader'  : vertex_shader_glumpy_1  ,
-			    'sel_fragment_shader': fragment_shader_glumpy_1
+			1: {'vertex_shader'      : vertex_shader_impostor_1  ,
+			    'fragment_shader'    : fragment_shader_impostor_1,
+			    'sel_vertex_shader'  : vertex_shader_impostor_1  ,
+			    'sel_fragment_shader': fragment_shader_impostor_1
 				},
 			
 			2: {'vertex_shader'      : v_shader_imposter,
 			    'fragment_shader'    : f_shader_imposter,
 			    'geometry_shader'    : g_shader_imposter,
 			    
-                'sel_vertex_shader'  : vertex_shader_glumpy_1  ,
-			    'sel_fragment_shader': fragment_shader_glumpy_1
+                'sel_vertex_shader'  : vertex_shader_impostor_1  ,
+			    'sel_fragment_shader': fragment_shader_impostor_1
 				}
 
 

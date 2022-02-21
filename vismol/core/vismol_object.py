@@ -29,15 +29,15 @@ from model.atom    import Atom
 from model.bond    import Bond
 from model.chain   import Chain
 from model.residue import Residue
-from model.representations import LinesRepresentation
-from model.representations import NonBondedRepresentation
-from model.representations import SticksRepresentation
-from model.representations import DotsRepresentation
-from model.representations import SpheresRepresentation
-from model.representations import GlumpyRepresentation
-from model.representations import WiresRepresentation
-from model.representations import RibbonsRepresentation
 from model.molecular_properties import COLOR_PALETTE
+from libgl.representations import LinesRepresentation
+from libgl.representations import NonBondedRepresentation
+from libgl.representations import SticksRepresentation
+from libgl.representations import DotsRepresentation
+from libgl.representations import SpheresRepresentation
+from libgl.representations import ImpostorRepresentation
+from libgl.representations import WiresRepresentation
+from libgl.representations import RibbonsRepresentation
 import utils.c_distances as cdist
 
 class VismolObject:
@@ -161,7 +161,7 @@ class VismolObject:
                                 "ribbons"   : None,
                                 "surface"   : None,
                                 "wires"     : None,
-                                "glumpy"    : None
+                                "impostor"  : None
                                 }
         
         self.selection_dots_vao    = None

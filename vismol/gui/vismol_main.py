@@ -6,10 +6,10 @@ import gi, sys
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
 import os
-import GTKGUI
-gladepath = os.path.split(GTKGUI.__file__)[:-1]
+import gui.vismol_widget
+gladepath = os.path.split(gui.vismol_widget.__file__)[:-1]
 gladepath = os.path.join(*gladepath, "MainWindow.glade")
-from GTKGUI.gtkWidgets.filechooser import FileChooser
+from gui.gtk_widgets.filechooser import FileChooser
 
 class VismolMainWindow():
     """ Class doc """
@@ -25,13 +25,13 @@ class VismolMainWindow():
         self.statusbar_main = self.builder.get_object("MainStatusBar")
         self.statusbar_main.push(1,"Welcome to VisMol")
         self.paned_V = self.builder.get_object("paned_V")
-        self.vismol_session = vismol_session
-        self.vismol_session.main_session = self
-        self.window.connect("key-press-event", self.vismol_session.glwidget.key_pressed)
-        self.window.connect("key-release-event", self.vismol_session.glwidget.key_released)
+        self.vm_session = vismol_session
+        self.vm_session.main_session = self
+        self.window.connect("key-press-event", self.vm_session.vm_widget.key_pressed)
+        self.window.connect("key-release-event", self.vm_session.vm_widget.key_released)
         self.menu_box = self.builder.get_object("toolbutton16")
         self.box2 = self.builder.get_object("box2")
-        self.selection_box = self.vismol_session.selection_box
+        self.selection_box = self.vm_session.selection_box
         self.menu_box.add(self.selection_box)
         #-------------------------------------------------------------------      
         #                         notebook_V1
@@ -68,17 +68,16 @@ class VismolMainWindow():
         self.paned_H = Gtk.Paned(orientation = Gtk.Orientation.HORIZONTAL)
         self.button = Gtk.Button(label="Click Here")
         #-------------------------------------------------------------------
-        self.vismol_session = vismol_session
         self.filechooser   = FileChooser()
         #-------------------------------------------------------------------
         
         self.container = Gtk.Box (orientation = Gtk.Orientation.VERTICAL)
         self.command_line_entry = Gtk.Entry()
         
-        if self.vismol_session is not None:
+        if self.vm_session is not None:
             #player
-            self.container.pack_start(self.vismol_session.glwidget, True, True, 0)
-            self.traj_frame = self.vismol_session.trajectory_frame
+            self.container.pack_start(self.vm_session.vm_widget, True, True, 0)
+            self.traj_frame = self.vm_session.trajectory_frame
             self.notebook_H2.append_page(self.container, Gtk.Label("view"))
             self.notebook_H2.append_page(Gtk.TextView(), Gtk.Label("logs"))
             self.HBOX = Gtk.Box(orientation = Gtk.Orientation.VERTICAL, spacing = 0)
@@ -91,13 +90,13 @@ class VismolMainWindow():
         self.window.show_all()
         
         if filein:
-            self.vismol_session.load(filein)
+            self.vm_session.load(filein)
         Gtk.main()
     
     def gtk_load_files(self, button):
         filename = self.filechooser.open()
         if filename:
-            self.vismol_session.load(filename)
+            self.vm_session.load(filename)
     
     def run(self):
         """ Function doc """
@@ -107,11 +106,11 @@ class VismolMainWindow():
         """ Function doc """
         if button.get_active():
             state = "on"
-            self.vismol_session._picking_selection_mode = True
+            self.vm_session._picking_selection_mode = True
             button.set_label("Picking")
         else:
             state = "off"
-            self.vismol_session._picking_selection_mode = False
+            self.vm_session._picking_selection_mode = False
             button.set_label("Viewing")
         print("was turned", state)
     
@@ -135,9 +134,9 @@ class GtkMainTreeView(Gtk.TreeView):
     def __init__ (self, vismol_session):
         """ Class initialiser """
         Gtk.TreeView.__init__(self)
-        self.vismol_session = vismol_session
+        self.vm_session = vismol_session
         self.treeview_menu = TreeViewMenu(self)
-        self.store = vismol_session.Vismol_Objects_ListStore
+        self.store = vismol_session.vm_objects_list_store
         self.set_model(self.store)
         #----------------------------------------------------------------------
         # the cellrenderer for the second column - boolean rendered as a toggle
@@ -171,12 +170,12 @@ class GtkMainTreeView(Gtk.TreeView):
         self.store[path][0] = not current_value
         if self.store[path][0]:
             obj_index = self.store[path][1]
-            self.vismol_session.enable_by_index(int(obj_index))
-            self.vismol_session.glwidget.queue_draw()
+            self.vm_session.enable_by_index(int(obj_index))
+            self.vm_session.vm_widget.queue_draw()
         else:
             obj_index = self.store[path][1]
-            self.vismol_session.disable_by_index(int(obj_index))
-            self.vismol_session.glwidget.queue_draw()
+            self.vm_session.disable_by_index(int(obj_index))
+            self.vm_session.vm_widget.queue_draw()
     
     def append(self, visObj):
         i = visObj.index
@@ -208,8 +207,8 @@ class GtkMainTreeView(Gtk.TreeView):
             model= tree.get_model()
             (model, iter) = selection.get_selected()
             self.selectedID  = int(model.get_value(iter, 1))
-            visObj = self.vismol_session.vismol_objects_dic[self.selectedID]
-            self.vismol_session.center(visObj)
+            visObj = self.vm_session.vismol_objects_dic[self.selectedID]
+            self.vm_session.center(visObj)
         
         if event.button == 1:
             print ("event.button == 1:")
@@ -263,7 +262,7 @@ class TreeViewMenu:
                     str(len(vis_object.frames)),
                    ]
             model.append(data)
-        self.treeview.vismol_session.glwidget.queue_draw()
+        self.treeview.vismol_session.vm_widget.queue_draw()
         print("f3")
     
     def build_glmenu (self, menu_items = None):
@@ -290,7 +289,7 @@ class GtkMainTreeView_old(Gtk.TreeView):
         """ Function doc """
         Gtk.TreeView.__init__(self)
         self.connect("button-release-event", self.on_treeview_Objects_button_release_event)
-        self.vismol_session = vismol_session
+        self.vm_session = vismol_session
         columns = [" " ,
                    "id",
                    "Object",
@@ -319,7 +318,7 @@ class GtkMainTreeView_old(Gtk.TreeView):
     
     def append(self, visObj):
         """ Function doc """
-        i = self.vismol_session.vismol_objects.index(visObj)
+        i = self.vm_session.vismol_objects.index(visObj)
         data = [visObj.active, str(i), visObj.name, str(len(visObj.atoms)), str(len(visObj.frames))]
         self.liststore.append(data)
         self.set_model(self.liststore)
@@ -330,7 +329,7 @@ class GtkMainTreeView_old(Gtk.TreeView):
         model.clear()
         n = 0
         i = 1
-        for vis_object in self.vismol_session.vismol_objects:
+        for vis_object in self.vm_session.vismol_objects:
             data = [vis_object.active, str(i), vis_object.name,
                     str(len(vis_object.atoms)), str(len(vis_object.frames))]
             model.append(data)
@@ -364,17 +363,17 @@ class GtkMainTreeView_old(Gtk.TreeView):
             model = tree.get_model()
             (model, iter) = selection.get_selected()
             obj_index = model.get_value(iter, 1)
-            self.vismol_session.edit_by_index(int(obj_index)-1)
-            self.vismol_session.glwidget.vm_widget.editing_mols = not self.vismol_session.glwidget.vm_widget.editing_mols
+            self.vm_session.edit_by_index(int(obj_index)-1)
+            self.vm_session.vm_widget.vm_glcore.editing_mols = not self.vm_session.vm_widget.vm_glcore.editing_mols
         tree = self.builder.get_object("treeview1")
         selection = tree.get_selection()
         model = tree.get_model()
         (model, iter) = selection.get_selected()
         obj_index = model.get_value(iter, 1)
-        visObj = self.vismol_session.vismol_objects[(int(obj_index)-1)]
+        visObj = self.vm_session.vismol_objects[(int(obj_index)-1)]
         
         if widget == self.builder.get_object("menuitem_center"):
-            self.vismol_session.glwidget.vm_widget.center_on_coordinates(visObj, visObj.mass_center)
+            self.vm_session.vm_widget.vm_glcore.center_on_coordinates(visObj, visObj.mass_center)
         
         if widget == self.builder.get_object("menu_show_lines"):
             visObj.lines_actived = True
@@ -390,7 +389,7 @@ class GtkMainTreeView_old(Gtk.TreeView):
         
         if widget == self.builder.get_object("menu_show_dots"):
             visObj.dots_actived = True
-            self.vismol_session.glwidget.vm_widget.queue_draw()
+            self.vm_session.vm_widget.vm_glcore.queue_draw()
         
         if widget == self.builder.get_object("menu_hide_lines"):
             visObj.lines_actived = False
@@ -406,4 +405,4 @@ class GtkMainTreeView_old(Gtk.TreeView):
             
         if widget == self.builder.get_object("menu_hide_dots"):
             visObj.dots_actived = False
-            self.vismol_session.glwidget.vm_widget.queue_draw()
+            self.vm_session.vm_widget.vm_glcore.queue_draw()

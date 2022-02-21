@@ -37,23 +37,20 @@ class VismolFont():
         resolution, font color, etc.
     """
     
-    def __init__ (self, visObj   = None, 
-                        font_file= fontpath,
-                        #font_file= 'VISMOL/glCore/Fonts/VeraMono.ttf', 
-                        char_res = 64, 
-                        c_w      = 0.25, 
-                        c_h      = 0.3, 
-                        color    =[1,1,1,1]):
+    def __init__(self, vismol_object=None, font_file=fontpath, char_res=64,
+                 char_width=0.25, char_height=0.3, color=None):
                             
         """ Class initialiser
         """
-        self.visObj    = visObj
+        if color is None:
+            color = [1, 1, 1, 1]
+        self.visObj    = vismol_object
         self.font_file = font_file
         self.char_res = char_res
-        self.char_width = c_w
-        self.char_height = c_h
-        self.offset = np.array([c_w/2.0,c_h/2.0],dtype=np.float32)
-        self.color = np.array(color,dtype=np.float32)
+        self.char_width = char_width
+        self.char_height = char_height
+        self.offset = np.array([char_width/2.0, char_height/2.0], dtype=np.float32)
+        self.color = np.array(color, dtype=np.float32)
         self.font_buffer = None
         self.texture_id = None
         self.text_u = None
@@ -99,8 +96,8 @@ class VismolFont():
     def make_freetype_texture(self, program):
         """ Function doc
         """
-        coords = np.zeros(3,np.float32)
-        uv_pos = np.zeros(4,np.float32)
+        coords = np.zeros(3, dtype=np.float32)
+        uv_pos = np.zeros(4, dtype=np.float32)
         
         vertex_array_object = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(vertex_array_object)
@@ -108,14 +105,14 @@ class VismolFont():
         coord_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*len(coords), coords, GL.GL_DYNAMIC_DRAW)
-        gl_coord = GL.glGetAttribLocation(program, 'vert_coord')
+        gl_coord = GL.glGetAttribLocation(program, "vert_coord")
         GL.glEnableVertexAttribArray(gl_coord)
         GL.glVertexAttribPointer(gl_coord, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
         
         tex_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, tex_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_pos.itemsize*len(uv_pos), uv_pos, GL.GL_DYNAMIC_DRAW)
-        gl_texture = GL.glGetAttribLocation(program, 'vert_uv')
+        gl_texture = GL.glGetAttribLocation(program, "vert_uv")
         GL.glEnableVertexAttribArray(gl_texture)
         GL.glVertexAttribPointer(gl_texture, 4, GL.GL_FLOAT, GL.GL_FALSE, 4*uv_pos.itemsize, ctypes.c_void_p(0))
         
@@ -130,9 +127,9 @@ class VismolFont():
     
     def load_matrices(self, program, view_mat, proj_mat):
         """ Function doc """
-        view = GL.glGetUniformLocation(program, 'view_mat')
+        view = GL.glGetUniformLocation(program, "view_mat")
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, view_mat)
-        proj = GL.glGetUniformLocation(program, 'proj_mat')
+        proj = GL.glGetUniformLocation(program, "proj_mat")
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, proj_mat)
     
     def load_font_params(self, program):
@@ -140,9 +137,9 @@ class VismolFont():
             offset coordinates (X,Y) to calculate the quad and the color of
             the font.
         """
-        offset = GL.glGetUniformLocation(program, 'offset')
+        offset = GL.glGetUniformLocation(program, "offset")
         GL.glUniform2fv(offset, 1, self.offset)
-        color = GL.glGetUniformLocation(program, 'text_color')
+        color = GL.glGetUniformLocation(program, "text_color")
         GL.glUniform4fv(color, 1, self.color)
         return True
     
@@ -150,22 +147,19 @@ class VismolFont():
         """ Function created only with debuging purposes.
         """
         print("#############################################")
-        print(self.font_file, 'font_file')
-        print(self.char_res, 'char_res')
-        print(self.char_width, 'char_width')
-        print(self.char_height, 'char_height')
-        print(self.offset, 'offset')
-        print(self.color, 'color')
-        print(self.font_buffer, 'font_buffer')
-        print(self.texture_id, 'texture_id')
-        print(self.text_u, 'text_u')
-        print(self.text_v, 'text_v')
-        print(self.vao, 'vao')
-        print(self.vbos, 'vbos')
+        print(self.font_file, "font_file")
+        print(self.char_res, "char_res")
+        print(self.char_width, "char_width")
+        print(self.char_height, "char_height")
+        print(self.offset, "offset")
+        print(self.color, "color")
+        print(self.font_buffer, "font_buffer")
+        print(self.texture_id, "texture_id")
+        print(self.text_u, "text_u")
+        print(self.text_v, "text_v")
+        print(self.vao, "vao")
+        print(self.vbos, "vbos")
     
-
-    def draw_labels (self):
+    def draw_labels(self):
         """ Function doc """
-        
-
-
+        pass

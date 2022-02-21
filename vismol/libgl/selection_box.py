@@ -153,14 +153,14 @@ void main(){
         coord_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.points.itemsize*int(len(self.points)), self.points, GL.GL_DYNAMIC_DRAW)
-        att_position = GL.glGetAttribLocation(self.selection_box_program, 'vert_coord')
+        att_position = GL.glGetAttribLocation(self.selection_box_program, "vert_coord")
         GL.glEnableVertexAttribArray(att_position)
         GL.glVertexAttribPointer(att_position, 2, GL.GL_FLOAT, GL.GL_FALSE, 2*self.points.itemsize, ctypes.c_void_p(0))
         
         col_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.color.itemsize*int(len(self.color)), self.color, GL.GL_STATIC_DRAW)
-        att_colors = GL.glGetAttribLocation(self.selection_box_program, 'vert_color')
+        att_colors = GL.glGetAttribLocation(self.selection_box_program, "vert_color")
         GL.glEnableVertexAttribArray(att_colors)
         GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.color.itemsize, ctypes.c_void_p(0))
         
@@ -172,7 +172,7 @@ void main(){
         
         self.buffers = (ind_vbo, coord_vbo, col_vbo)
     
-    def _draw_selection_box(self):
+    def _draw(self):
         """ The drawing method for the selection box. Initially we will draw the
             box boundaries with lines, and then fill the interior with two
             triangles.

@@ -764,12 +764,12 @@ class SpheresRepresentation(Representation):
         pass
 
 
-class GlumpyRepresentation(Representation):
+class ImpostorRepresentation(Representation):
     """ Class doc """
     
-    def __init__ (self, name = "glumpy", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None, scale=1.0):
+    def __init__ (self, name = "impostor", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None, scale=1.0):
         """ Class initialiser """
-        super(GlumpyRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
+        super(ImpostorRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
         self.scale = scale
     
     def draw_representation(self):

@@ -403,7 +403,7 @@ void main()
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
         return True
     
-    def _draw_gizmo_axis(self, flag):
+    def _draw(self, flag):
         """ Function called to draw the gizmo axis in an OpenGL window.
             To drawing method is inside the class to make the class completely
             independent.
