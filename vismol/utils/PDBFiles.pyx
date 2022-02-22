@@ -10,7 +10,7 @@ from core.vismol_object import VismolObject
 from model.molecular_properties import AtomTypes
 
 
-cpdef load_pdb_file(infile, vismol_session, gridsize=3, frames_only=False):
+cdef load_pdb_file(infile, vismol_session, gridsize=3, frames_only=False):
     """ The longest covalent bond I can find is the bismuth-iodine single bond.
         The order of bond lengths is single > double > triple.
         The largest atoms should form the longest covalent bonds. 
@@ -23,7 +23,6 @@ cpdef load_pdb_file(infile, vismol_session, gridsize=3, frames_only=False):
     #-------------------------------------------------------------------------------------------
     #                                P D B     P A R S E R 
     #-------------------------------------------------------------------------------------------
-    # print("P D B     P A R S E R")
     initial = time.time()
     with open(infile, "r") as pdb_file:
         pdbtext = pdb_file.read()
@@ -36,20 +35,20 @@ cpdef load_pdb_file(infile, vismol_session, gridsize=3, frames_only=False):
         if frames_only:
             return frames
         i = 0
-        atoms = []
-        while atoms == []:
-            atoms = get_list_of_atoms_from_rawframe(rawframes[i], gridsize)
+        atoms_info = []
+        # TODO: NOT SURE IF THIS IS A CORRECT USE OF WHILE
+        while atoms_info == []:
+            atoms_info = get_list_of_atoms_from_rawframe(rawframes[i], gridsize)
             i += 1
     
     name = os.path.basename(infile)
     final = time.time()
     # print ("P D B     P A R S E R end -  total time: ", final - initial, "\n")
     
-    vismol_object = VismolObject(name=name, atoms=atoms, vismol_session=vismol_session,
-                                 trajectory=frames)
+    vismol_object = VismolObject(vismol_session, atoms_info, name=name, trajectory=frames)
     return vismol_object
 
-cpdef get_list_of_atoms_from_rawframe(rawframe, gridsize=3):
+cdef get_list_of_atoms_from_rawframe(rawframe, gridsize=3):
     """ Function doc 
     """
     at = AtomTypes()
@@ -63,15 +62,13 @@ cpdef get_list_of_atoms_from_rawframe(rawframe, gridsize=3):
             at_pos    = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
             at_resi   = int(line[22:27])
             at_resn   = line[17:20].strip()
-            at_ch     = line[20:22]
+            at_ch     = line[20:22].strip()
             at_occup   = float(line[54:60])
             at_bfactor = float(line[60:66])
             at_charge  = 0.0
             at_symbol = line[70:].strip()
            
-            if at_symbol in at.ATOM_TYPES.keys():
-                pass
-            else:
+            if at_symbol not in at.ATOM_TYPES.keys():
                 at_symbol = None #at.get_symbol(at_name)
             
             atoms.append({"index"    : index,
@@ -86,7 +83,7 @@ cpdef get_list_of_atoms_from_rawframe(rawframe, gridsize=3):
             index += 1
     return atoms
 
-cpdef get_list_of_frames_from_pdb_rawframes(rawframes=None):
+cdef get_list_of_frames_from_pdb_rawframes(rawframes=None):
     """ Function doc
     """
     n_processor = multiprocessing.cpu_count()
@@ -101,7 +98,7 @@ cpdef get_list_of_frames_from_pdb_rawframes(rawframes=None):
     
     return framesout
 
-cpdef get_pdb_frame_coordinates(str frame):
+cdef get_pdb_frame_coordinates(str frame):
     """ Function doc """
     pdb_file_lines = frame.split("\n")
     frame_coordinates = []

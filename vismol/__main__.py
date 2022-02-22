@@ -31,7 +31,7 @@ from core.vismol_session import VismolSession
 
 def main():
     """ Function doc """
-    vm_session = VismolSession(glwidget=True, toolkit="gtk3")
+    vm_session = VismolSession(widget=True, toolkit="gtk3")
     if len(sys.argv) >= 2:
             filein = sys.argv[-1]
     else:

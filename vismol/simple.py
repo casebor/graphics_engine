@@ -29,8 +29,8 @@ from core.vismol_session import VismolSession
 
 
 def main():
-    vm_session = VismolSession(glwidget=True, toolkit="gtk3")
-    vm_session.insert_glmenu()
+    vm_session = VismolSession(widget=True, toolkit="gtk3")
+    vm_session.vm_widget.insert_glmenu()
     window = Gtk.Window(title="Vismol window")
     container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
     container.pack_start(vm_session.vm_widget, True, True, 0)
@@ -41,7 +41,7 @@ def main():
     window.show_all()
     try:
         filein = sys.argv[-1]
-        vm_session.load(filein)
+        vm_session.load_molecule(filein)
     except:
         pass
     Gtk.main()

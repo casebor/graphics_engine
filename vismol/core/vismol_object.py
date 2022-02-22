@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  VismolObject.py
+#  vismol_object.py
 #  
-#  Copyright 2022
+#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -41,62 +41,27 @@ from libgl.representations import RibbonsRepresentation
 import utils.c_distances as cdist
 
 class VismolObject:
-    """ Class doc 
-    
-    
-    Visual Object contains the information necessary for openGL to draw 
-    a model on the screen. Everything that is represented in the graphical 
-    form is stored in the form of a VismolObject.
-    
-    Arguments
-    
-    name       = string  - Label that describes the object  
-    atoms      = list of atoms  - [index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch]
-    vismol_session  = Vismol Session - Necessary to build the "atomtree_structure"
-                 vismol_session contains the atom_id_counter (self.vm_session.atom_id_counter)
-    
-    trajectory = A list of coordinates - eg [ [x1,y1,z1, x2,y2,z2...], [x1,y1,z1, x2,y2,z2...]...]
-                 One frame is is required at last.
-    
-    
-    Attributes 
-    
-    self.active            = False
-    self.editing            = False
-    self.Type               = "molecule"
-    self.name               = name #self._get_name(name)
-    self.mass_center        = Center of mass <- necessary to center the object on the screen
-                              calculated on _generate_atomtree_structure
-    
-    self.raw_atoms_data             = [[index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch], ...]
-    self.atoms              = [Atom1, atom2, ...] <--- Atom objects (from vModel.Atom       import Atom)
-    
-    self.residues           = []
-    self.chains             = {}
-    self.frames             = trajectory    
-    self.atom_unique_id_dic = {}    
-    
-    
-    #-----------------------#
-    #         Bonds         #
-    #-----------------------#
-    
-    self.index_bonds        = []
-    self.index_bonds_rep    = []
-    self.index_bonds_pairs  = [] 
-    
-    self.non_bonded_atoms   = None    
+    """ Visual Object contains the information necessary for openGL to draw 
+        a model on the screen. Everything that is represented in the graphical 
+        form is stored in the form of a VismolObject.
+        
+        Arguments
+        
+        name       = string  - Label that describes the object  
+        atoms      = list of atoms  - [index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch]
+        vismol_session  = Vismol Session - Necessary to build the "atomtree_structure"
+                     vismol_session contains the atom_id_counter (self.vm_session.atom_id_counter)
+        trajectory = A list of coordinates - eg [ [x1,y1,z1, x2,y2,z2...], [x1,y1,z1, x2,y2,z2...]...]
+                     One frame is is required at last.
     """
     
-    def __init__(self, active=False, name="UNK", atoms=None, vismol_session=None,
+    def __init__(self, vismol_session, atoms_info, active=False, name="UNK",
                  trajectory=None, bonds_pair_of_indexes=None, color_palette=None,
                  auto_find_bonded_and_nonbonded=True):
         """ Class initialiser """
         #-----------------------------------------------------------------
         #                V I S M O L   a t t r i b u t e s
         #----------------------------------------------------------------- 
-        if atoms is None:
-            atoms = []
         self.vm_session  = vismol_session # 
         self.index       = 0             # import to find vboject in self.vm_session.vismol_objects_dic
         self.active      = active        # for "show and hide"   enable/disable
@@ -105,15 +70,15 @@ class VismolObject:
         self.name        = name          # 
         self.mass_center = None          # 
         self.vm_font     = VismolFont()
-        if color_palette:
-            self.color_palette = color_palette #this is an integer num to access the color pick for carbon atoms (0 = green, 1 = purple, ...) 
-        else:
+        if color_palette is None:
             self.color_palette = COLOR_PALETTE[0]
+        else:
+            self.color_palette = color_palette #this is an integer num to access the color pick for carbon atoms (0 = green, 1 = purple, ...) 
         
         #-------------------------#
         #    R A W    L I S T     #
         #-------------------------#
-        self.raw_atoms_data     = atoms # this is a raw list : [0, "C5", 0.77, array([ 0.295,  2.928, -0.407]), 1, "GLC", " ", "C ", [1, 12, 8, 10], [0, 0, 0]]
+        self.raw_atoms_data     = atoms_info # this is a raw list : [0, "C5", 0.77, array([ 0.295,  2.928, -0.407]), 1, "GLC", " ", "C ", [1, 12, 8, 10], [0, 0, 0]]
         #-----------------------------------------------------------------
         self.atoms              = []    # this a list  atom objects!
         self.residues           = []
@@ -122,7 +87,6 @@ class VismolObject:
         self.frames             = trajectory
         self.cov_radii_list     = []    # a list of covalent radius values for all  --> will be used to calculate de bonds
         self.atom_unique_id_dic = {}
-        self.vobj_selected_atoms= []
         #-----------------------#
         #         Bonds         #
         #-----------------------#
@@ -262,32 +226,32 @@ class VismolObject:
         if rep_type == "lines":
             self.representations["lines"] = LinesRepresentation(name=rep_type,
                                               active=True, indexes=indexes, vismol_object=self,
-                                              vismol_glcore=self.vm_session.vm_widget.vm_glcore)
+                                              vismol_glcore=self.vm_session.vm_glcore)
         elif rep_type == "nonbonded":
             self.representations["nonbonded"] = NonBondedRepresentation(name=rep_type,
                                                   active=True, indexes=indexes, vismol_object=self,
-                                                  vismol_glcore=self.vm_session.vm_widget.vm_glcore)
+                                                  vismol_glcore=self.vm_session.vm_glcore)
         elif rep_type == "dots":
             self.representations["dots"] = DotsRepresentation(name=rep_type,
                                              active=True, indexes=indexes, vismol_object=self,
-                                             vismol_glcore=self.vm_session.vm_widget.vm_glcore)
+                                             vismol_glcore=self.vm_session.vm_glcore)
         elif rep_type == "sticks":
             self.representations["sticks"] = SticksRepresentation(name=rep_type,
                                                active=True, indexes=indexes, vismol_object=self,
-                                               vismol_glcore=self.vm_session.vm_widget.vm_glcore)
+                                               vismol_glcore=self.vm_session.vm_glcore)
         elif rep_type == "ribbons":
             self.representations["ribbons"] = RibbonsRepresentation(name=rep_type,
                                                 active=True, indexes=indexes, vismol_object=self,
-                                                vismol_glcore=self.vm_session.vm_widget.vm_glcore)
+                                                vismol_glcore=self.vm_session.vm_glcore)
         elif rep_type == "spheres":
             self.representations["spheres"] = SpheresRepresentation(name=rep_type,
                                                 active=True, indexes=indexes, vismol_object=self,
-                                                vismol_glcore=self.vm_session.vm_widget.vm_glcore)
+                                                vismol_glcore=self.vm_session.vm_glcore)
             self.representations["spheres"]._create_sphere_data()
         elif rep_type == "dotted_lines":
             self.representations["dotted_lines"] = LinesRepresentation(name=rep_type,
                                                      active=True, indexes=indexes, vismol_object=self,
-                                                     vismol_glcore=self.vm_session.vm_widget.vm_glcore)
+                                                     vismol_glcore=self.vm_session.vm_glcore)
         else:
             raise NotImplementedError("Representation {} not implemented".format(rep_type))
     

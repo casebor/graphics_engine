@@ -8,7 +8,7 @@ import numpy as np
 cimport numpy as np
 
 
-cpdef list calculate_grid_offset(gridsize, maxbond=2.6):
+cdef list calculate_grid_offset(gridsize, maxbond=2.6):
     grid_offset_full = []
     borderGrid  = maxbond / gridsize
     borderGrid  = int(borderGrid)
@@ -88,7 +88,7 @@ cpdef list calculate_grid_offset(gridsize, maxbond=2.6):
                 n+=1
     return grid_offset_full
 
-cpdef double calculate_sqrt_distance(int i, int j, coords):
+cdef double calculate_sqrt_distance(int i, int j, coords):
     """ Function doc """
     dX              = (coords[i*3  ] - coords[j*3  ])**2
     dY              = (coords[i*3+1] - coords[j*3+1])**2
@@ -96,7 +96,7 @@ cpdef double calculate_sqrt_distance(int i, int j, coords):
     r_ij = dX + dY + dZ
     return r_ij
 
-cpdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords, cov_rad, double tolerance, gridsize):
+cdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords, cov_rad, double tolerance, gridsize):
     """
         Calculate the distances and bonds 
         between atoms within a single element 
@@ -129,11 +129,11 @@ cpdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords,
 
     bonds_pair_of_indexes = []
     
-    cpdef double r_ij
-    cpdef int i
-    cpdef int atom_idx_i
-    cpdef int atom_idx_j
-    cpdef double cov_rad_ij_sqrt
+    cdef double r_ij
+    cdef int i
+    cdef int atom_idx_i
+    cdef int atom_idx_j
+    cdef double cov_rad_ij_sqrt
 
     
     for i, atom_idx_i in enumerate(list_of_atoms[:-1]):
@@ -157,19 +157,19 @@ cpdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords,
     return bonds_pair_of_indexes
 
 
-cpdef list ctype_get_connections_between_grid_elements(list atomic_grid1, 
+cdef list ctype_get_connections_between_grid_elements(list atomic_grid1, 
                                                        list atomic_grid2, 
                                                        coords, 
                                                        cov_rad, 
                                                        double  tolerance, 
                                                        gridsize):
     
-    cpdef double r_ij
-    cpdef double cov_rad_ij_sqrt
-    cpdef int atom_idx_i
-    cpdef int atom_idx_j
+    cdef double r_ij
+    cdef double cov_rad_ij_sqrt
+    cdef int atom_idx_i
+    cdef int atom_idx_j
 
-    cpdef list bonds_pair_of_indexes
+    cdef list bonds_pair_of_indexes
     bonds_pair_of_indexes = []
     
     
@@ -203,9 +203,9 @@ cpdef list ctype_get_connections_between_grid_elements(list atomic_grid1,
     return bonds_pair_of_indexes
 
 
-cpdef dict ctype_build_the_atomic_grid ( list indexes     ,
+cdef dict ctype_build_the_atomic_grid ( list indexes     ,
                                          list gridpos_list):
-    cpdef int atom
+    cdef int atom
 
     atomic_grid = {}
     
@@ -220,7 +220,7 @@ cpdef dict ctype_build_the_atomic_grid ( list indexes     ,
     return atomic_grid
 
 
-cpdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes, 
+cdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes, 
                                                       coords, 
                                                       cov_rad, 
                                                       list gridpos_list, 
@@ -229,8 +229,8 @@ cpdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes,
                                                       ):
     
     
-    cpdef double tolerance
-    #cpdef double maxbond
+    cdef double tolerance
+    #cdef double maxbond
     #maxbond   = 3.0
     tolerance = 1.4
     

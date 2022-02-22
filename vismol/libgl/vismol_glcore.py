@@ -172,12 +172,12 @@ class VismolGLCore:
             self.picking_x = np.float32(mouse_x)
             self.picking_y = np.float32(mouse_y)
             self.picking = True
-            self.queue_draw()
+            self.parent_widget.queue_draw()
         if right:
             self.picking_x = np.float32(mouse_x)
             self.picking_y = np.float32(mouse_y)
             self.picking = True
-            self.queue_draw()
+            self.parent_widget.queue_draw()
     
     def mouse_released(self, button_number, mouse_x, mouse_y):
         """ Function doc
@@ -200,14 +200,14 @@ class VismolGLCore:
                     self.show_selection_box = False
                     self.selection_box.start = None
                     self.selection_box.end = None
-                    self.queue_draw()
+                    self.parent_widget.queue_draw()
         else:
             if left:
                 self.picking_x = np.float32(mouse_x)
                 self.picking_y = np.float32(mouse_y)
                 self.picking = True
                 self.button = 1
-                self.queue_draw()
+                self.parent_widget.queue_draw()
             if middle:
                 if self.atom_picked is not None:
                     self.button = 2
@@ -280,7 +280,7 @@ class VismolGLCore:
             changed = self._zoom_view(dy)
         if changed:
             self.dragging = True
-            self.queue_draw()
+            self.parent_widget.queue_draw()
     
     def mouse_scroll(self, direction):
         """ Function doc
@@ -345,7 +345,7 @@ class VismolGLCore:
                                                     self.glcamera.viewport_aspect_ratio,
                                                     self.glcamera.min_znear, self.glcamera.z_far))
             self.glcamera.update_fog()
-        self.queue_draw()
+        self.parent_widget.queue_draw()
     
     def _rotate_view(self, dx, dy, x, y):
         """ Function doc """
@@ -499,7 +499,7 @@ class VismolGLCore:
                             # Only shows the representation if
                             # representations[rep_name].active = True
                             if vm_object.representations[rep_name].active:
-                                print(rep_name, "<- Debugging")
+                                # print(rep_name, "<- Debugging")
                                 vm_object.representations[rep_name].draw_representation()
         # Check if the picking function is active.
         # Viewing and picking selections cannot be displayed at the same time.
@@ -1082,7 +1082,7 @@ class VismolGLCore:
                     model_pos = vm_object.model_mat.T.dot(pos)[:3]
                     vm_object.model_mat = mop.my_glTranslatef(vm_object.model_mat, -model_pos)
             
-            self.queue_draw()
+            self.parent_widget.queue_draw()
         return True
     
     def queue_draw(self):
