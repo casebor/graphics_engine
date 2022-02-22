@@ -198,7 +198,7 @@ class VismolPickingSelection:
             self.vobject_picking.active = True
             self.vobject_picking.set_model_matrix(self.vm_session.glwidget.vm_widget.model_mat)
             
-            self.vobject_picking.create_new_representation(rtype = 'dotted_lines')
+            self.vobject_picking.create_new_representation(rep_type = 'dotted_lines')
             self.vm_session.vismol_geometric_object_dic[vobj_label] = self.vobject_picking
             #print('bulding vobject_picking line 174')
 

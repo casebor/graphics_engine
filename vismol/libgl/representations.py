@@ -35,10 +35,9 @@ import model.cartoon as cartoon
 class Representation:
     """ Class doc """
     
-    def __init__ (self, name, active, _type, vismol_object, vismol_glcore, indexes=None):
+    def __init__ (self, name, active, vismol_object, vismol_glcore, indexes=None):
         self.name       = name
         self.active     = active
-        self.type       = _type
         self.vm_object  = vismol_object
         self.vm_session = vismol_object.vm_session
         self.vm_glcore  = vismol_glcore
@@ -84,7 +83,7 @@ class Representation:
     
     def _make_gl_sel_representation_vao_and_vbos(self, dot_sizes=None, normals=None):
         """ Function doc """
-        print ("building", self.name,"background selection  VAO  and VBOs")
+        print ("building", self.name, "background selection  VAO  and VBOs")
         self.sel_vao       = self._make_gl_vao()
         self.sel_ind_vbo   = self._make_gl_index_buffer(self.indexes)
         self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.sel_shader_program)
@@ -215,9 +214,9 @@ class Representation:
 class LinesRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, name="lines", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None):
+    def __init__(self, name="lines", active=True, vismol_object=None, vismol_glcore=None, indexes=None):
         """ Class initialiser """
-        super(LinesRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
+        super(LinesRepresentation, self).__init__(name, active, vismol_object, vismol_glcore, indexes)
     
     def draw_representation(self):
         """ Function doc """
@@ -273,12 +272,71 @@ class LinesRepresentation(Representation):
         GL.glUseProgram(0)
 
 
+class DotsRepresentation(Representation):
+    """ Class doc """
+    
+    def __init__ (self, name="dots", active=True, vismol_object=None, vismol_glcore=None, indexes=None):
+        """ Class initialiser """
+        super(DotsRepresentation, self).__init__(name, active, vismol_object, vismol_glcore, indexes)
+    
+    def draw_representation (self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        self._enable_anti_alias_to_lines()
+        height = self.vm_glcore.height
+        GL.glUseProgram(self.shader_program)
+        GL.glPointSize(1.5*height/abs(self.vm_glcore.dist_cam_zrp))
+        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        self.vm_glcore.load_fog(self.shader_program)
+        GL.glBindVertexArray(self.vao)
+        
+        if self.vm_glcore.modified_view:
+            pass
+        else:
+            # This function checks if the number of the called frame will not exceed 
+            # the limit of frames that each object has. Allowing two objects with 
+            # different trajectory sizes to be manipulated at the same time within the 
+            # glArea
+            self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
+            GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.atoms)), GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        self._disable_anti_alias_to_lines()
+        GL.glPointSize(1)
+        GL.glUseProgram(0)
+    
+    def draw_background_sel_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        self._disable_anti_alias_to_lines()
+        GL.glUseProgram(self.sel_shader_program)
+        GL.glPointSize(200/abs(self.vm_glcore.dist_cam_zrp))
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
+        GL.glBindVertexArray(self.sel_vao)
+        
+        if self.vm_glcore.modified_view:
+            pass
+        else:
+            # This function checks if the number of the called frame will not exceed 
+            # the limit of frames that each object has. Allowing two objects with 
+            # different trajectory sizes to be manipulated at the same time within the 
+            # glArea
+            self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
+            GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.atoms)), GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glPointSize(1)
+        GL.glUseProgram(0)
+
+
 class DynamicBonds(Representation):
     """ Class doc """
     
-    def __init__ (self, name="sticks", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None):
+    def __init__ (self, name="sticks", active=True, vismol_object=None, vismol_glcore=None, indexes=None):
         """ Class initialiser """
-        super(DynamicBonds, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
+        super(DynamicBonds, self).__init__(name, active, vismol_object, vismol_glcore, indexes)
     
     def draw_representation(self):
         """ Function doc """
@@ -349,9 +407,9 @@ class DynamicBonds(Representation):
 class SticksRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, name="sticks", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None):
+    def __init__(self, name="sticks", active=True, vismol_object=None, vismol_glcore=None, indexes=None):
         """ Class initialiser """
-        super(SticksRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
+        super(SticksRepresentation, self).__init__(name, active, vismol_object, vismol_glcore, indexes)
     
     def draw_representation(self):
         """ Function doc """
@@ -408,9 +466,9 @@ class SticksRepresentation(Representation):
 class RibbonsRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, name="ribbon", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None):
+    def __init__(self, name="ribbon", active=True, vismol_object=None, vismol_glcore=None, indexes=None):
         """ Class initialiser """
-        super(RibbonsRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
+        super(RibbonsRepresentation, self).__init__(name, active, vismol_object, vismol_glcore, indexes)
         
         if self.vm_object.c_alpha_bonds == []:
             self.vm_object.get_backbone_indexes()
@@ -482,9 +540,9 @@ class RibbonsRepresentation(Representation):
 class NonBondedRepresentation(Representation):
     """ Class doc """
     
-    def __init__ (self, name="nonbonded", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None):
+    def __init__ (self, name="nonbonded", active=True, vismol_object=None, vismol_glcore=None, indexes=None):
         """ Class initialiser """
-        super(NonBondedRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
+        super(NonBondedRepresentation, self).__init__(name, active, vismol_object, vismol_glcore, indexes)
     
     def draw_representation(self):
         """ Function doc """
@@ -538,71 +596,12 @@ class NonBondedRepresentation(Representation):
         GL.glUseProgram(0)
 
 
-class DotsRepresentation(Representation):
-    """ Class doc """
-    
-    def __init__ (self, name="dots", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None):
-        """ Class initialiser """
-        super(DotsRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
-    
-    def draw_representation (self):
-        """ Function doc """
-        self._check_vao_and_vbos()
-        self._enable_anti_alias_to_lines()
-        height = self.vm_glcore.height
-        GL.glUseProgram(self.shader_program)
-        GL.glPointSize(1.5*height/abs(self.vm_glcore.dist_cam_zrp))
-        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
-        self.vm_glcore.load_fog(self.shader_program)
-        GL.glBindVertexArray(self.vao)
-        
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.atoms)), GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        self._disable_anti_alias_to_lines()
-        GL.glPointSize(1)
-        GL.glUseProgram(0)
-    
-    def draw_background_sel_representation(self):
-        """ Function doc """
-        self._check_vao_and_vbos()
-        self._disable_anti_alias_to_lines()
-        GL.glUseProgram(self.sel_shader_program)
-        GL.glPointSize(200/abs(self.vm_glcore.dist_cam_zrp))
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
-        GL.glBindVertexArray(self.sel_vao)
-        
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.atoms)), GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        GL.glDisable(GL.GL_DEPTH_TEST)
-        GL.glPointSize(1)
-        GL.glUseProgram(0)
-
-
 class SpheresRepresentation(Representation):
     """ Class doc """
     
-    def __init__ (self, name="dots", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None):
+    def __init__ (self, name="dots", active=True, vismol_object=None, vismol_glcore=None, indexes=None):
         """ Class initialiser """
-        super(SpheresRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
+        super(SpheresRepresentation, self).__init__(name, active, vismol_object, vismol_glcore, indexes)
         
         self.level= self.vm_session.vm_config.gl_parameters['sphere_quality']
         self.scale= self.vm_session.vm_config.gl_parameters['sphere_scale']
@@ -767,9 +766,9 @@ class SpheresRepresentation(Representation):
 class ImpostorRepresentation(Representation):
     """ Class doc """
     
-    def __init__ (self, name = "impostor", active=True, _type="mol", vismol_object=None, vismol_glcore=None, indexes=None, scale=1.0):
+    def __init__ (self, name = "impostor", active=True, vismol_object=None, vismol_glcore=None, indexes=None, scale=1.0):
         """ Class initialiser """
-        super(ImpostorRepresentation, self).__init__(name, active, _type, vismol_object, vismol_glcore, indexes)
+        super(ImpostorRepresentation, self).__init__(name, active, vismol_object, vismol_glcore, indexes)
         self.scale = scale
     
     def draw_representation(self):
@@ -827,10 +826,10 @@ class ImpostorRepresentation(Representation):
         GL.glUseProgram(0)
 
 class CartoonRepresentation(Representation):
-    def __init__ (self, name = 'cartoon', active = True, _type = 'mol', vismol_object = None, vm_glcore = None, indexes = []):
+    def __init__ (self, name = 'cartoon', active = True, rep_type = 'mol', vismol_object = None, vismol_glcore = None, indexes = []):
         self.name               = name
         self.active             = active
-        self.type               = _type
+        self.type               = rep_type
 
         self.vm_object             = vismol_object
         self.vm_glcore             = vm_glcore
@@ -1037,11 +1036,11 @@ class CartoonRepresentation(Representation):
 class SurfaceRepresentation(Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'surface', active = True, _type = 'mol', vismol_object = None, vm_glcore = None, indexes = []):
+    def __init__ (self, name = 'surface', active = True, rep_type = 'mol', vismol_object = None, vm_glcore = None, indexes = []):
         """ Class initialiser """
         self.name               = name
         self.active             = active
-        self.type               = _type
+        self.type               = rep_type
 
         self.vm_object             = vismol_object
         self.vm_glcore             = vm_glcore
@@ -1316,11 +1315,11 @@ class SurfaceRepresentation(Representation):
 class WiresRepresentation(Representation):
     """ Class doc """
     
-    def __init__ (self, name = 'wires', active = True, _type = 'mol', vismol_object = None, vm_glcore = None, indexes = []):
+    def __init__ (self, name = 'wires', active = True, rep_type = 'mol', vismol_object = None, vm_glcore = None, indexes = []):
         """ Class initialiser """
         self.name               = name
         self.active             = active
-        self.type               = _type
+        self.type               = rep_type
         self.vm_object             = vismol_object
         self.vm_glcore             = vm_glcore
         
@@ -1425,7 +1424,7 @@ class WiresRepresentation(Representation):
 class LabelRepresentation:
     """ Class doc """
     
-    def __init__ (self, name = 'labels', active = True, _type = 'mol', vismol_object = None, vm_glcore = None, indexes = []):
+    def __init__ (self, name = 'labels', active = True, rep_type = 'mol', vismol_object = None, vm_glcore = None, indexes = []):
         """ Class initialiser """
         self.vm_object = vismol_object
         self.name   = name

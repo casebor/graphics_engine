@@ -55,11 +55,11 @@ class VismolWidget(Gtk.GLArea):
                         | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK
                         | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK
                         | Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK)
-        self.vm_objects_list_store = Gtk.ListStore(bool,  # visible? 
-                                                   str,  # id
-                                                   str,  # name
-                                                   str,  # num of atoms
-                                                   str)  # num of frames
+        # self.vm_objects_list_store = Gtk.ListStore(bool,  # visible? 
+        #                                            str,  # id
+        #                                            str,  # name
+        #                                            str,  # num of atoms
+        #                                            str)  # num of frames
         self.vm_selection_modes_list_store = Gtk.ListStore(str)
         self.vm_glcore = VismolGLCore(self, vismol_session, width, height)
         # self.set_size_request(600, 600)
@@ -111,21 +111,22 @@ class VismolWidget(Gtk.GLArea):
             for customized actions) and maintained, i.e. it"s the same as
             using Ctrl+Z to undo an action.
         """
-        print(Gdk.keyval_name(event.keyval))
-        func = getattr(self, "_pressed_" + Gdk.keyval_name(event.keyval))
         try:
+            func = getattr(self, "_pressed_" + Gdk.keyval_name(event.keyval))
             func()
         except AttributeError as ae:
-            print(ae)
+            pass
+            # print(ae)
     
     def key_released(self, widget, event):
         """ Used to indicates a key has been released.
         """
-        func = getattr(self, "_released_" + Gdk.keyval_name(event.keyval))
         try:
+            func = getattr(self, "_released_" + Gdk.keyval_name(event.keyval))
             func()
         except AttributeError as ae:
-            print(ae)
+            pass
+            # print(ae)
     
     def _pressed_Control_L(self):
         """ Function doc

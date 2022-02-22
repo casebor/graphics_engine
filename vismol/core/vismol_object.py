@@ -256,47 +256,40 @@ class VismolObject:
         self.vm_session.atom_dic_id[self.vm_session.atom_id_counter] = atom
         self.vm_session.atom_id_counter +=1
     
-    def create_new_representation(self, rtype="lines", indexes=None):
+    def create_new_representation(self, rep_type="lines", indexes=None):
         """ Function doc
         """
-        if rtype == "lines":
-            self.representations["lines"] = LinesRepresentation(name=rtype,
-                                              active=True, _type="geo",
-                                              indexes=indexes, vismol_object=self,
+        if rep_type == "lines":
+            self.representations["lines"] = LinesRepresentation(name=rep_type,
+                                              active=True, indexes=indexes, vismol_object=self,
                                               vismol_glcore=self.vm_session.vm_widget.vm_glcore)
-        elif rtype == "nonbonded":
-            self.representations["nonbonded"] = NonBondedRepresentation(name=rtype,
-                                                  active=True, _type="geo",
-                                                  indexes=indexes, vismol_object=self,
+        elif rep_type == "nonbonded":
+            self.representations["nonbonded"] = NonBondedRepresentation(name=rep_type,
+                                                  active=True, indexes=indexes, vismol_object=self,
                                                   vismol_glcore=self.vm_session.vm_widget.vm_glcore)
-        elif rtype == "dots":
-            self.representations["dots"] = DotsRepresentation(name=rtype,
-                                             active=True, _type="geo",
-                                             indexes=indexes, vismol_object=self,
+        elif rep_type == "dots":
+            self.representations["dots"] = DotsRepresentation(name=rep_type,
+                                             active=True, indexes=indexes, vismol_object=self,
                                              vismol_glcore=self.vm_session.vm_widget.vm_glcore)
-        elif rtype == "sticks":
-            self.representations["sticks"] = SticksRepresentation(name=rtype,
-                                               active=True, _type="geo",
-                                               indexes=indexes, vismol_object=self,
+        elif rep_type == "sticks":
+            self.representations["sticks"] = SticksRepresentation(name=rep_type,
+                                               active=True, indexes=indexes, vismol_object=self,
                                                vismol_glcore=self.vm_session.vm_widget.vm_glcore)
-        elif rtype == "ribbons":
-            self.representations["ribbons"] = RibbonsRepresentation(name=rtype,
-                                                active=True, _type="geo",
-                                                indexes=indexes, vismol_object=self,
+        elif rep_type == "ribbons":
+            self.representations["ribbons"] = RibbonsRepresentation(name=rep_type,
+                                                active=True, indexes=indexes, vismol_object=self,
                                                 vismol_glcore=self.vm_session.vm_widget.vm_glcore)
-        elif rtype == "spheres":
-            self.representations["spheres"] = SpheresRepresentation(name=rtype,
-                                                active=True, _type="geo",
-                                                indexes=indexes, vismol_object=self,
+        elif rep_type == "spheres":
+            self.representations["spheres"] = SpheresRepresentation(name=rep_type,
+                                                active=True, indexes=indexes, vismol_object=self,
                                                 vismol_glcore=self.vm_session.vm_widget.vm_glcore)
             self.representations["spheres"]._create_sphere_data()
-        elif rtype == "dotted_lines":
-            self.representations["dotted_lines"] = LinesRepresentation(name=rtype,
-                                                     active=True, _type="geo",
-                                                     indexes=indexes, vismol_object=self,
+        elif rep_type == "dotted_lines":
+            self.representations["dotted_lines"] = LinesRepresentation(name=rep_type,
+                                                     active=True, indexes=indexes, vismol_object=self,
                                                      vismol_glcore=self.vm_session.vm_widget.vm_glcore)
         else:
-            raise NotImplementedError("Representation {} not implemented".format(rtype))
+            raise NotImplementedError("Representation {} not implemented".format(rep_type))
     
     def _get_center_of_mass(self, frame=0):
         """ Function doc

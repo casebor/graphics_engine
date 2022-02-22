@@ -58,36 +58,16 @@ class ShowHideVisMol:
         if atoms is None:
             atoms = []
         for atom in atoms:
-            #               B O N D S
-            if rep_type in ["lines", "sticks", "ribbon"]:
-                if rep_type == "lines":
-                    if show:
-                        atom.lines = True
-                    else:
-                        atom.lines = False
-                elif rep_type == "sticks":
-                    if show:
-                        atom.sticks = True
-                    else:
-                        atom.sticks = False
-            #               A T O M S 
-            else:
-                if rep_type == "nonbonded":
-                    if len(atom.bonds) == 0:
-                        if show:
-                            atom.nonbonded = True
-                        else:
-                            atom.nonbonded = False
-                elif rep_type == "dots":
-                    if show:
-                        atom.dots = True
-                    else:
-                        atom.dots = False
-                elif rep_type == "spheres":
-                    if show:
-                        atom.spheres = True
-                    else:
-                        atom.spheres = False
+            try:
+                if show:
+                    _r = getattr(atom, rep_type)
+                    _r = True
+                else:
+                    _r = getattr(atom, rep_type)
+                    _r = False
+            except AttributeError as ae:
+                print("Representation of type {} not implemented".format(rep_type))
+                print(ae)
     
     def show_or_hide_by_object(self, rep_type="lines", vismol_object=None, selection_table=None, show=True):
         """ Function doc """
@@ -119,10 +99,11 @@ class ShowHideVisMol:
             
             if vismol_object.representations[rep_type] is None:
                 if len(indexes_bonds) > 0:
-                    rep = SticksRepresentation(name=rep_type, active=True, rep_type="mol",
-                                               vismol_object=vismol_object, gl_core=self.vm_widget.vm_glcore,
+                    rep = SticksRepresentation(name=rep_type, active=True,
+                                               vismol_object=vismol_object,
+                                               vismol_glcore=self.vm_widget.vm_glcore,
                                                indexes=indexes_bonds)
-                    vismol_object.representations[rep.name] = rep
+                    vismol_object.representations[rep_type] = rep
             else:
                 if len(indexes_bonds) > 0:
                     indexes_bonds = np.array(indexes_bonds, dtype=np.uint32)
@@ -139,8 +120,9 @@ class ShowHideVisMol:
                         indexes.append(index)
                 
                 if vismol_object.representations[rep_type] is None:
-                    rep = DotsRepresentation(name=rep_type, active=True, rep_type="mol",
-                                             vismol_object=vismol_object, gl_core=self.vm_widget.vm_glcore,
+                    rep = DotsRepresentation(name=rep_type, active=True,
+                                             vismol_object=vismol_object,
+                                             vismol_glcore=self.vm_widget.vm_glcore,
                                              indexes=indexes)
                     vismol_object.representations[rep.name] = rep
                 else:
@@ -158,8 +140,9 @@ class ShowHideVisMol:
                         indexes.append(index)
                 
                 if vismol_object.representations[rep_type] is None:
-                    rep = NonBondedRepresentation(name=rep_type, active=True, rep_type="mol",
-                                                  vismol_object=vismol_object, gl_core=self.vm_widget.vm_glcore,
+                    rep = NonBondedRepresentation(name=rep_type, active=True,
+                                                  vismol_object=vismol_object,
+                                                  vismol_glcore=self.vm_widget.vm_glcore,
                                                   indexes=indexes)
                     vismol_object.representations[rep_type] = rep
                 else:
@@ -178,8 +161,9 @@ class ShowHideVisMol:
                 
                 if vismol_object.representations["spheres"] is None:
                     if len(indexes) > 0:
-                        rep = SpheresRepresentation(name=rep_type, active=True, rep_type="mol",
-                                                    vismol_object=vismol_object, gl_core=self.vm_widget.vm_glcore,
+                        rep = SpheresRepresentation(name=rep_type, active=True,
+                                                    vismol_object=vismol_object,
+                                                    vismol_glcore=self.vm_widget.vm_glcore,
                                                     indexes=indexes)
                         rep._create_sphere_data()
                         vismol_object.representations[rep_type] = rep
@@ -213,8 +197,9 @@ class ShowHideVisMol:
                 
                 if vismol_object.representations[rep_type] is None:
                     if len(indexes_bonds) > 0:
-                        rep = SticksRepresentation(name=rep_type, active=True, rep_type="mol",
-                                                   vismol_object=vismol_object, gl_core=self.vm_widget.vm_glcore,
+                        rep = SticksRepresentation(name=rep_type, active=True,
+                                                   vismol_object=vismol_object,
+                                                   vismol_glcore=self.vm_widget.vm_glcore,
                                                    indexes=indexes)
                         vismol_object.representations[rep.name] = rep
                 else:
@@ -234,8 +219,9 @@ class ShowHideVisMol:
                             index = vismol_object.atoms.index(atom)
                             indexes.append(index)
                     if vismol_object.representations[rep_type] is None:
-                        rep  = DotsRepresentation(name=rep_type, active=True, rep_type="mol",
-                                                  vismol_object=vismol_object, gl_core=self.vm_widget.vm_glcore,
+                        rep  = DotsRepresentation(name=rep_type, active=True,
+                                                  vismol_object=vismol_object,
+                                                  vismol_glcore=self.vm_widget.vm_glcore,
                                                   indexes=indexes)
                         vismol_object.representations[rep.name] = rep 
                     else:
@@ -253,8 +239,9 @@ class ShowHideVisMol:
                             index = vismol_object.atoms.index(atom)
                             indexes.append(index)
                     if vismol_object.representations[rep_type] is None:
-                        rep  = NonBondedRepresentation(name=rep_type, active=True, rep_type="mol",
-                                                       vismol_object=vismol_object, gl_core=self.vm_widget.vm_glcore,
+                        rep  = NonBondedRepresentation(name=rep_type, active=True,
+                                                       vismol_object=vismol_object,
+                                                       vismol_glcore=self.vm_widget.vm_glcore,
                                                        indexes=indexes)
                         vismol_object.representations[rep.name] = rep 
                     else:
@@ -274,8 +261,9 @@ class ShowHideVisMol:
                             indexes.append(index)
                     if vismol_object.representations["spheres"] is None:
                         if len(atoms2spheres) > 0:
-                            rep  = SpheresRepresentation(name=rep_type, active=True, rep_type="mol",
-                                                         vismol_object=vismol_object, gl_core=self.vm_widget.vm_glcore,
+                            rep  = SpheresRepresentation(name=rep_type, active=True,
+                                                         vismol_object=vismol_object,
+                                                         vismol_glcore=self.vm_widget.vm_glcore,
                                                          indexes=indexes)
                             rep._create_sphere_data()
                             vismol_object.representations[rep.name] = rep
@@ -313,41 +301,19 @@ class VismolSession(ShowHideVisMol):
         #---------------------------------------------------------------
         self.picking_selections = VMPick(self)
         #---------------------------------------------------------------------------
-        #---------------------------------------------------------------------------
         # GTK WIDGETS
         #---------------------------------------------------------------------------
-        self.toolkit = toolkit
         if glwidget:
             if toolkit == "gtk3":
                 self.selection_box_frame = None
                 self.vm_widget = VismolWidget(self)
-                self.vm_widget.vm_glcore.queue_draw()
+                self.vm_glcore = self.vm_widget.vm_glcore
+                self.vm_glcore.queue_draw()
                 self.gtk_widgets_update_list = []
-                """This gtk list is declared in the VismolGLWidget file 
-                   (it does not depend on the creation of Treeview)"""
-                self.vm_objects_list_store = self.vm_widget.vm_objects_list_store
-                self.vm_selection_modes_list_store = self.vm_widget.vm_selection_modes_list_store
-                data = ["atom", "residue", "chain", "molecule"]
-                for i in data:
-                    self.vm_selection_modes_list_store.append([i])
-                
-                statusbar = VismolStatusBar(vismol_session=self)
-                self.statusbar = statusbar.statusbar
-                self.go_to_atom_window = VismolGoToAtomWindow2(vismol_session=self)
-                t_frame = VismolTrajectoryFrame(vismol_session=self)
-                self.trajectory_frame = t_frame.get_box()
-                self.selection_box_frame = VismolSelectionTypeBox(vismol_session=self)
-                self.selection_box = self.selection_box_frame.box
-                self.gtk_widgets_update_list.append(self.go_to_atom_window)
-                self.gtk_widgets_update_list.append(t_frame)
-                self.gtk_widgets_update_list.append(self.selection_box_frame)
-                
             if toolkit == "qt4":
                 raise NotImplementedError()
-                # self.vm_widget = VismolGLWidget.QtGLWidget(self)
         else:
             self.vm_widget = None
-        self.gtk_treeview_iters = []
     
     def gtk_widgets_update(self):
         """ Function doc """
@@ -375,14 +341,14 @@ class VismolSession(ShowHideVisMol):
                 self.selection_box_frame.change_toggle_button_selecting_mode_status(True)
             else:
                 self._picking_selection_mode = True
-            self.vm_widget.queue_draw()
+            self.vm_glcore.queue_draw()
         
         def _selection_type_viewing(_):
             if self.selection_box_frame:
                 self.selection_box_frame.change_toggle_button_selecting_mode_status(False)
             else:
                 self._picking_selection_mode = False
-            self.vm_widget.queue_draw()
+            self.vm_glcore.queue_draw()
         
         if sele_menu is None:
             """ Standard Sele Menu """
@@ -466,7 +432,7 @@ class VismolSession(ShowHideVisMol):
                     "Invert Selection":["MenuItem", invert_selection],
                     
                     "separator2":["separator", None],
-
+            
                     
                     
                     "Selection type"   : [
@@ -510,7 +476,7 @@ class VismolSession(ShowHideVisMol):
                                            },
                                ]
                     }
-      
+        
         if bg_menu is None:
             """ Standard Bg Menu"""
             def open_structure_data(_):
@@ -674,15 +640,8 @@ class VismolSession(ShowHideVisMol):
                     "separator2":["separator", None],
 
                     }
-
-
-
-
-        self.vm_widget.build_glmenu(bg_menu   = bg_menu, 
-                                   sele_menu = sele_menu, 
-                                   obj_menu  = obj_menu,
-                                   pick_menu = pick_menu )
-
+        self.vm_widget.build_glmenu(bg_menu=bg_menu, sele_menu=sele_menu,
+                                    obj_menu=obj_menu, pick_menu=pick_menu)
     
     def command_line (self, entry = None):
         """ Function doc """
@@ -717,15 +676,15 @@ class VismolSession(ShowHideVisMol):
         vismol_object.index = self.vm_object_counter
         self.vm_objects_dic[self.vm_object_counter] = vismol_object
         self.vm_object_counter += 1
-        self.append_vismol_object_to_vismol_objects_list_store(vismol_object)
+        # self.append_vismol_object_to_vismol_objects_list_store(vismol_object)
         
         if show_molecule:
-            vismol_object.create_new_representation("lines")
-            vismol_object.create_new_representation("nonbonded")
+            vismol_object.create_new_representation(rep_type="lines")
+            vismol_object.create_new_representation(rep_type="nonbonded")
             if autocenter:
-                self.vm_widget.vm_glcore.center_on_coordinates(vismol_object, vismol_object.mass_center)
+                self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.mass_center)
             else:
-                self.vm_widget.vm_glcore.queue_draw()
+                self.vm_glcore.queue_draw()
             self.gtk_widgets_update()
     
     def load(self, infile):
@@ -735,94 +694,21 @@ class VismolSession(ShowHideVisMol):
         vismol_object.active = True
         self.add_vismol_object_to_vismol_session(vismol_object, show_molecule)
     
+    # def append_vismol_object_to_vismol_objects_list_store(self, vismol_object):
+    #     """ This function adds new structures to "vm_objects_list_store". 
+    #         The vm_objects_list_store is created in the VismolGLWidget 
+    #         file and does not depend on the maintreeview of the main window.
+    #     """
+    #     if vismol_object.type == "molecule":
+    #         i = vismol_object.index 
+    #         data = [vismol_object.active           , 
+    #                 str(i)                  ,
+    #                 vismol_object.name             , 
+    #                 str(len(vismol_object.atoms))  , 
+    #                 str(len(vismol_object.frames)) ,
+    #                 ]
+    #         self.vm_objects_list_store.append(data)
     
-    def load_xyz_coords_to_vismol_object (self, infile, vismol_object, autocenter = True):
-        """ Function doc """
-        if infile[-3:] == "gro":
-            frames = self._load_gro_coords_to_vismol_object(infile, vismol_object)
-                                                                   
-        if infile[-3:] == "pdb":                                  
-            frames = self._load_pdb_coords_to_vismol_object(infile, vismol_object)
-        
-        if infile[-4:] == "mol2":
-            frames = self._load_mol2_coords_to_vismol_object(infile , vismol_object)
-        
-        if infile[-3:] == "xyz":
-            frames = self._load_xyz_coords_to_vismol_object(infile , vismol_object)
-        
-        if infile[-3:] == "crd":
-            frames = self._load_crd_coords_to_vismol_object(infile , vismol_object)
-        
-        if infile[-3:] == "net" or infile[-2:] == "nc" or infile[-6:] == "netcdf" or infile[-6:] == "rst7f":
-            frames = self._load_netcdf4_coords_to_vismol_object(infile , vismol_object)
-            
-        if infile[-3:] == "aux":
-            frames = self._load_aux_coords_to_vismol_object(infile , vismol_object)
-
-        if autocenter:
-            vismol_object._get_center_of_mass(frame = 0)
-            #print(vismol_object.mass_center)
-            self.vm_widget.vm_glcore.center_on_coordinates(vismol_object, vismol_object.mass_center)
-
-            rep  = LinesRepresentation (name = "lines", active = True, _type = "mol", vismol_object = vismol_object, gl_core = self.vm_widget.vm_glcore)
-            vismol_object.representations[rep.name] = rep
-
-            rep  = NonBondedRepresentation (name = "nonbonded", active = True, _type = "mol", vismol_object = vismol_object, gl_core = self.vm_widget.vm_glcore)
-            vismol_object.representations[rep.name] = rep
-
-
-
-    
-    def append_vismol_object_to_vismol_objects_list_store(self, vismol_object):
-        """ This function adds new structures to "vm_objects_list_store". 
-            The vm_objects_list_store is created in the VismolGLWidget 
-            file and does not depend on the maintreeview of the main window.
-        """
-        
-        if vismol_object.type == "molecule":
-            i = vismol_object.index 
-            data = [vismol_object.active           , 
-                    str(i)                  ,
-                    vismol_object.name             , 
-                    str(len(vismol_object.atoms))  , 
-                    str(len(vismol_object.frames)) ,
-                    ]
-            self.vm_objects_list_store.append(data)
-    
-    def _load_gro_coords_to_vismol_object(self, infile , vismol_object = None):
-        """ Function doc """
-        pass
-        
-        
-    def _load_netcdf4_coords_to_vismol_object(self, infile , vismol_object = None):
-        #print( infile , vismol_object)
-        frames = AMBERFiles.load_netcdf4_file(infile, vismol_object)
-        #vismol_object.frames+=frames
-        #print ("system size: ", len(vismol_object.atoms),"frame size: ",len(frames[0])/3)
-        
-        for frame in frames:
-            vismol_object.frames.append(frame) 
-            
-    def _load_crd_coords_to_vismol_object(self, infile , vismol_object = None):
-        #print( infile , vismol_object)
-        frames = AMBERFiles.load_amber_crd_file(infile, vismol_object)
-        print ("system size: ", len(vismol_object.atoms),"frame size: ",len(frames[0])/3)
-        for frame in frames:
-            vismol_object.frames.append(frame) 
-    
-    def _load_pdb_coords_to_vismol_object(self, infile , vismol_object = None):
-        """ Function doc """
-        frames = PDBFiles.load_pdb_file (infile = infile, vismol_session = self, frames_only = True) 
-        
-        print ("system size: ", len(vismol_object.atoms),"frame size: ",len(frames[0])/3)
-        for frame in frames:
-            vismol_object.frames.append(frame)    
-        #print (vismol_object.mass_center)
-        #if vismol_object.mass_center == None:
-        
-        #vismol_object._get_center_of_mass(vismol_object.frames[-1])
-        #print (vismol_object.mass_center)
-
     def delete_by_index(self, index = None):
         """ Function doc """
         self.viewing_selections = []
@@ -842,7 +728,7 @@ class VismolSession(ShowHideVisMol):
         if indexes == "all":
             self.selections[sele].selecting_by_indexes(vismol_object=vismol_object,
                                                        indexes=range(0, int(len(vismol_object.atoms)/2)))
-        self.vm_widget.queue_draw()
+        self.vm_glcore.queue_draw()
         
     def orient (self, obj =  None):
         """ Function doc """  
@@ -852,7 +738,7 @@ class VismolSession(ShowHideVisMol):
         print ("center", vismol_object)
         frame = self.get_frame ()
         vismol_object._get_center_of_mass (frame)
-        self.vm_widget.vm_glcore.center_on_coordinates(vismol_object, vismol_object.mass_center)
+        self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.mass_center)
 
 
     def center_by_index(self, Vobject =  None, index = None):
@@ -878,7 +764,7 @@ class VismolSession(ShowHideVisMol):
         #self.vm_widget.queue_draw()
         
         self.vm_objects_dic[index].active = False
-        self.vm_widget.queue_draw()
+        self.vm_glcore.queue_draw()
 
     def enable_by_index (self, index = 0):#, dictionary = True):
         """When the variable "dictionary" is active, the function accesses 
@@ -897,7 +783,7 @@ class VismolSession(ShowHideVisMol):
         #    self.vm_objects[index].active = True
         #self.vm_widget.queue_draw()
         self.vm_objects_dic[index].active = True
-        self.vm_widget.queue_draw()
+        self.vm_glcore.queue_draw()
         
         
     def edit_by_index(self, index = 0):
@@ -925,7 +811,7 @@ class VismolSession(ShowHideVisMol):
                                                )
         print(vismol_object.colors)
 
-        self.vm_widget.vm_glcore.queue_draw()
+        self.vm_glcore.queue_draw()
         for rep  in vismol_object.representations.keys():
             if vismol_object.representations[rep]:
                 try:
@@ -940,8 +826,8 @@ class VismolSession(ShowHideVisMol):
     
     def set_frame (self, frame = 0):
         """ Function doc """
-        self.vm_widget.vm_glcore.frame = frame
-        self.vm_widget.queue_draw()
+        self.vm_glcore.frame = frame
+        self.vm_glcore.queue_draw()
 
         #self.vm_widget.updateGL()
     
@@ -953,7 +839,7 @@ class VismolSession(ShowHideVisMol):
     def get_frame (self):
         """ Function doc """
         #""" Function doc """
-        frame = self.vm_widget.vm_glcore.frame
+        frame = self.vm_glcore.frame
         return frame
     
     def get_vismol_object_dict (self):
@@ -1004,36 +890,3 @@ class VismolSession(ShowHideVisMol):
             self.selections[self.current_selection].selection_function_viewing(selected, _type, disable)
 
        
-
-    def start_viewer (self):
-        """ Function doc """
-        import gi, sys
-        gi.require_version("Gtk", "3.0")
-        from gi.repository import Gtk, Gdk
-        #----------------------------------------------------------------------------#
-        # - - - - - - - - -  GTK STUFFS  - - - - - - - - -               
-        self.window = Gtk.Window(title="VisMol window")                  
-        #filechooser = FileChooser()                                     
-                                         
-        self.container = Gtk.Box (orientation = Gtk.Orientation.VERTICAL)
-        # - - - - - - - - - - - -  - - - - - - - - - - - -               
-                                       
-        #---------------------------------------------------------------------------  
-        #self.vismol_session  =  VisMolSession(glwidget = True, toolkit = "gtk3")       
-        self.container.pack_start(self.vm_widget, True, True, 0)         
-                                         
-        self.window.connect("key-press-event"  , self.vm_widget.key_pressed)  
-        self.window.connect("key-release-event", self.vm_widget.key_released) 
-        self.window.add(self.container)                                                    
-        #--------------------------------------------------------------------------- #
-                                         
-        #--------------------------------------------------------------------------- #
-        self.window.connect("delete-event",    Gtk.main_quit)                             #
-        self.window.show_all()                                                            #
-        #----------------------------------------------------------------------------#
-        #x = threading.Thread(target = Gtk.main(), args=(1,))
-        #x.start()
-
-        Gtk.main()
-        
-        return None

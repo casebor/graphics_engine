@@ -499,6 +499,7 @@ class VismolGLCore:
                             # Only shows the representation if
                             # representations[rep_name].active = True
                             if vm_object.representations[rep_name].active:
+                                print(rep_name, "<- Debugging")
                                 vm_object.representations[rep_name].draw_representation()
         # Check if the picking function is active.
         # Viewing and picking selections cannot be displayed at the same time.
