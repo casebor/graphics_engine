@@ -565,7 +565,7 @@ class VismolGoToAtomWindow2(Gtk.Window):
 class VismolSelectionTypeBox(Gtk.Box):
     """ Class doc """
     
-    def __init__ (self, vismol_session = None):
+    def __init__ (self, vismol_session=None):
         """ Class initialiser """
         Gtk.Box.__init__(self)
         #self.set_orientation(Gtk.Orientation.VERTICAL)

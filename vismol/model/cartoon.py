@@ -5,7 +5,7 @@
 #  
 
 import numpy as np
-import model.Vectors as LA
+import utils.matrix_operations as mop
 
 p = 0.6;
 q = 0.8071;
@@ -506,23 +506,23 @@ def calculate_secondary_structure(visObj):
             #print ('CA1 = CA2')
             
             # distances
-            d2i  = LA.subtract(CA0.coords(), CA3.coords()) 
-            d2i  = LA.length(d2i)
+            d2i  = CA0.coords(), CA3.coords()
+            d2i  = np.linalg.norm(d2i)
             
-            d3i  = LA.subtract(CA0.coords(), CA5.coords()) 
-            d3i  = LA.length(d3i)
+            d3i  = CA0.coords(), CA5.coords()
+            d3i  = np.linalg.norm(d3i)
             
-            d4i  = LA.subtract(CA0.coords(), CA7.coords()) 
-            d4i  = LA.length(d4i)
+            d4i  = CA0.coords(), CA7.coords()
+            d4i  = np.linalg.norm(d4i)
             
             # angle
-            v0   = LA.subtract(CA1.coords(),CA0.coords())
-            v1   = LA.subtract(CA1.coords(), CA3.coords())
+            v0   = CA1.coords(),CA0.coords()
+            v1   = CA1.coords(), CA3.coords()
             
-            ti   = 57.295779513*(LA.angle(v0, v1))
+            ti   = 57.295779513*(mop.angle(v0, v1))
             
             # dihedral 
-            ai   = 57.295779513*(LA.dihedral(CA0.coords(), CA1.coords(), CA3.coords(), CA5.coords()))
+            ai   = 57.295779513*(mop.dihedral(CA0.coords(), CA1.coords(), CA3.coords(), CA5.coords()))
             
             
             

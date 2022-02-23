@@ -256,3 +256,36 @@ cpdef get_inverse_matrix(mat):
     mat_o = np.matrix(np.copy(mat))
     assert(mat.shape == (4,4))
     return np.array(mat_o.I)
+
+cpdef angle(v0, v1):
+    """ Return angle [0..pi] between two vectors."""
+    try:
+        v0 = np.array(v0, dtype=np.float32)
+        v1 = np.array(v1, dtype=np.float32)
+        v0 /= np.linalg.norm(v0)
+        v1 /= np.linalg.norm(v1)
+        return np.acos(np.dot(v0, v1))
+    except:
+        return False
+
+cpdef dihedral(p0, p1, p2, p3):
+    """ Return angle [0..2*pi] formed by vertices p0-p1-p2-p3."""
+    p0 = np.array(p0, dtype=np.float32)
+    p1 = np.array(p1, dtype=np.float32)
+    p2 = np.array(p2, dtype=np.float32)
+    p3 = np.array(p3, dtype=np.float32)
+    v01 = p0 - p1
+    v32 = p3 - p2
+    v12 = p1 - p2
+    v0 = np.cross(v12, v01)
+    v3 = np.cross(v12, v32)
+    # The cross product vectors are both normal to the axis
+    # vector v12, so the angle between them is the dihedral
+    # angle that we are looking for.  However, since "angle"
+    # only returns values between 0 and pi, we need to make
+    # sure we get the right sign relative to the rotation axis
+    a = angle(v0, v3)
+    if np.dot(np.cross(v0, v3), v12) > 0:
+        a = -a
+    return a
+

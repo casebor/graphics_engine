@@ -110,6 +110,7 @@ class VismolSession():
     
     def show_or_hide(self, rep_type="lines", selection=None, show=True):
         """ Function doc """
+        print(selection)
         if selection is None:
             selection = self.selections[self.current_selection]
         
@@ -276,10 +277,8 @@ class VismolSession():
     
     def _selection_function(self, selected, _type=None, disable=True):
         #"""     P I C K I N G     S E L E C T I O N S     """
-        #print("_selection_function")
         if self._picking_selection_mode:
             self.picking_selections.selection_function_picking(selected)
-        
         #"""     V I E W I N G     S E L E C T I O N S     """
         else:
             self.selections[self.current_selection].selection_function_viewing(selected, _type, disable)

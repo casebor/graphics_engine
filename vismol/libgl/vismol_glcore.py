@@ -214,6 +214,7 @@ class VismolGLCore:
                     self.center_on_atom(self.atom_picked)
                     self.atom_picked = None
             if right:
+                print("<->",self.vm_session.current_selection)
                 # The right button (button = 3) always opens one of the available menus.
                 self.button = 3
                 menu_type = None

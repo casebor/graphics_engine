@@ -26,7 +26,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
 from libgl.vismol_glcore import VismolGLCore
-from gui.gtk_widgets.filechooser import FileChooser
+from gui.filechooser import FileChooser
 
 
 class VismolGTKWidget(Gtk.GLArea):
@@ -215,21 +215,95 @@ class VismolGTKWidget(Gtk.GLArea):
         if self.selection_box_frame:
             self.selection_box_frame.change_toggle_button_selecting_mode_status(True)
         else:
-            self._picking_selection_mode = True
-        self.vm_glcore.queue_draw()
+            self.vm_session._picking_selection_mode = True
+        self.queue_draw()
     
     def _selection_type_viewing(self, widget):
         if self.selection_box_frame:
             self.selection_box_frame.change_toggle_button_selecting_mode_status(False)
         else:
-            self._picking_selection_mode = False
-        self.vm_glcore.queue_draw()
-
+            self.vm_session._picking_selection_mode = False
+        self.queue_draw()
+    
     def quit(self, widget):
         Gtk.main_quit()
     
+    def _viewing_selection_mode_atom(self, widget):
+        self.vm_session.viewing_selection_mode(sel_type="atom")
+    
+    def _viewing_selection_mode_residue(self, widget):
+        self.vm_session.viewing_selection_mode(sel_type="residue")
+    
+    def _viewing_selection_mode_chain(self, widget):
+        self.vm_session.viewing_selection_mode(sel_type="chain")
+    
+    def menu_show_dots(self, widget):
+        """ Function doc """
+        self.vm_session.show_or_hide(rep_type="dots", show=True)
+    
+    def menu_hide_dots(self, widget):
+        """ Function doc """
+        self.vm_session.show_or_hide(rep_type="dots", show=False)
+    
+    def menu_show_lines(self, widget):
+        """ Function doc """
+        self.vm_session.show_or_hide(rep_type="lines", show=True)
+    
+    def menu_hide_lines(self, widget):
+        """ Function doc """
+        self.vm_session.show_or_hide(rep_type="lines", show=False)
+    
+    def menu_show_nonbonded(self, widget):
+        """ Function doc """
+        self.vm_session.show_or_hide(rep_type="nonbonded", show=True)
+    
+    def menu_hide_nonbonded(self, widget):
+        """ Function doc """
+        self.vm_session.show_or_hide(rep_type="nonbonded", show=False)
+    
+    def invert_selection(self, widget):
+        """ Function doc """
+        self.vm_session.selections[self.vm_session.current_selection].invert_selection()
+    
     def insert_glmenu(self, bg_menu=None, sele_menu=None, obj_menu=None, pick_menu=None):
         """ Function doc """
+        if bg_menu is None:
+            """ Standard Bg Menu"""
+            bg_menu = {"Open File": ["MenuItem", self.open_file],
+                       "separator": ["separator", None],
+                       "Selection Mode": ["submenu",
+                                            {"by atom": ["MenuItem", self._viewing_selection_mode_atom],
+                                             "by residue": ["MenuItem", self._viewing_selection_mode_residue],
+                                             "by chain": ["MenuItem", self._viewing_selection_mode_chain],
+                                            }
+                                         ],
+                       "Selection Type": ["submenu",
+                                            {"viewing": ["MenuItem", self._selection_type_viewing],
+                                             "picking": ["MenuItem", self._selection_type_picking],
+                                            }
+                                         ],
+                       "separator": ["separator", None],
+                       "Quit": ["MenuItem", self.quit],
+                      }
+        
+        if sele_menu is None:
+            """ Standard Sele Menu """
+            sele_menu = {"Show": ["submenu",
+                                    {"dots": ["MenuItem", self.menu_show_dots],
+                                     "lines": ["MenuItem", self.menu_show_lines],
+                                     "nonbonded": ["MenuItem", self.menu_show_nonbonded],
+                                     "separator": ["separator", None],
+                                    }
+                                 ],
+                         "Hide": ["submenu",
+                                    {"lines": ["MenuItem", self.menu_hide_lines],
+                                     "dots": ["MenuItem", self.menu_hide_dots],
+                                     "nonbonded": ["MenuItem", self.menu_hide_nonbonded],
+                                    }
+                                 ],
+                         "separator":["separator", None],
+                         "Invert Selection": ["MenuItem", self.invert_selection],
+                        }
         
         def _viewing_selection_mode_atom(_):
             self.viewing_selection_mode(sel_type="atom")
@@ -240,158 +314,54 @@ class VismolGTKWidget(Gtk.GLArea):
         def _viewing_selection_mode_chain(_):
             self.viewing_selection_mode(sel_type="chain")
         
-        if sele_menu is None:
-            """ Standard Sele Menu """
-            
-            def select_test(_):
-                """ Function doc """
-                self.select(indexes="all")
-            
-            def menu_show_lines(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="lines", show=True)
-            
-            def menu_hide_lines(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="lines", show=False)
-            
-            def menu_show_sticks(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="sticks", show=True)
-            
-            def menu_show_nonbonded(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="nonbonded", show=True)
-            
-            def menu_hide_nonbonded(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="nonbonded", show=False)
-            
-            def menu_hide_sticks(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="sticks", show=False)
-            
-            def menu_show_spheres(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="spheres", show=True)
-            
-            def menu_hide_spheres(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="spheres", show=False)
-            
-            def menu_show_dots(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="dots", show=True)
-            
-            def menu_hide_dots(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="dots", show=False)
-            
-            def invert_selection(_):
-                """ Function doc """
-                self.selections[self.current_selection].invert_selection()
-            
-            sele_menu = { 
-                    "header" : ["MenuItem", None],
-                    "separator1":["separator", None],
-                    "show"   : [
-                                "submenu" ,{
-                                            
-                                            "lines"         : ["MenuItem", menu_show_lines],
-                                            "sticks"        : ["MenuItem", menu_show_sticks],
-                                            "spheres"       : ["MenuItem", menu_show_spheres],
-                                            "dots"          : ["MenuItem", menu_show_dots],
-                                            "separator2"    : ["separator", None],
-                                            "nonbonded"     : ["MenuItem", menu_show_nonbonded],
-                    
-                                           }
-                               ],
-                    
-                    
-                    "hide"   : [
-                                "submenu",  {
-                                            "lines"    : ["MenuItem", menu_hide_lines],
-                                            "sticks"   : ["MenuItem", menu_hide_sticks],
-                                            "spheres"  : ["MenuItem", menu_hide_spheres],
-                                            "dots"     : ["MenuItem", menu_hide_dots],
-                                            "separator2"    : ["separator", None],
-                                            "nonbonded": ["MenuItem", menu_hide_nonbonded],
-                                            }
-                                ],
-                    
-                    "Invert Selection":["MenuItem", invert_selection],
-                    
-                    "separator2":["separator", None],
-            
-                    
-                    
-                    "Selection type"   : [
-                                "submenu" ,{
-                                            
-                                            "viewing"   :  ["MenuItem", self._selection_type_viewing],
-                                            "picking"   :  ["MenuItem", self._selection_type_picking],
-                                            #"separator2":["separator", None],
-                                            #"nonbonded" : ["MenuItem", None],
-                    
-                                           }
-                                        ],
-                    
-                    "Selection Mode"   : [
-                                "submenu" ,{
-                                            
-                                            "Atoms"     :  ["MenuItem", _viewing_selection_mode_atom],
-                                            "Residue"   :  ["MenuItem", _viewing_selection_mode_residue],
-                                            "Chain"     :  ["MenuItem", _viewing_selection_mode_chain],
-                                            #"separator2":["separator", None],
-                                            #"nonbonded" : ["MenuItem", None],
-                    
-                                           }
-                               ],
-                    
-                    "separator3":["separator", None],
-                    
-                    "Label Mode":  ["submenu" , {
-                                            "Atom"         : [
-                                                               "submenu", {
-                                                                           "lines"    : ["MenuItem", None],
-                                                                           "sticks"   : ["MenuItem", None],
-                                                                           "spheres"  : ["MenuItem", None],
-                                                                           "nonbonded": ["MenuItem", None],
-                                                                           }
-                                                              ],
-                                            
-                                            "Atom index"   : ["MenuItem", None],
-                                            "residue name" : ["MenuItem", None],
-                                            "residue_index": ["MenuItem", None],
-                                           },
-                               ]
-                    }
+        def select_test(_):
+            """ Function doc """
+            self.select(indexes="all")
         
-        if bg_menu is None:
-            """ Standard Bg Menu"""
-            bg_menu = {"Open File": ["MenuItem", self.open_file],
-                       "separator": ["separator", None],
-                       "Selection Type": ["submenu",
-                                            {"viewing": ["MenuItem", self._selection_type_viewing],
-                                             "picking": ["MenuItem", self._selection_type_picking],
-                                            }
-                                         ],
-                       "Selection Mode": ["submenu",
-                                            {"atoms": ["MenuItem", _viewing_selection_mode_atom],
-                                             "residue": ["MenuItem", _viewing_selection_mode_residue],
-                                             "chain": ["MenuItem", _viewing_selection_mode_chain],
-                                            }
-                                         ],
-                       "Hide": ["submenu", {"lines": ["MenuItem", menu_hide_lines],
-                                            "sticks": ["MenuItem", menu_hide_sticks],
-                                            "spheres": ["MenuItem", menu_hide_spheres],
-                                            "nonbonded": ["MenuItem", None],
-                                           }
-                               ],
-                       "separator": ["separator", None],
-                       "Quit": ["MenuItem", self.quit]
-                      }
+        def menu_show_lines(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="lines", show=True)
         
+        def menu_hide_lines(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="lines", show=False)
+        
+        def menu_show_sticks(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="sticks", show=True)
+        
+        def menu_show_nonbonded(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="nonbonded", show=True)
+        
+        def menu_hide_nonbonded(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="nonbonded", show=False)
+        
+        def menu_hide_sticks(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="sticks", show=False)
+        
+        def menu_show_spheres(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="spheres", show=True)
+        
+        def menu_hide_spheres(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="spheres", show=False)
+        
+        def menu_show_dots(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="dots", show=True)
+        
+        def menu_hide_dots(_):
+            """ Function doc """
+            self.show_or_hide(rep_type="dots", show=False)
+        
+        def invert_selection(_):
+            """ Function doc """
+            self.selections[self.current_selection].invert_selection()
+            
         if obj_menu is None:
             """ Standard Obj Menu"""
             obj_menu = { 
@@ -481,9 +451,10 @@ class VismolGTKWidget(Gtk.GLArea):
                     "separator2":["separator", None],
 
                     }
+        
         self.build_glmenu(bg_menu=bg_menu, sele_menu=sele_menu, obj_menu=obj_menu, pick_menu=pick_menu)
     
-
+    
     def build_submenus_from_dicts(self, menu_dict):
         """ Function doc
         """
