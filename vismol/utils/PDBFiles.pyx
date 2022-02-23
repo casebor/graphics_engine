@@ -10,7 +10,7 @@ from core.vismol_object import VismolObject
 from model.molecular_properties import AtomTypes
 
 
-cdef load_pdb_file(infile, vismol_session, gridsize=3, frames_only=False):
+cpdef load_pdb_file(infile, vismol_session, gridsize=3, frames_only=False):
     """ The longest covalent bond I can find is the bismuth-iodine single bond.
         The order of bond lengths is single > double > triple.
         The largest atoms should form the longest covalent bonds. 
@@ -48,7 +48,7 @@ cdef load_pdb_file(infile, vismol_session, gridsize=3, frames_only=False):
     vismol_object = VismolObject(vismol_session, atoms_info, name=name, trajectory=frames)
     return vismol_object
 
-cdef get_list_of_atoms_from_rawframe(rawframe, gridsize=3):
+cpdef get_list_of_atoms_from_rawframe(rawframe, gridsize=3):
     """ Function doc 
     """
     at = AtomTypes()
@@ -83,7 +83,7 @@ cdef get_list_of_atoms_from_rawframe(rawframe, gridsize=3):
             index += 1
     return atoms
 
-cdef get_list_of_frames_from_pdb_rawframes(rawframes=None):
+cpdef get_list_of_frames_from_pdb_rawframes(rawframes=None):
     """ Function doc
     """
     n_processor = multiprocessing.cpu_count()
@@ -98,7 +98,7 @@ cdef get_list_of_frames_from_pdb_rawframes(rawframes=None):
     
     return framesout
 
-cdef get_pdb_frame_coordinates(str frame):
+cpdef get_pdb_frame_coordinates(str frame):
     """ Function doc """
     pdb_file_lines = frame.split("\n")
     frame_coordinates = []

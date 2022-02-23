@@ -8,7 +8,7 @@ import numpy as np
 cimport numpy as np
 
 
-cdef list calculate_grid_offset(gridsize, maxbond=2.6):
+cpdef list calculate_grid_offset(gridsize, maxbond=2.6):
     grid_offset_full = []
     borderGrid  = maxbond / gridsize
     borderGrid  = int(borderGrid)
@@ -88,7 +88,7 @@ cdef list calculate_grid_offset(gridsize, maxbond=2.6):
                 n+=1
     return grid_offset_full
 
-cdef double calculate_sqrt_distance(int i, int j, coords):
+cpdef double calculate_sqrt_distance(int i, int j, coords):
     """ Function doc """
     dX              = (coords[i*3  ] - coords[j*3  ])**2
     dY              = (coords[i*3+1] - coords[j*3+1])**2
@@ -96,7 +96,7 @@ cdef double calculate_sqrt_distance(int i, int j, coords):
     r_ij = dX + dY + dZ
     return r_ij
 
-cdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords, cov_rad, double tolerance, gridsize):
+cpdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords, cov_rad, double tolerance, gridsize):
     """
         Calculate the distances and bonds 
         between atoms within a single element 
@@ -157,7 +157,7 @@ cdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords, 
     return bonds_pair_of_indexes
 
 
-cdef list ctype_get_connections_between_grid_elements(list atomic_grid1, 
+cpdef list ctype_get_connections_between_grid_elements(list atomic_grid1, 
                                                        list atomic_grid2, 
                                                        coords, 
                                                        cov_rad, 
@@ -203,7 +203,7 @@ cdef list ctype_get_connections_between_grid_elements(list atomic_grid1,
     return bonds_pair_of_indexes
 
 
-cdef dict ctype_build_the_atomic_grid ( list indexes     ,
+cpdef dict ctype_build_the_atomic_grid ( list indexes     ,
                                          list gridpos_list):
     cdef int atom
 
@@ -220,7 +220,7 @@ cdef dict ctype_build_the_atomic_grid ( list indexes     ,
     return atomic_grid
 
 
-cdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes, 
+cpdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes, 
                                                       coords, 
                                                       cov_rad, 
                                                       list gridpos_list, 

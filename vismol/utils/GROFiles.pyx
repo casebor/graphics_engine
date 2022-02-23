@@ -12,7 +12,7 @@ from model.molecular_properties import AtomTypes
 
 from pprint import pprint
 
-cdef load_gro_file(infile=None, gridsize=3, vismol_session=None):
+cpdef load_gro_file(infile=None, gridsize=3, vismol_session=None):
     """ Function doc 
 
     gridsize =
@@ -82,7 +82,7 @@ cdef load_gro_file(infile=None, gridsize=3, vismol_session=None):
     
     
     
-cdef get_atom_info_from_raw_line(lines, gridsize = 3, at =  None):
+cpdef get_atom_info_from_raw_line(lines, gridsize = 3, at =  None):
     #try:
     atoms           = []
     index           = 0

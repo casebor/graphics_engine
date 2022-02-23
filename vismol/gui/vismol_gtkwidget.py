@@ -26,6 +26,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
 from libgl.vismol_glcore import VismolGLCore
+from gui.gtk_widgets.filechooser import FileChooser
 
 
 class VismolGTKWidget(Gtk.GLArea):
@@ -60,9 +61,12 @@ class VismolGTKWidget(Gtk.GLArea):
         self.vm_selection_modes_list_store = Gtk.ListStore(str)
         self.vm_session = vismol_session
         self.vm_glcore = VismolGLCore(self, vismol_session, width, height)
-        self.glMenu_sele = None
-        self.glMenu_bg = None
-        self.glMenu_obj = None
+        self.glmenu_bg = None
+        self.glmenu_sele = None
+        self.glmenu_obj = None
+        self.glmenu_pick = None
+        self.filechooser = None
+        self.selection_box_frame = None
     
     def initialize(self, widget):
         """ Enables the buffers and other charasteristics of the OpenGL context.
@@ -125,38 +129,31 @@ class VismolGTKWidget(Gtk.GLArea):
             # print(ae)
     
     def _pressed_Control_L(self):
-        """ Function doc
-        """
+        """ Function doc """
         self.vm_glcore.ctrl = True
     
     def _released_Control_L(self):
-        """ Function doc
-        """
+        """ Function doc """
         self.vm_glcore.ctrl = False
     
     def _pressed_Shift_L(self):
-        """ Function doc
-        """
+        """ Function doc """
         self.vm_glcore.shift = True
     
     def _released_Shift_L(self):
-        """ Function doc
-        """
+        """ Function doc """
         self.vm_glcore.shift = False
     
     def mouse_pressed(self, widget, event):
-        """ Function doc
-        """
+        """ Function doc """
         self.vm_glcore.mouse_pressed(event.button, event.x, event.y)
     
     def mouse_released(self, widget, event):
-        """ Function doc
-        """
+        """ Function doc """
         self.vm_glcore.mouse_released(event.button, event.x, event.y)
     
     def mouse_motion(self, widget, event):
-        """ Function doc
-        """
+        """ Function doc """
         self.vm_glcore.mouse_motion(event.x, event.y)
     
     def mouse_scroll(self, widget, event):
@@ -167,36 +164,81 @@ class VismolGTKWidget(Gtk.GLArea):
         if event.direction == Gdk.ScrollDirection.DOWN:
             self.vm_glcore.mouse_scroll(-1)
     
+    def build_glmenu(self, bg_menu=None, sele_menu=None, obj_menu=None, pick_menu=None):
+        """ Function doc """
+        if bg_menu:
+            self.glmenu_bg = Gtk.Menu()
+            self.glmenu_bg_toplabel = Gtk.MenuItem(label="background")
+            self.build_glmenu_from_dicts(bg_menu, self.glmenu_bg)
+            self.glmenu_bg.show_all()
+        else:
+            self.glmenu_bg = None
+        
+        if sele_menu:
+            self.glmenu_sele = Gtk.Menu()
+            self.glmenu_sele_toplabel = Gtk.MenuItem(label="selection")
+            self.build_glmenu_from_dicts(sele_menu, self.glmenu_sele)
+            self.glmenu_sele.show_all()
+        else:
+            self.glmenu_sele = None
+        
+        if pick_menu:
+            self.glmenu_pick = Gtk.Menu()
+            self.glmenu_pick_toplabel = Gtk.MenuItem(label="picking")
+            self.glmenu_pick.append(self.glmenu_pick_toplabel)
+            self.build_glmenu_from_dicts(pick_menu, self.glmenu_pick)
+            self.glmenu_pick.show_all()
+        else:
+            self.glmenu_pick = None
+        
+        if obj_menu:
+            self.glmenu_obj = Gtk.Menu()
+            self.glmenu_obj_toplabel = Gtk.MenuItem(label="object")
+            self.glmenu_obj.append(self.glmenu_obj_toplabel)
+            self.build_glmenu_from_dicts(obj_menu, self.glmenu_obj)
+            self.glmenu_obj.show_all()
+        else:
+            self.glmenu_obj = None
+     
+    def open_file(self, widget):
+        """ Function doc """
+        if self.filechooser is None:
+            self.filechooser = FileChooser()
+        filename = self.filechooser.open()
+        self.vm_session.load_molecule(filename)
+    
+    def menu_item_action(self, widget):
+        """ Function doc """
+        print("menu_item_action")
+    
+    def _selection_type_picking(self, widget):
+        if self.selection_box_frame:
+            self.selection_box_frame.change_toggle_button_selecting_mode_status(True)
+        else:
+            self._picking_selection_mode = True
+        self.vm_glcore.queue_draw()
+    
+    def _selection_type_viewing(self, widget):
+        if self.selection_box_frame:
+            self.selection_box_frame.change_toggle_button_selecting_mode_status(False)
+        else:
+            self._picking_selection_mode = False
+        self.vm_glcore.queue_draw()
+
+    def quit(self, widget):
+        Gtk.main_quit()
     
     def insert_glmenu(self, bg_menu=None, sele_menu=None, obj_menu=None, pick_menu=None):
         """ Function doc """
         
         def _viewing_selection_mode_atom(_):
-            """ Function doc """
             self.viewing_selection_mode(sel_type="atom")
         
         def _viewing_selection_mode_residue(_):
-            """ Function doc """
             self.viewing_selection_mode(sel_type="residue")
         
         def _viewing_selection_mode_chain(_):
-            """ Function doc """
             self.viewing_selection_mode(sel_type="chain")
-        
-        def _selection_type_picking(_):
-            """ Function doc """
-            if self.selection_box_frame:
-                self.selection_box_frame.change_toggle_button_selecting_mode_status(True)
-            else:
-                self._picking_selection_mode = True
-            self.vm_glcore.queue_draw()
-        
-        def _selection_type_viewing(_):
-            if self.selection_box_frame:
-                self.selection_box_frame.change_toggle_button_selecting_mode_status(False)
-            else:
-                self._picking_selection_mode = False
-            self.vm_glcore.queue_draw()
         
         if sele_menu is None:
             """ Standard Sele Menu """
@@ -286,8 +328,8 @@ class VismolGTKWidget(Gtk.GLArea):
                     "Selection type"   : [
                                 "submenu" ,{
                                             
-                                            "viewing"   :  ["MenuItem", _selection_type_viewing],
-                                            "picking"   :  ["MenuItem", _selection_type_picking],
+                                            "viewing"   :  ["MenuItem", self._selection_type_viewing],
+                                            "picking"   :  ["MenuItem", self._selection_type_picking],
                                             #"separator2":["separator", None],
                                             #"nonbonded" : ["MenuItem", None],
                     
@@ -327,76 +369,29 @@ class VismolGTKWidget(Gtk.GLArea):
         
         if bg_menu is None:
             """ Standard Bg Menu"""
-            def open_structure_data(_):
-                """ Function doc """
-                self.filechooser = FileChooser()
-                filename = self.filechooser.open()
-                self.load(filename)
-            bg_menu = { 
-                    "separator0"   :["separator", None],
-
-                    "Open File"    : ["MenuItem", open_structure_data],
-                    
-                    "select" : ["MenuItem", select_test],
-
-                    "separator1":["separator", None],
-
-
-                    "Selection type"   : [
-                                "submenu" ,{
-                                            
-                                            "viewing"   :  ["MenuItem", _selection_type_viewing],
-                                            "picking"   :  ["MenuItem", _selection_type_picking],
-                                            #"separator2":["separator", None],
-                                            #"nonbonded" : ["MenuItem", None],
-                    
-                                           }
-                                        ],
-                    
-                    "Selection Mode"   : [
-                                "submenu" ,{
-                                            
-                                            "atoms"     :  ["MenuItem", _viewing_selection_mode_atom],
-                                            "residue"   :  ["MenuItem", _viewing_selection_mode_residue],
-                                            "chain"     :  ["MenuItem", _viewing_selection_mode_chain],
-                                            #"separator2":["separator", None],
-                                            #"nonbonded" : ["MenuItem", None],
-                    
+            bg_menu = {"Open File": ["MenuItem", self.open_file],
+                       "separator": ["separator", None],
+                       "Selection Type": ["submenu",
+                                            {"viewing": ["MenuItem", self._selection_type_viewing],
+                                             "picking": ["MenuItem", self._selection_type_picking],
+                                            }
+                                         ],
+                       "Selection Mode": ["submenu",
+                                            {"atoms": ["MenuItem", _viewing_selection_mode_atom],
+                                             "residue": ["MenuItem", _viewing_selection_mode_residue],
+                                             "chain": ["MenuItem", _viewing_selection_mode_chain],
+                                            }
+                                         ],
+                       "Hide": ["submenu", {"lines": ["MenuItem", menu_hide_lines],
+                                            "sticks": ["MenuItem", menu_hide_sticks],
+                                            "spheres": ["MenuItem", menu_hide_spheres],
+                                            "nonbonded": ["MenuItem", None],
                                            }
                                ],
-                    
-                    
-                    "hide"   : [
-                                "submenu",  {
-                                            "lines"    : ["MenuItem", menu_hide_lines],
-                                            "sticks"   : ["MenuItem", menu_hide_sticks],
-                                            "spheres"  : ["MenuItem", menu_hide_spheres],
-                                            "nonbonded": ["MenuItem", None],
-                                            }
-                                ],
-                    
-                    
-                    "separator2":["separator", None],
-
-                    
-                    
-                    "label":  ["submenu" , {
-                                            "Atom"         : [
-                                                               "submenu", {
-                                                                           "lines"    : ["MenuItem", None],
-                                                                           "sticks"   : ["MenuItem", None],
-                                                                           "spheres"  : ["MenuItem", None],
-                                                                           "nonbonded": ["MenuItem", None],
-                                                                           }
-                                                              ],
-                                            
-                                            "Atom index"   : ["MenuItem", None],
-                                            "residue name" : ["MenuItem", None],
-                                            "residue_index": ["MenuItem", None],
-                                           },
-                               ]
-                    }
-
+                       "separator": ["separator", None],
+                       "Quit": ["MenuItem", self.quit]
+                      }
+        
         if obj_menu is None:
             """ Standard Obj Menu"""
             obj_menu = { 
@@ -449,9 +444,7 @@ class VismolGTKWidget(Gtk.GLArea):
                                            },
                                ]
                     }
-
-
-
+        
         if pick_menu is None:
             """ Standard Sele Menu """
             pick_menu = { 
@@ -488,8 +481,7 @@ class VismolGTKWidget(Gtk.GLArea):
                     "separator2":["separator", None],
 
                     }
-        self.build_glmenu(bg_menu=bg_menu, sele_menu=sele_menu,
-                                    obj_menu=obj_menu, pick_menu=pick_menu)
+        self.build_glmenu(bg_menu=bg_menu, sele_menu=sele_menu, obj_menu=obj_menu, pick_menu=pick_menu)
     
 
     def build_submenus_from_dicts(self, menu_dict):
@@ -523,7 +515,7 @@ class VismolGTKWidget(Gtk.GLArea):
         return menu
         #menu.show_all()
 
-    def build_glmenu_from_dicts (self, menu_dict, glMenu):
+    def build_glmenu_from_dicts(self, menu_dict, glMenu):
         """ Function doc """
         for key in menu_dict:
             mitem = Gtk.MenuItem(label = key)
@@ -542,84 +534,21 @@ class VismolGTKWidget(Gtk.GLArea):
                     pass
             glMenu.append(mitem) 
 
-    def build_glmenu (self,  bg_menu  = None, sele_menu = None, obj_menu = None , pick_menu =  None):
+    def show_gl_menu(self, signals=None, menu_type=None, info=None):
         """ Function doc """
-        
-        """ Selection Menu """
-        # --------------------------------------------------------------- #
-        if sele_menu:
-            self.glMenu_sele           = Gtk.Menu()
-            self.glMenu_sele_toplabel =  Gtk.MenuItem(label = "selection")
-            self.glMenu_sele.append (self.glMenu_sele_toplabel)
-            
-            self.build_glmenu_from_dicts( sele_menu, self.glMenu_sele)
-           
-            self.glMenu_sele.show_all()
-
-        else:
-            self.glMenu_sele = None
-        # --------------------------------------------------------------- #
-        
-        """ Picking Menu """
-        # --------------------------------------------------------------- #
-        if pick_menu:
-            self.glMenu_pick           = Gtk.Menu()
-            self.glMenu_pick_toplabel =  Gtk.MenuItem(label = "picking")
-            self.glMenu_pick.append (self.glMenu_pick_toplabel)
-            
-            self.build_glmenu_from_dicts( pick_menu, self.glMenu_pick)
-           
-            self.glMenu_pick.show_all()
-
-        else:
-            self.glMenu_pick = None
-        # --------------------------------------------------------------- #
-
-        """ Background Menu """
-        # --------------------------------------------------------------- #
-        if bg_menu:
-            self.glMenu_bg  = Gtk.Menu()
-            self.glMenu_bg_toplabel =  Gtk.MenuItem(label = "background")
-            self.glMenu_bg.append (self.glMenu_bg_toplabel)
-
-            self.build_glmenu_from_dicts( bg_menu, self.glMenu_bg)
-            #self.glMenu_bg = self.build_submenus_from_dicts (bg_menu)
-            self.glMenu_bg.show_all()
-        else:
-            self.glMenu_bg = None
-        
-        
-        if obj_menu:
-            self.glMenu_obj  = Gtk.Menu()
-            self.glMenu_obj_toplabel =  Gtk.MenuItem(label = "atom")
-            self.glMenu_obj.append (self.glMenu_obj_toplabel)
-
-            self.build_glmenu_from_dicts( obj_menu, self.glMenu_obj)
-            self.glMenu_obj.show_all()
-        else:
-            self.glMenu_obj = None
-            
-     
-    def show_gl_menu (self, signals = None, menu_type = None, info = None):
-        """ Function doc """
-        
         if menu_type == "bg_menu":
-            if self.glMenu_bg:
-                self.glMenu_bg.popup(None, None, None, None, 0, 0)
-        
+            if self.glmenu_bg:
+                self.glmenu_bg.popup(None, None, None, None, 0, 0)
         
         if menu_type == "sele_menu":
-            if self.glMenu_sele:
-                self.glMenu_sele.popup(None, None, None, None, 0, 0)
+            if self.glmenu_sele:
+                self.glmenu_sele.popup(None, None, None, None, 0, 0)
         
         if menu_type == "pick_menu":
-            if self.glMenu_pick:
-                self.glMenu_pick.popup(None, None, None, None, 0, 0)
-        
+            if self.glmenu_pick:
+                self.glmenu_pick.popup(None, None, None, None, 0, 0)
         
         if menu_type == "obj_menu":
-            if self.glMenu_obj:
-                self.glMenu_obj_toplabel.set_label(info)
-                self.glMenu_obj.popup(None, None, None, None, 0, 0)
-        
-    
+            if self.glmenu_obj:
+                self.glmenu_obj_toplabel.set_label(info)
+                self.glmenu_obj.popup(None, None, None, None, 0, 0)

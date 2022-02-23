@@ -29,7 +29,7 @@ from core.vismol_session import VismolSession
 
 
 def main():
-    vm_session = VismolSession(widget=True, toolkit="gtk3")
+    vm_session = VismolSession(toolkit="gtk3")
     vm_session.vm_widget.insert_glmenu()
     window = Gtk.Window(title="Vismol window")
     container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)

@@ -26,21 +26,15 @@
 import os
 import numpy as np
 from utils import parser
-# from libgl.representations import DotsRepresentation
-# from libgl.representations import LinesRepresentation
-# from libgl.representations import SticksRepresentation
-# from libgl.representations import SpheresRepresentation
-# from libgl.representations import NonBondedRepresentation
 from core.vismol_config import VismolConfig
 from core.vismol_selections import VismolPickingSelection as VMPick
 from core.vismol_selections import VismolViewingSelection as VMSele
 
 
-
 class VismolSession():
     """ Class doc """
     
-    def __init__(self, widget=False, toolkit="gtk3", main_session=None):
+    def __init__(self, toolkit, widget=None, main_session=None):
         """ Class initialiser """
         self.main_session = None
         self.toolkit = toolkit
@@ -53,27 +47,28 @@ class VismolSession():
         self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None, "pk3pk4":None}
         self.atom_dic_id = {}
         self.atom_id_counter = 0
-        self.show_hide_indexes = None
         self._picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
         self.selections = {"sel01": VMSele(self)}
         self.current_selection = "sel01"
         self.picking_selections = VMPick(self)
         
-        if widget:
-            if toolkit == "gtk3":
-                from gui.vismol_gtkwidget import VismolGTKWidget
-                self.selection_box_frame = None
+        if toolkit == "gtk3":
+            from gui.vismol_gtkwidget import VismolGTKWidget
+            self.selection_box_frame = None
+            if widget is None:
                 self.vm_widget = VismolGTKWidget(self)
-                self.vm_glcore = self.vm_widget.vm_glcore
-                self.vm_glcore.queue_draw()
-                self.gtk_widgets_update_list = []
-            if toolkit == "qt4":
-                self.vm_widget = None
-                raise NotImplementedError("Not implemented yet for Qt4 :(")
-                quit()
+            else:
+                self.vm_widget = widget
+            self.vm_glcore = self.vm_widget.vm_glcore
+            self.vm_glcore.queue_draw()
+            self.gtk_widgets_update_list = []
+        elif toolkit == "qt4":
+            self.vm_widget = None
+            raise NotImplementedError("Not implemented yet for Qt4 :(")
+            quit()
         else:
             self.vm_widget = None
-            raise RuntimeError("Widget not found, quitting.")
+            raise RuntimeError("Toolkit not defined, quitting.")
             quit()
     
     def add_vismol_object(self, vismol_object=None, show_molecule=True, autocenter=True):
@@ -121,18 +116,18 @@ class VismolSession():
         self.change_attributes_for_selected_atoms(rep_type=rep_type, atoms=selection.selected_atoms,
                                                   show=show)
         for vm_object in selection.selected_objects:
-            self.show_hide_indexes = []
+            show_hide_indexes = []
             if rep_type == "lines":
                 for bond in vm_object.bonds:
                     if bond.atom_i.lines and bond.atom_j.lines:
-                        self.show_hide_indexes.append(bond.atom_index_i)
-                        self.show_hide_indexes.append(bond.atom_index_j)
+                        show_hide_indexes.append(bond.atom_index_i)
+                        show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "sticks":
                 for bond in vm_object.bonds:
                     if bond.atom_i.sticks and bond.atom_j.sticks:
-                        self.show_hide_indexes.append(bond.atom_index_i)
-                        self.show_hide_indexes.append(bond.atom_index_j)
+                        show_hide_indexes.append(bond.atom_index_i)
+                        show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "ribbon":
                 raise NotImplementedError("Not implementer for 'ribbon' yet.")
@@ -140,12 +135,12 @@ class VismolSession():
             elif rep_type == "dots":
                 for atom in vm_object.atoms:
                     if atom.dots:
-                        self.show_hide_indexes.append(vm_object.atoms.index(atom))
+                        show_hide_indexes.append(vm_object.atoms.index(atom))
             
             elif rep_type == "nonbonded":
                 for atom in vm_object.atoms:
                     if atom.nonbonded:
-                        self.show_hide_indexes.append(vm_object.atoms.index(atom))
+                        show_hide_indexes.append(vm_object.atoms.index(atom))
             
             elif rep_type == "impostor":
                 raise NotImplementedError("Not implementer for 'impostor' yet.")
@@ -159,8 +154,8 @@ class VismolSession():
             elif rep_type == "cartoon":
                 raise NotImplementedError("Not implementer for 'cartoon' yet.")
             
-            if len(self.show_hide_indexes) > 0:
-                vm_object.representations[rep_type].define_new_indexes_to_vbo(indexes_bonds)
+            if len(show_hide_indexes) > 0:
+                vm_object.representations[rep_type].define_new_indexes_to_vbo(show_hide_indexes)
                 vm_object.representations[rep_type].active = True
             else:
                 vm_object.representations[rep_type].active = False
@@ -279,21 +274,6 @@ class VismolSession():
         #print(sel_type)
         self.selections[self.current_selection]._selection_mode = sel_type
     
-    def selection_function(self, pickedID):
-        """ Function doc """
-        #print("selection_function")
-        if pickedID is None:
-            selected = None
-        else:
-            selected = self.atom_dic_id[pickedID]
-        
-        #"""     P I C K I N G     S E L E C T I O N S     """
-        if self._picking_selection_mode:
-            self.picking_selections.selection_function_picking(selected)
-        
-        else:
-            self.selections[self.current_selection].selection_function_viewing(selected)
-    
     def _selection_function(self, selected, _type=None, disable=True):
         #"""     P I C K I N G     S E L E C T I O N S     """
         #print("_selection_function")
@@ -303,364 +283,3 @@ class VismolSession():
         #"""     V I E W I N G     S E L E C T I O N S     """
         else:
             self.selections[self.current_selection].selection_function_viewing(selected, _type, disable)
-    
-
-
-
-
-'''
-    def gtk_widgets_update(self):
-        """ Function doc """
-        for widget in self.gtk_widgets_update_list:
-            widget.update()
-    
-    def insert_glmenu(self, bg_menu=None, sele_menu=None, obj_menu=None, pick_menu=None):
-        """ Function doc """
-        
-        def _viewing_selection_mode_atom(_):
-            """ Function doc """
-            self.viewing_selection_mode(sel_type="atom")
-        
-        def _viewing_selection_mode_residue(_):
-            """ Function doc """
-            self.viewing_selection_mode(sel_type="residue")
-        
-        def _viewing_selection_mode_chain(_):
-            """ Function doc """
-            self.viewing_selection_mode(sel_type="chain")
-        
-        def _selection_type_picking(_):
-            """ Function doc """
-            if self.selection_box_frame:
-                self.selection_box_frame.change_toggle_button_selecting_mode_status(True)
-            else:
-                self._picking_selection_mode = True
-            self.vm_glcore.queue_draw()
-        
-        def _selection_type_viewing(_):
-            if self.selection_box_frame:
-                self.selection_box_frame.change_toggle_button_selecting_mode_status(False)
-            else:
-                self._picking_selection_mode = False
-            self.vm_glcore.queue_draw()
-        
-        if sele_menu is None:
-            """ Standard Sele Menu """
-            
-            def select_test(_):
-                """ Function doc """
-                self.select(indexes="all")
-            
-            def menu_show_lines(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="lines", show=True)
-            
-            def menu_hide_lines(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="lines", show=False)
-            
-            def menu_show_sticks(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="sticks", show=True)
-            
-            def menu_show_nonbonded(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="nonbonded", show=True)
-            
-            def menu_hide_nonbonded(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="nonbonded", show=False)
-            
-            def menu_hide_sticks(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="sticks", show=False)
-            
-            def menu_show_spheres(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="spheres", show=True)
-            
-            def menu_hide_spheres(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="spheres", show=False)
-            
-            def menu_show_dots(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="dots", show=True)
-            
-            def menu_hide_dots(_):
-                """ Function doc """
-                self.show_or_hide(rep_type="dots", show=False)
-            
-            def invert_selection(_):
-                """ Function doc """
-                self.selections[self.current_selection].invert_selection()
-            
-            sele_menu = { 
-                    "header" : ["MenuItem", None],
-                    "separator1":["separator", None],
-                    "show"   : [
-                                "submenu" ,{
-                                            
-                                            "lines"         : ["MenuItem", menu_show_lines],
-                                            "sticks"        : ["MenuItem", menu_show_sticks],
-                                            "spheres"       : ["MenuItem", menu_show_spheres],
-                                            "dots"          : ["MenuItem", menu_show_dots],
-                                            "separator2"    : ["separator", None],
-                                            "nonbonded"     : ["MenuItem", menu_show_nonbonded],
-                    
-                                           }
-                               ],
-                    
-                    
-                    "hide"   : [
-                                "submenu",  {
-                                            "lines"    : ["MenuItem", menu_hide_lines],
-                                            "sticks"   : ["MenuItem", menu_hide_sticks],
-                                            "spheres"  : ["MenuItem", menu_hide_spheres],
-                                            "dots"     : ["MenuItem", menu_hide_dots],
-                                            "separator2"    : ["separator", None],
-                                            "nonbonded": ["MenuItem", menu_hide_nonbonded],
-                                            }
-                                ],
-                    
-                    "Invert Selection":["MenuItem", invert_selection],
-                    
-                    "separator2":["separator", None],
-            
-                    
-                    
-                    "Selection type"   : [
-                                "submenu" ,{
-                                            
-                                            "viewing"   :  ["MenuItem", _selection_type_viewing],
-                                            "picking"   :  ["MenuItem", _selection_type_picking],
-                                            #"separator2":["separator", None],
-                                            #"nonbonded" : ["MenuItem", None],
-                    
-                                           }
-                                        ],
-                    
-                    "Selection Mode"   : [
-                                "submenu" ,{
-                                            
-                                            "Atoms"     :  ["MenuItem", _viewing_selection_mode_atom],
-                                            "Residue"   :  ["MenuItem", _viewing_selection_mode_residue],
-                                            "Chain"     :  ["MenuItem", _viewing_selection_mode_chain],
-                                            #"separator2":["separator", None],
-                                            #"nonbonded" : ["MenuItem", None],
-                    
-                                           }
-                               ],
-                    
-                    "separator3":["separator", None],
-                    
-                    "Label Mode":  ["submenu" , {
-                                            "Atom"         : [
-                                                               "submenu", {
-                                                                           "lines"    : ["MenuItem", None],
-                                                                           "sticks"   : ["MenuItem", None],
-                                                                           "spheres"  : ["MenuItem", None],
-                                                                           "nonbonded": ["MenuItem", None],
-                                                                           }
-                                                              ],
-                                            
-                                            "Atom index"   : ["MenuItem", None],
-                                            "residue name" : ["MenuItem", None],
-                                            "residue_index": ["MenuItem", None],
-                                           },
-                               ]
-                    }
-        
-        if bg_menu is None:
-            """ Standard Bg Menu"""
-            def open_structure_data(_):
-                """ Function doc """
-                self.filechooser = FileChooser()
-                filename = self.filechooser.open()
-                self.load(filename)
-            bg_menu = { 
-                    "separator0"   :["separator", None],
-
-                    "Open File"    : ["MenuItem", open_structure_data],
-                    
-                    "select" : ["MenuItem", select_test],
-
-                    "separator1":["separator", None],
-
-
-                    "Selection type"   : [
-                                "submenu" ,{
-                                            
-                                            "viewing"   :  ["MenuItem", _selection_type_viewing],
-                                            "picking"   :  ["MenuItem", _selection_type_picking],
-                                            #"separator2":["separator", None],
-                                            #"nonbonded" : ["MenuItem", None],
-                    
-                                           }
-                                        ],
-                    
-                    "Selection Mode"   : [
-                                "submenu" ,{
-                                            
-                                            "atoms"     :  ["MenuItem", _viewing_selection_mode_atom],
-                                            "residue"   :  ["MenuItem", _viewing_selection_mode_residue],
-                                            "chain"     :  ["MenuItem", _viewing_selection_mode_chain],
-                                            #"separator2":["separator", None],
-                                            #"nonbonded" : ["MenuItem", None],
-                    
-                                           }
-                               ],
-                    
-                    
-                    "hide"   : [
-                                "submenu",  {
-                                            "lines"    : ["MenuItem", menu_hide_lines],
-                                            "sticks"   : ["MenuItem", menu_hide_sticks],
-                                            "spheres"  : ["MenuItem", menu_hide_spheres],
-                                            "nonbonded": ["MenuItem", None],
-                                            }
-                                ],
-                    
-                    
-                    "separator2":["separator", None],
-
-                    
-                    
-                    "label":  ["submenu" , {
-                                            "Atom"         : [
-                                                               "submenu", {
-                                                                           "lines"    : ["MenuItem", None],
-                                                                           "sticks"   : ["MenuItem", None],
-                                                                           "spheres"  : ["MenuItem", None],
-                                                                           "nonbonded": ["MenuItem", None],
-                                                                           }
-                                                              ],
-                                            
-                                            "Atom index"   : ["MenuItem", None],
-                                            "residue name" : ["MenuItem", None],
-                                            "residue_index": ["MenuItem", None],
-                                           },
-                               ]
-                    }
-
-        if obj_menu is None:
-            """ Standard Obj Menu"""
-            obj_menu = { 
-                    "OBJ menu" : ["MenuItem", None],
-                    
-                    
-                    "separator1":["separator", None],
-                    
-                    
-                    "show"   : [
-                                "submenu" ,{
-                                            
-                                            "lines"    : ["MenuItem", menu_show_lines],
-                                            "sticks"   : ["MenuItem", menu_show_sticks],
-                                            "spheres"  : ["MenuItem", menu_show_spheres],
-                                            "separator2":["separator", None],
-                                            "nonbonded": ["MenuItem", None],
-                    
-                                           }
-                               ],
-                    
-                    
-                    "hide"   : [
-                                "submenu",  {
-                                            "lines"    : ["MenuItem", menu_hide_lines],
-                                            "sticks"   : ["MenuItem", menu_hide_sticks],
-                                            "spheres"  : ["MenuItem", menu_hide_spheres],
-                                            "nonbonded": ["MenuItem", None],
-                                            }
-                                ],
-                    
-                    
-                    "separator2":["separator", None],
-
-                    
-                    
-                    "label":  ["submenu" , {
-                                            "Atom"         : [
-                                                               "submenu", {
-                                                                           "lines"    : ["MenuItem", None],
-                                                                           "sticks"   : ["MenuItem", None],
-                                                                           "spheres"  : ["MenuItem", None],
-                                                                           "nonbonded": ["MenuItem", None],
-                                                                           }
-                                                              ],
-                                            
-                                            "atomic index" : ["MenuItem", None],
-                                            "residue name" : ["MenuItem", None],
-                                            "residue_index": ["MenuItem", None],
-                                           },
-                               ]
-                    }
-
-
-
-        if pick_menu is None:
-            """ Standard Sele Menu """
-            pick_menu = { 
-                    "header" : ["MenuItem", None],
-                    
-                    
-                    
-                    "separator1":["separator", None],
-                    
-                    
-                    "show"   : [
-                                "submenu" ,{
-                                            
-                                            "lines"         : ["MenuItem", menu_show_lines],
-                                            "sticks"        : ["MenuItem", menu_show_sticks],
-                                            "spheres"       : ["MenuItem", menu_show_spheres],
-                                            "separator2"    : ["separator", None],
-                                            "nonbonded"     : ["MenuItem", None],
-                    
-                                           }
-                               ],
-                    
-                    
-                    "hide"   : [
-                                "submenu",  {
-                                            "lines"    : ["MenuItem", menu_hide_lines],
-                                            "sticks"   : ["MenuItem", menu_hide_sticks],
-                                            "spheres"  : ["MenuItem", menu_hide_spheres],
-                                            "nonbonded": ["MenuItem", None],
-                                            }
-                                ],
-                    
-                    
-                    "separator2":["separator", None],
-
-                    }
-        self.vm_widget.build_glmenu(bg_menu=bg_menu, sele_menu=sele_menu,
-                                    obj_menu=obj_menu, pick_menu=pick_menu)
-    
-    def command_line (self, entry = None):
-        """ Function doc """
-        cmd = entry.split()
-        print (cmd)
-        
-        obj     = int(cmd[1]            )
-        _indexes = cmd[2].split("+")
-        indexes = []
-        
-        
-        for index in _indexes:
-            indexes.append(int(index))
-        
-        if cmd[0] == "show":
-            self._show_lines (vismol_object = self.vm_objects[obj], 
-                                       indexes = indexes)       
-        
-        if cmd[0] == "hide":
-            self._hide_lines (vismol_object = self.vm_objects[obj], 
-                                       indexes = indexes)  
-        
-        self.ctrl = True
-        
-        
-        print (entry)
-       
-'''

@@ -141,7 +141,7 @@ class VismolObject:
         self.picking_dots_vao    = None
         self.picking_dot_buffers = None
         
-        if len(atoms) != 0:
+        if len(atoms_info) != 0:
             self._generate_atomtree_structure()
             self._generate_color_vectors()
         """

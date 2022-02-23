@@ -25,7 +25,7 @@
 import numpy as np
 cimport numpy as np
 
-def my_glSideVectorAbs(in_matrix):
+cpdef my_glSideVectorAbs(in_matrix):
     """ Uses a numpy array as input to obtain the side vector untransformed,
         i.e. when you apply a modification to a vector using a matrix,
         its coordinates are changed, so this function returns the
@@ -44,7 +44,7 @@ def my_glSideVectorAbs(in_matrix):
     side = np.array(inv_mat*side).T
     return side[0,:3]
 
-def my_glUpVectorAbs(in_matrix):
+cpdef my_glUpVectorAbs(in_matrix):
     """ Uses a 4x4 matrix as input to obtain the up vector untransformed,
         i.e. when you apply a modification to a vector using a matrix,
         its coordinates are changed, so this function returns the
@@ -63,7 +63,7 @@ def my_glUpVectorAbs(in_matrix):
     side = np.array(inv_mat*side).T
     return side[0,:3]
 
-def my_glForwardVectorAbs(in_matrix):
+cpdef my_glForwardVectorAbs(in_matrix):
     """ Uses a 4x4 matrix as input to obtain the forward vector untransformed,
         i.e. when you apply a modification to a vector using a matrix,
         its coordinates are changed, so this function returns the
@@ -82,7 +82,7 @@ def my_glForwardVectorAbs(in_matrix):
     side = np.array(inv_mat*side).T
     return side[0,:3]
 
-def my_glTranslatef(np.ndarray in_matrix, np.ndarray position):
+cpdef my_glTranslatef(np.ndarray in_matrix, np.ndarray position):
     """ Creates a translation matrix using an identity matrix and the
         position's coordinates at the last row, but only the xyz components.
         As initial result, you get the following matrix:
@@ -107,7 +107,7 @@ def my_glTranslatef(np.ndarray in_matrix, np.ndarray position):
     trans_matrix[3,:3] = position
     return my_glMultiplyMatricesf(in_matrix, trans_matrix)
 
-def my_glMultiplyMatricesf(np.ndarray mat1, np.ndarray mat2):
+cpdef my_glMultiplyMatricesf(np.ndarray mat1, np.ndarray mat2):
     """ Multiplication of matrices in the order [mat1] x [mat2].
         
         Keyword arguments:
@@ -139,7 +139,7 @@ def my_glMultiplyMatricesf(np.ndarray mat1, np.ndarray mat2):
     result[3,3] = mat1[3,0]*mat2[0,3]+mat1[3,1]*mat2[1,3]+mat1[3,2]*mat2[2,3]+mat1[3,3]*mat2[3,3]
     return result
 
-def my_glRotatef(np.ndarray in_matrix, np.float32_t angle, np.ndarray dir_vec):
+cpdef my_glRotatef(np.ndarray in_matrix, np.float32_t angle, np.ndarray dir_vec):
     """ Produces a rotation matrix of "angle" degrees around the vector 
         "dir_vec", then multiply the input matrix "in_matrix" with this 
         rotation matrix "rot_matrix" in the order [in_matrix] x [trans_matrix].
@@ -179,7 +179,7 @@ def my_glRotatef(np.ndarray in_matrix, np.float32_t angle, np.ndarray dir_vec):
     rot_matrix[2,2] = z*z*(1-c)+c
     return my_glMultiplyMatricesf(in_matrix, rot_matrix)
 
-def my_glPerspectivef(np.float32_t fovy, np.float32_t aspect, np.float32_t z_near, np.float32_t z_far):
+cpdef my_glPerspectivef(np.float32_t fovy, np.float32_t aspect, np.float32_t z_near, np.float32_t z_far):
     """ Creates a perspective matrix with "fovy" as field of view, "aspect" as
         viewport aspect ratio, "z_near" as the near clipping plane and "z_far"
         as far clipping plane. The perpective matrix is constructed in the form:
@@ -203,7 +203,7 @@ def my_glPerspectivef(np.float32_t fovy, np.float32_t aspect, np.float32_t z_nea
     pers_matrix[2,3] = -1.0
     return pers_matrix
 
-def my_glFrustumf(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.float32_t top, np.float32_t near, np.float32_t far):
+cpdef my_glFrustumf(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.float32_t top, np.float32_t near, np.float32_t far):
     """ Creates a frustrum to use as perspective matrix. Uses the "left" and 
         "right" as leaft and rigth vertical clipping planes of the frustrum.
         The "top" and "bottom" as the top and bottom horizontal clipping planes.
@@ -226,7 +226,7 @@ def my_glFrustumf(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np
     frust[3,2] = -2.0*near*far/(far-near)
     return frust
 
-def my_glOrthof(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.float32_t top, np.float32_t near, np.float32_t far):
+cpdef my_glOrthof(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.float32_t top, np.float32_t near, np.float32_t far):
     """ 
     """
     cdef np.ndarray[np.float32_t, ndim=2] ortho = np.zeros((4,4), dtype=np.float32)
@@ -239,7 +239,7 @@ def my_glOrthof(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.f
     ortho[3,3] = 1.0
     return ortho
 
-def get_xyz_coords(np.ndarray xyz_mat):
+cpdef get_xyz_coords(np.ndarray xyz_mat):
     """ Returns the x, y, z position contained in the xyz_mat matrix. The
         input matrix needs to be a 4x4 matrix.
     """
@@ -250,7 +250,7 @@ def get_xyz_coords(np.ndarray xyz_mat):
     cdef np.ndarray[np.float32_t, ndim=1] position = pos.dot(rot_mat)
     return position
 
-def get_inverse_matrix(mat):
+cpdef get_inverse_matrix(mat):
     """ Function doc
     """
     mat_o = np.matrix(np.copy(mat))
