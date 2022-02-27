@@ -215,14 +215,14 @@ class VismolGTKWidget(Gtk.GLArea):
         if self.selection_box_frame:
             self.selection_box_frame.change_toggle_button_selecting_mode_status(True)
         else:
-            self.vm_session._picking_selection_mode = True
+            self.vm_session.picking_selection_mode = True
         self.queue_draw()
     
     def _selection_type_viewing(self, widget):
         if self.selection_box_frame:
             self.selection_box_frame.change_toggle_button_selecting_mode_status(False)
         else:
-            self.vm_session._picking_selection_mode = False
+            self.vm_session.picking_selection_mode = False
         self.queue_draw()
     
     def quit(self, widget):
@@ -292,12 +292,11 @@ class VismolGTKWidget(Gtk.GLArea):
                                     {"dots": ["MenuItem", self.menu_show_dots],
                                      "lines": ["MenuItem", self.menu_show_lines],
                                      "nonbonded": ["MenuItem", self.menu_show_nonbonded],
-                                     "separator": ["separator", None],
                                     }
                                  ],
                          "Hide": ["submenu",
-                                    {"lines": ["MenuItem", self.menu_hide_lines],
-                                     "dots": ["MenuItem", self.menu_hide_dots],
+                                    {"dots": ["MenuItem", self.menu_hide_dots],
+                                     "lines": ["MenuItem", self.menu_hide_lines],
                                      "nonbonded": ["MenuItem", self.menu_hide_nonbonded],
                                     }
                                  ],

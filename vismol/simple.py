@@ -22,13 +22,17 @@
 #
 #
 
+import logging
 import gi, sys
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
 from core.vismol_session import VismolSession
 
+logger = logging.getLogger(__name__)
+
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
     vm_session = VismolSession(toolkit="gtk3")
     vm_session.vm_widget.insert_glmenu()
     window = Gtk.Window(title="Vismol window")

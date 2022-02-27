@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  __main__.py
+#  atom.py
 #  
 #  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
 #  
@@ -23,88 +23,60 @@
 #  
 
 import numpy as np
-from model import molecular_properties
 from model.molecular_properties import ATOM_TYPES
-from model.molecular_properties import ATOM_TYPES_LIST
-from model.molecular_properties import ATOM_TYPES_BY_ATOMICNUMBER
 
 
 class Atom:
     """ Class doc """
-    def __init__ (self, name         = 'Xx',
-                        index        = None, 
-                        symbol       = None, 
-                        pos          = None, 
-                        resi         = None, 
-                        resn         = None, 
-                        chain        = ''  , 
-                        atom_id      = 0   , 
-                        residue      = 'X' ,
-                        color        = None,
-                        color_id     = None,
-                        radius       = None,
-                        vdw_rad      = None,
-                        cov_rad      = None,
-                        ball_radius  = None,
-                        occupancy    = 0.0 ,
-                        bfactor      = 0.0 , 
-                        charge       = 0.0 ,
-                        bonds_indexes= []  ,
-                        vismol_object= None):
-        self.pos        = pos     # - coordinates of the first frame
-        self.index      = index   # - Remember that the "index" attribute refers to the numbering of atoms 
-                                  # (it is not a zero base, it starts at 1 for the first atom)
-        self.name       = name    #
-        if symbol:
-            self.symbol = symbol  #
+    
+    def __init__(self, vismol_object=None, name="Xx", index=None, residue=None,
+                 chain=None, pos=None, symbol=None, atom_id=None, color=None,
+                 vdw_rad=None, cov_rad=None, ball_rad=None,
+                 occupancy=0.0, bfactor=0.0, charge=0.0, bonds_indexes=None):
+        """ Class initializer """
+        self.vm_object = vismol_object
+        self.name = name
+        self.index = index   # - Remember that the "index" attribute refers to the numbering of atoms (it is not a zero base, it starts at 1 for the first atom)
+        self.residue = residue
+        self.chain = chain
+        self.pos = pos     # - coordinates of the first frame
+        self.unique_id = None
+        
+        # self.symbol = self._get_symbol(self.name) if (symbol is None) else symbol
+        if symbol is None:
+            self.symbol = self._get_symbol()
         else:
-            self.symbol = self.get_symbol(self.name)
-        self.resi       = resi    #
-        self.resn       = resn    #
-        self.chain      = chain   #
-        self.vm_object  = vismol_object
-        self.residue    = residue    
-        self.occupancy  = occupancy
-        self.bfactor    = bfactor  
-        self.charge     = charge   
-        self.atom_id = atom_id        # An unique number
-        #----------------------------------------------        
-        if color:
+            self.symbol = symbol
+        self.atom_id = atom_id
+        
+        if color is None:
+            self.color = self._init_color()
+        else:
             self.color = color
-        else:
-            self.color   = self.init_color (self.symbol)
-        #----------------------------------------------        
-        if color_id:
-            self.color_id = color_id
-        else:
-            self._generate_atom_unique_color_id ()
-        #----------------------------------------------
         
-        #self.col_rgb      = self.init_color_rgb(self.symbol)
-        if radius:
-            self.radius = radius
+        if vdw_rad is None:
+            self.vdw_rad = self._init_vdw_rad()
         else:
-            self.radius       = self.init_radius   (self.symbol)
-        
-
-        if vdw_rad:
             self.vdw_rad = vdw_rad
+        
+        if cov_rad is None:
+            self.cov_rad = self._init_cov_rad()
         else:
-            self.vdw_rad = self.init_vdw_rad  (self.symbol)
-        
-        
-        if cov_rad:
             self.cov_rad = cov_rad
-        else:
-            self.cov_rad = self.init_cov_rad  (self.symbol)
         
-
-        if ball_radius:
-            self.ball_radius = ball_radius
+        if ball_rad is None:
+            self.ball_rad = self._init_ball_rad()
         else:
-            self.ball_radius  = self.init_ball_rad (self.symbol)
-
-
+            self.ball_rad = ball_rad
+        
+        self.occupancy = occupancy
+        self.bfactor = bfactor
+        self.charge = charge
+        if bonds_indexes is None:
+            self.bonds_indexes = []
+        else:
+            self.bonds_indexes = bonds_indexes
+        
         self.selected       = False
         self.lines          = True
         self.dots           = False
@@ -114,64 +86,170 @@ class Atom:
         self.sticks         = False
         self.spheres        = False
         self.surface        = False
-        self.bonds_indexes  = bonds_indexes
         self.bonds          = []
-
         self.isfree         = True
-        #self.sphere_data    = self.get_sphere_data(self.symbol)
+    
+    def _get_symbol(self):
+        """ Function doc """
+        name = self.name.strip()
+        if name == "":
+            return ""
         
-
+        _n = name
+        for char in name:
+            if char.isnumeric():
+                _n = _n.replace(char, "")
+        name = _n
+        
+        if len(name) >= 3:
+            name = name[:2]
+        
+        # This can't happen since before all numbers have been converted to strings
+        # if len(name) == 2:
+        #     if name[1].isnumeric():
+        #         symbol = name[0]
+        
+        # The capitalization of hte name can solve all the next ifs
+        # name = name.lower().capitalize()
+        if name in ATOM_TYPES.keys():
+            return name
+        else:
+            if name[0] == "H":
+                if name[1] == "g":
+                    symbol =  "Hg"
+                elif name[1] =="e":
+                    symbol = "He"
+                else:
+                    symbol =  "H"
+            
+            elif name[0] == "C":
+                if name[1] == "a":
+                    symbol = "Ca"
+                elif name[1] =="l":
+                    symbol = "Cl"
+                elif name[1] =="d":
+                    symbol = "Cd"
+                elif name[1] =="u":
+                    symbol = "Cu"
+                else:
+                    symbol = "C"
+            
+            elif name[0] == "N":
+                if name[1] == "i":
+                    symbol = "Ni"
+                elif name[1] == "a":
+                    symbol = "Na"
+                elif name[1] == "e":
+                    symbol = "Ne"
+                elif name[1] == "b":
+                    symbol = "Nb"
+                else:
+                    symbol = "N"
+            
+            elif name[0] == "O":
+                if name[1] == "s":
+                    symbol = "Os"
+                else:
+                    symbol = "O"
+            
+            elif name[0] == "S":
+                if name[1] == "I":
+                    symbol = "Si"
+                elif name[1] == "e":
+                    symbol = "Se"
+                else:
+                    symbol = "S"
+            
+            elif name[0] == "P":
+                if name[1] == "d":
+                    symbol = "Pd"
+                elif  name[1] == "b":
+                    symbol = "Pb"
+                elif  name[1] == "o":
+                    symbol = "Po"
+                else:
+                    symbol = "P" 
+            
+            elif name[0] == "M":
+                if name[1] == "n":
+                    symbol = "Mn"
+                elif name[1] == "N":
+                    symbol = "Mn"
+                elif name[1] == "o":
+                    symbol = "Mo"
+                elif name[1] == "G":
+                    symbol = "Mg"
+                else:
+                    symbol = "X"
+            else:
+                symbol = "X"
+        return symbol
+    
+    def _init_color(self):
+        """ Return the color of an atom in RGB. Note that the returned
+            value is in scale of 0 to 1, but you can change this in the
+            index. If the atomname does not match any of the names
+            given, it returns the default dummy value of atom X.
+        """
+        try:
+            color = self.vm_object.color_palette[self.name]
+        except KeyError:
+            # print(self.symbol, "Atom")
+            color = self.vm_object.color_palette[self.symbol]
+        return np.array(color, dtype=np.float32)
+    
+    def _generate_atom_unique_color_id(self):
+        """ Function doc """
+        r = (self.unique_id & 0x000000FF) >> 0
+        g = (self.unique_id & 0x0000FF00) >> 8
+        b = (self.unique_id & 0x00FF0000) >> 16
+        # pickedID = r + g * 256 + b * 256*256
+        self.color_id = np.array([r/255.0, g/255.0, b/255.0], dtype=np.float32)
+    
+    def _init_vdw_rad(self):
+        """ Function doc """
+        try:
+            vdw = ATOM_TYPES[self.name][6]
+        except KeyError:
+            vdw = ATOM_TYPES[self.symbol][6]
+        return vdw
+    
+    def _init_cov_rad(self):
+        """ Function doc """
+        try:
+            cov = ATOM_TYPES[self.name][5]
+        except KeyError:
+            cov = ATOM_TYPES[self.symbol][5]
+        return cov
+    
+    def _init_ball_rad(self):
+        """ Function doc """
+        try:
+            ball = ATOM_TYPES[self.name][6]
+        except KeyError:
+            ball = ATOM_TYPES[self.symbol][6]
+        return ball
     
     def coords(self, frame=None):
         """ Function doc """
         if frame is None:
-            frame  = self.vm_object.vismolSession.glwidget.vm_widget.frame
-        x = self.vm_object.frames[frame][(self.index-1)*3  ]
-        y = self.vm_object.frames[frame][(self.index-1)*3+1]
-        z = self.vm_object.frames[frame][(self.index-1)*3+2]
-        return np.array([x, y, z])
-
-    def get_grid_position (self, gridsize = 3, frame = None):
-        """ Function doc """
-        coords = self.coords (frame)
-        gridpos  = (int(coords[0]/gridsize), int(coords[1]/gridsize), int(coords[2]/gridsize))
-        return gridpos
-
+            frame  = self.vm_object.vm_session.frame
+        # x = self.vm_object.frames[frame][(self.index-1)*3  ]
+        # y = self.vm_object.frames[frame][(self.index-1)*3+1]
+        # z = self.vm_object.frames[frame][(self.index-1)*3+2]
+        # return np.array([x, y, z])
+        return self.vm_object.frames[frame, self.atom_id]
     
-    def get_cov_rad (self):
+    def get_grid_position(self, gridsize=3, frame=None):
         """ Function doc """
-        return self.cov_rad 
-
-    #def get_color (self):
-    #    """ Function doc """
-    #    #self.at = vismol_object.vismolSession.vConfig.atom_types
-    #
-    #    self.color   = self.at.get_color(self.symbol)
- 
-    def _generate_atom_unique_color_id (self): #, vismolSession = None):
+        coords = self.coords(frame)
+        gridpos = (int(coords[0]/gridsize), int(coords[1]/gridsize), int(coords[2]/gridsize))
+        return gridpos
+    
+    def get_cov_rad(self):
         """ Function doc """
-        i = self.atom_id
-        r = (i & 0x000000FF) >>  0
-        g = (i & 0x0000FF00) >>  8
-        b = (i & 0x00FF0000) >> 16
-       
-        pickedID = r + g * 256 + b * 256*256
-        self.color_id = [r/255.0, g/255.0, b/255.0]
-        #print ('pickedID',pickedID, self.atom_id)
-        #return pickedID
-        #self.vm_object.vismolSession.atom_dic_id[pickedID] = self
-
-
-
-
-
-
-
-
-
-
-
-
+        return self.cov_rad
+    
     def init_color_rgb(self, name):
         """ Return the color of an atom in RGB. Note that the returned
             value is in scale of 0 to 1, but you can change this in the
@@ -182,376 +260,48 @@ class Atom:
             color = color =self.vm_object.color_palette[name]
             #color = ATOM_TYPES[name][1]
         except KeyError:
-            if name[0] == 'H':# or name in self.hydrogen:
-                #color = ATOM_TYPES['H'][1]
-                color = self.vm_object.color_palette['H']
+            if name[0] == "H":# or name in self.hydrogen:
+                #color = ATOM_TYPES["H"][1]
+                color = self.vm_object.color_palette["H"]
             
-            elif name[0] == 'C':
-                #color = ATOM_TYPES['C'][1]
-                color = self.vm_object.color_palette['C']
+            elif name[0] == "C":
+                #color = ATOM_TYPES["C"][1]
+                color = self.vm_object.color_palette["C"]
             
-            elif name[0] == 'O':
-                #color = ATOM_TYPES['O'][1]
-                color = self.vm_object.color_palette['O']
+            elif name[0] == "O":
+                #color = ATOM_TYPES["O"][1]
+                color = self.vm_object.color_palette["O"]
             
-            elif name[0] == 'N':
-                #color = ATOM_TYPES['N'][1]
-                color = self.vm_object.color_palette['N']
+            elif name[0] == "N":
+                #color = ATOM_TYPES["N"][1]
+                color = self.vm_object.color_palette["N"]
                 
-            elif name[0] == 'S':
-                #color = ATOM_TYPES['S'][1]
-                color = self.vm_object.color_palette['S']
+            elif name[0] == "S":
+                #color = ATOM_TYPES["S"][1]
+                color = self.vm_object.color_palette["S"]
             else:
-                #color = ATOM_TYPES['X'][1]
-                color = self.vm_object.color_palette['X']
+                #color = ATOM_TYPES["X"][1]
+                color = self.vm_object.color_palette["X"]
                 
         color = [int(color[0]*250), int(color[1]*250), int(color[2]*250)]
         return color
-
-    def init_color(self, name):
-        """ Return the color of an atom in RGB. Note that the returned
-            value is in scale of 0 to 1, but you can change this in the
-            index. If the atomname does not match any of the names
-            given, it returns the default dummy value of atom X.
-        """
-        try:
-            color = color =self.vm_object.color_palette[name]
-            #color = ATOM_TYPES[name][1]
-        except KeyError:
-            if name[0] == 'H':# or name in self.hydrogen:
-                #color = ATOM_TYPES['H'][1]
-                color = self.vm_object.color_palette['H']
-            
-            elif name[0] == 'C':
-                #color = ATOM_TYPES['C'][1]
-                color = self.vm_object.color_palette['C']
-            
-            elif name[0] == 'O':
-                #color = ATOM_TYPES['O'][1]
-                color = self.vm_object.color_palette['O']
-            
-            elif name[0] == 'N':
-                #color = ATOM_TYPES['N'][1]
-                color = self.vm_object.color_palette['N']
-                
-            elif name[0] == 'S':
-                #color = ATOM_TYPES['S'][1]
-                color = self.vm_object.color_palette['S']
-            else:
-                #color = ATOM_TYPES['X'][1]
-                color = self.vm_object.color_palette['X']
-                ##print(name)
-        return color
-
-    def init_cov_rad(self, name):
-        """
-        """
-        
-        
-        try:
-            rad = ATOM_TYPES[name][5]
-        except KeyError:
-            if name[0] == 'H' or name in self.hydrogen:
-                rad = ATOM_TYPES['H'][5]
-            elif name[0] == 'C':
-                rad = ATOM_TYPES['C'][5]
-            elif name[0] == 'O':
-                rad = ATOM_TYPES['O'][5]
-            elif name[0] == 'N':
-                rad = ATOM_TYPES['N'][5]
-            elif name[0] == 'S':
-                rad = ATOM_TYPES['S'][5]
-            else:
-                rad = 0.30
-        #if name[0] == "P":
-        #    print (name, rad)
-        return rad
-
+    
     def init_radius(self, name):
         """
         """
         try:
             rad = ATOM_TYPES[name][6]/5.0
         except KeyError:
-            if name[0] == 'H' or name in self.hydrogen:
-                rad = ATOM_TYPES['H'][6]/5.0
-            elif name[0] == 'C':
-                rad = ATOM_TYPES['C'][6]/5.0
-            elif name[0] == 'O':
-                rad = ATOM_TYPES['O'][6]/5.0
-            elif name[0] == 'N':
-                rad = ATOM_TYPES['N'][6]/5.0
-            elif name[0] == 'S':
-                rad = ATOM_TYPES['S'][6]/5.0
+            if name[0] == "H" or name in self.hydrogen:
+                rad = ATOM_TYPES["H"][6]/5.0
+            elif name[0] == "C":
+                rad = ATOM_TYPES["C"][6]/5.0
+            elif name[0] == "O":
+                rad = ATOM_TYPES["O"][6]/5.0
+            elif name[0] == "N":
+                rad = ATOM_TYPES["N"][6]/5.0
+            elif name[0] == "S":
+                rad = ATOM_TYPES["S"][6]/5.0
             else:
                 rad = 0.30
         return rad
-
-    def init_vdw_rad(self, name):
-        """
-        """
-        try:
-            vdw = ATOM_TYPES[name][6]
-        except KeyError:
-            if name[0] == 'H' or name in self.hydrogen:
-                vdw = ATOM_TYPES['H'][6]
-            elif name[0] == 'C':      
-                vdw = ATOM_TYPES['C'][6]
-            elif name[0] == 'O':      
-                vdw = ATOM_TYPES['O'][6]
-            elif name[0] == 'N':      
-                vdw = ATOM_TYPES['N'][6]
-            elif name[0] == 'S':      
-                vdw = ATOM_TYPES['S'][6]
-            else:
-                vdw = 0.40
-        return vdw
-
-    def init_ball_rad(self, name):
-        """
-        """
-        try:
-            ball = ATOM_TYPES[name][4]
-        except KeyError:
-            if name[0] == 'H' or name in self.hydrogen:
-                ball = ATOM_TYPES['H'][4]
-            elif name[0] == 'C':
-                ball = ATOM_TYPES['C'][4]
-            elif name[0] == 'O':
-                ball = ATOM_TYPES['O'][4]
-            elif name[0] == 'N':
-                ball = ATOM_TYPES['N'][4]
-            elif name[0] == 'S':
-                ball = ATOM_TYPES['S'][4]
-            else:
-                ball = 0.30
-        return ball/2.0
-
-    def get_symbol (self, name):
-        """ Function doc """
-        
-        name  =  name.strip()
-        
-        
-        if name == '':
-            return ''
-        
-        name2 = name
-        for char in name:
-            if char.isnumeric():
-                name2 = name2.replace(char,'')
-                #print ('replace', name)
-            else:
-                #print (name)
-                pass
-        name = name2
-        #print (name)
-        if len(name) >=3:
-            name  = name[:2]
-        
-        if len(name) == 2:
-            if name[1].isnumeric():
-                symbol  =  name[0]
-            else:
-                pass
-                
-        
-        
-        if name in ATOM_TYPES.keys():
-            return name
-        
-        else:
-           
-            if name[0] == 'H':
-                
-                if name[1] == 'g':
-                    symbol =  'Hg'
-               
-                elif  name[-1] =='e':
-                    symbol = 'He'                    
-                
-                else:
-                    symbol =  'H'
-
-            
-            
-            elif name[0] == 'C':
-                
-                if name[1] == 'a':
-                    symbol =  'Ca'
-                    
-                elif  name[-1] =='l':
-                    symbol = 'Cl'
-                
-                elif  name[-1] =='L':
-                    symbol = 'Cl'
-                   
-                elif  name[-1] =='d':
-                    symbol = 'Cd'
-                
-                elif  name[-1] =='u':
-                    symbol = 'Cu'
-                
-                else:
-                    symbol =  'C'
-        
-            
-            
-            
-            
-            elif name[0] == 'N':
-                
-                if name[1] == 'i':
-                    symbol =  'Ni'
-                
-                elif name[1] == 'a':
-                    symbol =  'Na'
-                
-                elif name[1] == 'A':
-                    symbol =  'Na'
-                
-                elif name[1] == 'e':
-                    symbol =  'Ne'
-                elif name[1] == 'b':
-                    symbol =  'Nb'
-                
-                else:
-                    symbol =  'N'
-                    
-            
-            
-            
-            elif name[0] == 'O':
-                
-                if name[1] == 'g':
-                    symbol =  'Og'
-                
-                if name[1] == 's':
-                    symbol =  'Os'
-                
-                else:
-                    symbol =  'O'                        
-            
-            
-            
-            elif name[0] == 'S':           
-                if name[1] == 'I':
-                    symbol =  'Si'
-                
-                elif name[1] == 'e':
-                    symbol =  'Se'
-                else:
-                    symbol =  'S'   
-            
-            
-            
-            
-            
-            elif name[0] == 'P':
-                
-                if name[1] == 'd':
-                    symbol =  'Pd'
-                    
-                elif  name[1] == 'b':
-                    symbol =  'Pb'
-                
-                elif  name[1] == 'o':
-                    symbol =  'Po'
-                
-                else:
-                    symbol =  'P' 
-            
-            
-            elif name[0] == 'O':
-                
-                if name[1] == 'g':
-                    symbol =  'Og'
-                else:
-                    symbol =  'O' 
-
-
-            elif name[0] == 'M':
-                
-                if name[1] == 'n':
-                    symbol =  'Mn'
-                    
-                elif name[1] == 'N':
-                    symbol =  'Mn'
-                
-                elif name[1] == 'o':
-                    symbol =  'Mo'
-                
-                elif name[1] == 'G':
-                    symbol =  'Mg'
-                    
-                else:
-                    symbol =  'X' 
-
-        
-            else:
-                #print (name)
-                #if returnX:
-                symbol = 'X'
-                #else:
-                #symbol = ''
-    
-        return symbol
-            
-        
-        
-        
-        
-        
-        
-
-
-   
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

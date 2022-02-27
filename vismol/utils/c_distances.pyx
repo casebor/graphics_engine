@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 #
 
-import time
 import multiprocessing
 import numpy as np
 cimport numpy as np
@@ -90,13 +89,17 @@ cpdef list calculate_grid_offset(gridsize, maxbond=2.6):
 
 cpdef double calculate_sqrt_distance(int i, int j, coords):
     """ Function doc """
-    dX              = (coords[i*3  ] - coords[j*3  ])**2
-    dY              = (coords[i*3+1] - coords[j*3+1])**2
-    dZ              = (coords[i*3+2] - coords[j*3+2])**2
+    # dX              = (coords[i*3  ] - coords[j*3  ])**2
+    # dY              = (coords[i*3+1] - coords[j*3+1])**2
+    # dZ              = (coords[i*3+2] - coords[j*3+2])**2
+    dX, dY, dZ = coords[i] - coords[j]
+    dX = dX**2
+    dY = dY**2
+    dZ = dZ**2
     r_ij = dX + dY + dZ
     return r_ij
 
-cpdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords, cov_rad, double tolerance, gridsize):
+cpdef list get_connections_within_grid_element(list list_of_atoms, coords, cov_rad, double tolerance, gridsize):
     """
         Calculate the distances and bonds 
         between atoms within a single element 
@@ -141,8 +144,9 @@ cpdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords,
             if atom_idx_i == atom_idx_j :
                 pass            
             else:
-                
+                # print(atom_idx_i, "@", atom_idx_j, "@", coords)
                 r_ij            = calculate_sqrt_distance(atom_idx_i, atom_idx_j, coords)
+                # r_ij = np.linalg.norm(coords[atom_idx_i] - coords[atom_idx_j])
                 cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*1.4
                 
                 #print (atom_idx_i, atom_idx_j,cov_rad[atom_idx_j],cov_rad[atom_idx_j] , r_ij, cov_rad_ij_sqrt)
@@ -157,7 +161,7 @@ cpdef list ctype_get_connections_within_grid_element(list list_of_atoms, coords,
     return bonds_pair_of_indexes
 
 
-cpdef list ctype_get_connections_between_grid_elements(list atomic_grid1, 
+cpdef list get_connections_between_grid_elements(list atomic_grid1, 
                                                        list atomic_grid2, 
                                                        coords, 
                                                        cov_rad, 
@@ -190,6 +194,7 @@ cpdef list ctype_get_connections_between_grid_elements(list atomic_grid1,
                     pass            
                 else:
                     r_ij            = calculate_sqrt_distance(atom_idx_i, atom_idx_j, coords)
+                    # r_ij = np.linalg.norm(coords[atom_idx_i] - coords[atom_idx_j])
                     #cov_rad_ij_sqrt =  cov_rad[atom_idx_i] + cov_rad[atom_idx_j] 
                     cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*1.4
                     #print (atom_idx_i, atom_idx_j,cov_rad[atom_idx_j],cov_rad[atom_idx_j] , r_ij, cov_rad_ij_sqrt)
@@ -203,7 +208,7 @@ cpdef list ctype_get_connections_between_grid_elements(list atomic_grid1,
     return bonds_pair_of_indexes
 
 
-cpdef dict ctype_build_the_atomic_grid ( list indexes     ,
+cpdef dict build_the_atomic_grid ( list indexes     ,
                                          list gridpos_list):
     cdef int atom
 
@@ -220,13 +225,8 @@ cpdef dict ctype_build_the_atomic_grid ( list indexes     ,
     return atomic_grid
 
 
-cpdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes, 
-                                                      coords, 
-                                                      cov_rad, 
-                                                      list gridpos_list, 
-                                                      double gridsize,
-                                                      double maxbond
-                                                      ):
+cpdef list get_atomic_bonds_from_grid(list indexes, coords, cov_rad, list gridpos_list,
+                                      double gridsize, double maxbond):
     
     
     cdef double tolerance
@@ -234,7 +234,7 @@ cpdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes,
     #maxbond   = 3.0
     tolerance = 1.4
     
-    atomic_grid = ctype_build_the_atomic_grid ( indexes     ,
+    atomic_grid = build_the_atomic_grid ( indexes     ,
                                                 gridpos_list)
 
     grid_offset_full = calculate_grid_offset(gridsize, maxbond)
@@ -256,7 +256,7 @@ cpdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes,
             pass
         else:
             pass
-            element1_bonds = ctype_get_connections_within_grid_element( atomic_grid1, coords, cov_rad, tolerance, gridsize)        
+            element1_bonds = get_connections_within_grid_element( atomic_grid1, coords, cov_rad, tolerance, gridsize)        
             bonds_pair_of_indexes += element1_bonds
         #----------------------------------------------------------------------------------------#
         n+=1
@@ -270,7 +270,7 @@ cpdef list ctype_get_atomic_bonds_from_atomic_grids( list indexes,
             if element2 in atomic_grid:                        
                 n+=1
                 pass
-                element1_2_bonds = ctype_get_connections_between_grid_elements(atomic_grid1, atomic_grid[element2], coords, cov_rad, tolerance, gridsize)
+                element1_2_bonds = get_connections_between_grid_elements(atomic_grid1, atomic_grid[element2], coords, cov_rad, tolerance, gridsize)
                 bonds_pair_of_indexes += element1_2_bonds
         #----------------------------------------------------------------------------------------#
     #print('n interaction', n)

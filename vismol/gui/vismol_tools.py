@@ -628,7 +628,7 @@ class VismolSelectionTypeBox(Gtk.Box):
         """ Function doc """
         if button.get_active():
             state = "on"
-            self.vm_session._picking_selection_mode = True
+            self.vm_session.picking_selection_mode = True
             button.set_label('Picking')
             print(self.combobox_selection_type.get_active())
             self.vm_session._selection_function (None)
@@ -642,7 +642,7 @@ class VismolSelectionTypeBox(Gtk.Box):
             
         else:
             state = "off"
-            self.vm_session._picking_selection_mode = False
+            self.vm_session.picking_selection_mode = False
             button.set_label('Viewing')
             self.vm_session.glwidget.vm_widget.queue_draw()
             

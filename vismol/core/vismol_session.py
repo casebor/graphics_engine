@@ -26,9 +26,12 @@
 import os
 import numpy as np
 from utils import parser
+from logging import getLogger
 from core.vismol_config import VismolConfig
 from core.vismol_selections import VismolPickingSelection as VMPick
 from core.vismol_selections import VismolViewingSelection as VMSele
+
+logger = getLogger(__name__)
 
 
 class VismolSession():
@@ -47,7 +50,7 @@ class VismolSession():
         self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None, "pk3pk4":None}
         self.atom_dic_id = {}
         self.atom_id_counter = 0
-        self._picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
+        self.picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
         self.selections = {"sel01": VMSele(self)}
         self.current_selection = "sel01"
         self.picking_selections = VMPick(self)
@@ -64,59 +67,64 @@ class VismolSession():
             self.gtk_widgets_update_list = []
         elif toolkit == "qt4":
             self.vm_widget = None
+            logger.error("Not implemented yet for Qt4 :(")
             raise NotImplementedError("Not implemented yet for Qt4 :(")
             quit()
         else:
             self.vm_widget = None
+            logger.error("Toolkit not defined, quitting.")
             raise RuntimeError("Toolkit not defined, quitting.")
             quit()
     
-    def add_vismol_object(self, vismol_object=None, show_molecule=True, autocenter=True):
+    def add_vismol_object(self, vismol_object, show_molecule=True, autocenter=True):
         """ Function doc
         """
-        vismol_object.index = self.vm_object_counter
+        if vismol_object.index in self.vm_objects_dic.keys():
+            logger.warning("The VismolObject with id {} already exists. \
+                The data will be overwritten.".format(vismol_object.index))
+        # vismol_object.index = self.vm_object_counter
         self.vm_objects_dic[self.vm_object_counter] = vismol_object
         self.vm_object_counter += 1
+        self.atom_id_counter += len(vismol_object.atoms)
+        for atom in vismol_object.atoms.values():
+            self.atom_dic_id[atom.unique_id] = atom
         if show_molecule:
-            vismol_object.create_new_representation(rep_type="lines")
-            vismol_object.create_new_representation(rep_type="nonbonded")
+            vismol_object.create_representation(rep_type="lines")
+            vismol_object.create_representation(rep_type="nonbonded")
             if autocenter:
                 self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.mass_center)
             else:
                 self.vm_glcore.queue_draw()
     
     def load_molecule(self, infile):
-        """ Function doc
+        """ Probably would be better to join this with add_vismol_object
         """
-        vismol_object, show_molecule = parser.parse_file(infile, self)
+        vismol_object, show_molecule = parser.parse_file(self, infile)
+        vismol_object._generate_color_vectors(self.atom_id_counter)
         vismol_object.active = True
-        self.add_vismol_object(vismol_object, show_molecule)
+        self.add_vismol_object(vismol_object, show_molecule=show_molecule)
     
-    def change_attributes_for_selected_atoms(self, rep_type="lines", atoms=None, show=True):
+    def _change_attributes_for_atoms(self, atoms, rep_type, show):
         """ Function doc """
-        if atoms is None:
-            atoms = []
         for atom in atoms:
             try:
                 if show:
-                    _r = getattr(atom, rep_type)
-                    _r = True
+                    setattr(atom, rep_type, True)
                 else:
-                    _r = getattr(atom, rep_type)
-                    _r = False
+                    setattr(atom, rep_type, False)
             except AttributeError as ae:
-                print("Representation of type {} not implemented".format(rep_type))
-                print(ae)
+                logger.error("Representation of type {} not implemented".format(rep_type))
+                logger.error(ae)
     
     def show_or_hide(self, rep_type="lines", selection=None, show=True):
         """ Function doc """
-        print(selection)
         if selection is None:
             selection = self.selections[self.current_selection]
         
-        self.change_attributes_for_selected_atoms(rep_type=rep_type, atoms=selection.selected_atoms,
-                                                  show=show)
+        self._change_attributes_for_atoms(selection.selected_atoms, rep_type, show)
         for vm_object in selection.selected_objects:
+            if vm_object.representations[rep_type] is None:
+                vm_object.create_representation(rep_type=rep_type)
             show_hide_indexes = []
             if rep_type == "lines":
                 for bond in vm_object.bonds:
@@ -131,6 +139,7 @@ class VismolSession():
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "ribbon":
+                logger.error("Not implementer for 'ribbon' yet.")
                 raise NotImplementedError("Not implementer for 'ribbon' yet.")
             
             elif rep_type == "dots":
@@ -144,15 +153,19 @@ class VismolSession():
                         show_hide_indexes.append(vm_object.atoms.index(atom))
             
             elif rep_type == "impostor":
+                logger.error("Not implementer for 'impostor' yet.")
                 raise NotImplementedError("Not implementer for 'impostor' yet.")
             
             elif rep_type == "spheres":
+                logger.error("Not implementer for 'spheres' yet.")
                 raise NotImplementedError("Not implementer for 'spheres' yet.")
             
             elif rep_type == "surface":
+                logger.error("Not implementer for 'surface' yet.")
                 raise NotImplementedError("Not implementer for 'surface' yet.")
             
             elif rep_type == "cartoon":
+                logger.error("Not implementer for 'cartoon' yet.")
                 raise NotImplementedError("Not implementer for 'cartoon' yet.")
             
             if len(show_hide_indexes) > 0:
@@ -169,7 +182,7 @@ class VismolSession():
         try:
             vm_object = self.vm_objects_dic.pop(index)
         except KeyError:
-            print("VismolObject with index {} not found".format(index))
+            logger.warning("VismolObject with index {} not found".format(index))
             return None
         return vm_object
     
@@ -201,7 +214,7 @@ class VismolSession():
             self.vm_objects_dic[index].active = False
             self.vm_glcore.queue_draw()
         except KeyError:
-            print("VismolObject with index {} not found".format(index))
+            logger.error("VismolObject with index {} not found".format(index))
             return False
         return True
     
@@ -220,7 +233,7 @@ class VismolSession():
             self.vm_objects_dic[index].active = True
             self.vm_glcore.queue_draw()
         except KeyError:
-            print("VismolObject with index {} not found".format(index))
+            logger.error("VismolObject with index {} not found".format(index))
             return False
         return True
     
@@ -231,7 +244,7 @@ class VismolSession():
             self.vm_objects_dic[index].editing = not self.vm_objects_dic[index].editing
             self.vm_glcore.queue_draw()
         except KeyError:
-            print("VismolObject with index {} not found".format(index))
+            logger.error("VismolObject with index {} not found".format(index))
             return False
         return True
     
@@ -251,10 +264,11 @@ class VismolSession():
         self.vm_widget.queue_draw()
         for rep  in vismol_object.representations.keys():
             if vismol_object.representations[rep]:
-                try:
-                    vismol_object.representations[rep]._set_colors_to_buffer()
-                except:
-                    print('"VisMol/vModel/Representations.py, line 123, in _set_colors_to_buffer GL.glBindBuffer(GL.GL_ARRAY_BUFFER, ctypes.ArgumentError: argument 2: <class "TypeError">: wrong type"')
+                vismol_object.representations[rep]._set_colors_to_buffer()
+                # try:
+                #     vismol_object.representations[rep]._set_colors_to_buffer()
+                # except:
+                #     print('"VisMol/vModel/Representations.py, line 123, in _set_colors_to_buffer GL.glBindBuffer(GL.GL_ARRAY_BUFFER, ctypes.ArgumentError: argument 2: <class "TypeError">: wrong type"')
         return True
     
     def set_frame(self, frame=0):
@@ -273,11 +287,11 @@ class VismolSession():
             self.selection_box_frame.change_sel_type_in_combobox(sel_type)
             
         #print(sel_type)
-        self.selections[self.current_selection]._selection_mode = sel_type
+        self.selections[self.current_selection].selection_mode = sel_type
     
     def _selection_function(self, selected, _type=None, disable=True):
         #"""     P I C K I N G     S E L E C T I O N S     """
-        if self._picking_selection_mode:
+        if self.picking_selection_mode:
             self.picking_selections.selection_function_picking(selected)
         #"""     V I E W I N G     S E L E C T I O N S     """
         else:

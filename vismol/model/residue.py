@@ -1,9 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
+#  residue.py
+#  
+#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
+#  
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#  
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#  
+#  
 
 import numpy as np
-import model.Vectors as vectors
 from model.molecular_properties import solvent_dictionary
 from model.molecular_properties import residues_dictionary
 
@@ -11,32 +30,43 @@ from model.molecular_properties import residues_dictionary
 class Residue:
     """ Class doc """
     
-    def __init__ (self, atoms   = None, 
-                        name    = 'UNK', 
-                        index   = None,
-                        chain   = None,
-                        vismol_object = None):
+    def __init__(self, vismol_object, name="UNK", index=None, atoms=None, chain=None):
         """ Class initialiser """
-        self.atoms     = []
-        self.resi      = index
-        self.resn      = name
-        self.chain     = chain
-        self.vismol_object   = vismol_object
-        self.isProtein = False
-        self.isSolvent = False
-        self.mass_center = None
-        self.is_protein ()
-
-
-        self.topology = {
-                         
-                        }
-        
-        
-    def get_center_of_mass (self, mass = False, frame = 0):
+        self.vm_object = vismol_object
+        self.resn = name
+        self.resi = index
+        if atoms is None:
+            self.atoms = {}
+        else:
+            self.atoms = atoms
+        self.chain = chain
+        self.is_protein = False
+        self.is_solvent = False
+        self._is_protein()
+        self.topology = {}
+    
+    def _is_protein(self):
         """ Function doc """
-        
-        frame_size = len(self.vismol_object.frames)-1
+        # is it a protein residue?
+        if self.resn in residues_dictionary.keys():
+            self.is_protein = True
+        # is it a salvent molecule?
+        if self.resn in solvent_dictionary.keys():
+            self.is_solvent = True
+    
+    def geometry_center(self, frame=0):
+        """ Function doc """
+        if frame > len(self.vm_object.frames)-1:
+            frame = len(self.vm_object.frames)-1
+        gc = np.zeros(3, dtype=np.float32)
+        for atom in self.atoms.values():
+            gc += atom.coords(frame)
+        gc /= len(self.atoms.values())
+        return gc
+    
+    def get_center_of_mass(self, mass=False, frame=0):
+        """ Function doc """
+        frame_size = len(self.vm_object.frames)-1
         
         if frame <= frame_size:
             pass
@@ -44,8 +74,6 @@ class Residue:
             frame = frame_size
         
         total = len(self.atoms)
-        
-        #coord = [0,0,0]
         sum_x = 0.0
         sum_y = 0.0
         sum_z = 0.0
@@ -59,38 +87,14 @@ class Residue:
         self.mass_center = np.array([sum_x / total,
                                      sum_y / total, 
                                      sum_z / total])
-
-
-    def is_protein (self):
-        """ Function doc """
-        #residues_dictionary = MolecularProperties.#self.vismol_object.vismolSession.vConfig.residues_dictionary
-        #solvent_dictionary  = MolecularProperties.#self.vismol_object.vismolSession.vConfig.solvent_dictionary
-        # is it a protein residue?
-        if self.resn in residues_dictionary.keys():
-            self.isProtein = True
-        else:
-            self.isProtein = False
-        
-        # is it a salvent molecule?
-        if self.resn in solvent_dictionary.keys():
-            self.isSolvent = True
-        else:
-            self.isSolvent = False
-        
-        #return self.isProtein
     
-    def get_phi_and_psi (self):
+    def get_phi_and_psi(self):
         """ Function doc """
-        if self.isProtein:
-            
+        if self.is_protein:
             dihedral_atoms = { 
-                              
-            
                              } 
             print(self.resn,self.resi) 
             for atom in self.atoms:
                 print(self.resn, atom.name, atom.symbol, atom.coords(), atom.bonds, atom.connected2 )
-        
         else:
             pass
-            

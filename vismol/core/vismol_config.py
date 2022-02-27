@@ -64,6 +64,13 @@ class VismolConfig:
                               "gridsize": 0.8,
                               "maxbond": 2.4,
                               "bond_tolerance": 1.4}
+        self.n_proc = 2
+        # self.representations_available = {"dots", "lines", "nonbonded", "dotted_lines",
+        #                                   "ribbon", "sticks", "spheres", "impostor",
+        #                                   "surface", "cartoon", "freetype",
+        #                                   "picking_dots"}
+        self.representations_available = {"dots", "lines", "nonbonded", "picking_dots"}
+    
     
     def save_easyhybrid_config(self):
         """ Function doc """

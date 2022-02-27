@@ -25,6 +25,7 @@
 import time
 import numpy as np
 from OpenGL import GL
+from logging import getLogger
 from libgl.glaxis import GLAxis
 from libgl.glcamera import GLCamera
 from libgl.vismol_font import VismolFont
@@ -44,6 +45,8 @@ import libgl.shaders.nonbonded as shaders_nonbonded
 import libgl.shaders.vm_freetype as shaders_vm_freetype
 import utils.matrix_operations as mop
 
+logger = getLogger(__name__)
+
 
 class VismolGLCore:
     
@@ -59,10 +62,7 @@ class VismolGLCore:
         self.width = np.float32(width)
         self.height = np.float32(height)
         self.shader_programs = {}
-        self.representations_available = {"dots", "lines", "nonbonded", "dotted_lines",
-                                          "ribbon", "sticks", "spheres", "impostor",
-                                          "surface", "cartoon", "freetype",
-                                          "picking_dots"}
+        self.representations_available = self.vm_config.representations_available
     
     def initialize(self):
         """ Enables the buffers and other charasteristics of the OpenGL context.
@@ -214,7 +214,6 @@ class VismolGLCore:
                     self.center_on_atom(self.atom_picked)
                     self.atom_picked = None
             if right:
-                print("<->",self.vm_session.current_selection)
                 # The right button (button = 3) always opens one of the available menus.
                 self.button = 3
                 menu_type = None
@@ -223,10 +222,10 @@ class VismolGLCore:
                 # Checks if vismol_session.current_selection has any selection.
                 # Also needs to check whether "picking" mode is enabled.
                 if not bool(self.vm_session.selections[self.vm_session.current_selection].selected_objects) \
-                   or self.vm_session._picking_selection_mode:
+                   or self.vm_session.picking_selection_mode:
                     # Checks if the list of atoms selected by the picking function has any elements. 
                     # If the list is empty, the pick menu is not shown.
-                    if self.vm_session._picking_selection_mode \
+                    if self.vm_session.picking_selection_mode \
                        and self.vm_session.picking_selections.picking_selections_list != [None,None,None,None]:
                         info = None
                         menu_type = "pick_menu"
@@ -500,11 +499,10 @@ class VismolGLCore:
                             # Only shows the representation if
                             # representations[rep_name].active = True
                             if vm_object.representations[rep_name].active:
-                                # print(rep_name, "<- Debugging")
                                 vm_object.representations[rep_name].draw_representation()
         # Check if the picking function is active.
         # Viewing and picking selections cannot be displayed at the same time.
-        if self.vm_session._picking_selection_mode:
+        if self.vm_session.picking_selection_mode:
             self._draw_picking_label()
             for rep_name in self.vm_session.vm_geometric_object_dic.keys():
                 if self.vm_session.vm_geometric_object_dic[rep_name]:
@@ -560,17 +558,16 @@ class VismolGLCore:
     def create_gl_programs(self):
         """ Function doc
         """
-        print("OpenGL version: ", GL.glGetString(GL.GL_VERSION))
-        print("OpenGL major version: ", GL.glGetDoublev(GL.GL_MAJOR_VERSION))
-        print("OpenGL minor version: ", GL.glGetDoublev(GL.GL_MINOR_VERSION))
-        #----------------------------------------------------------------------#
+        logger.info("OpenGL version: {}".format(GL.glGetString(GL.GL_VERSION)))
+        logger.info("OpenGL major version: {}".format(GL.glGetDoublev(GL.GL_MAJOR_VERSION)))
+        logger.info("OpenGL minor version: {}".format(GL.glGetDoublev(GL.GL_MINOR_VERSION)))
         for rep in self.representations_available:
             func = getattr(self, "_compile_shader_" + rep)
             try:
                 func()
             except AttributeError as ae:
-                print("Representation of type '{}' not implemented".format(rep))
-                print(ae)
+                logger.error("Representation of type '{}' not implemented".format(rep))
+                logger.error(ae)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -608,8 +605,8 @@ class VismolGLCore:
         GL.glShaderSource(shader, shader_prog)
         GL.glCompileShader(shader)
         if GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
-            print("Error compiling the shader: ", shader_type)
-            raise RuntimeError(GL.glGetShaderInfoLog(shader))
+            logger.critical("Error compiling the shader: ", shader_type)
+            raise RuntimeError(logger.critical(GL.glGetShaderInfoLog(shader)))
         return shader
     
     def _selection_box_pick(self):
@@ -730,8 +727,8 @@ class VismolGLCore:
                     self.vm_session._selection_function(self.atom_picked)
                     self.button = None
             except KeyError as ke:
-                print("pickedID", pickedID, "not found")
-                print(ke)
+                logger.debug("pickedID {} not found".format(pickedID))
+                logger.debug(ke)
                 self.button = None
         self.picking = False
         return True
