@@ -51,11 +51,11 @@ class VismolSession():
         self.atom_dic_id = {}
         self.atom_id_counter = 0
         self.picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
-        self.selections = {"sel01": VMSele(self)}
-        self.current_selection = "sel01"
+        self.selections = {"sel_00": VMSele(self)}
+        self.current_selection = "sel_00"
         self.picking_selections = VMPick(self)
         
-        if toolkit == "gtk3":
+        if toolkit == "Gtk_3.0":
             from gui.vismol_gtkwidget import VismolGTKWidget
             self.selection_box_frame = None
             if widget is None:
@@ -65,7 +65,7 @@ class VismolSession():
             self.vm_glcore = self.vm_widget.vm_glcore
             self.vm_glcore.queue_draw()
             self.gtk_widgets_update_list = []
-        elif toolkit == "qt4":
+        elif toolkit == "Qt4":
             self.vm_widget = None
             logger.error("Not implemented yet for Qt4 :(")
             raise NotImplementedError("Not implemented yet for Qt4 :(")
@@ -76,7 +76,7 @@ class VismolSession():
             raise RuntimeError("Toolkit not defined, quitting.")
             quit()
     
-    def add_vismol_object(self, vismol_object, show_molecule=True, autocenter=True):
+    def _add_vismol_object(self, vismol_object, show_molecule=True, autocenter=True):
         """ Function doc
         """
         if vismol_object.index in self.vm_objects_dic.keys():
@@ -97,12 +97,12 @@ class VismolSession():
                 self.vm_glcore.queue_draw()
     
     def load_molecule(self, infile):
-        """ Probably would be better to join this with add_vismol_object
+        """ Probably would be better to join this with _add_vismol_object
         """
         vismol_object, show_molecule = parser.parse_file(self, infile)
         vismol_object._generate_color_vectors(self.atom_id_counter)
         vismol_object.active = True
-        self.add_vismol_object(vismol_object, show_molecule=show_molecule)
+        self._add_vismol_object(vismol_object, show_molecule=show_molecule)
     
     def _change_attributes_for_atoms(self, atoms, rep_type, show):
         """ Function doc """

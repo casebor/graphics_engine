@@ -32,8 +32,10 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
-    vm_session = VismolSession(toolkit="gtk3")
+    logging.basicConfig(format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
+                        datefmt="%Y-%m-%d:%H:%M:%S", level=logging.DEBUG)
+    # logging.basicConfig(level=logging.DEBUG)
+    vm_session = VismolSession(toolkit="Gtk_3.0")
     vm_session.vm_widget.insert_glmenu()
     window = Gtk.Window(title="Vismol window")
     container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)

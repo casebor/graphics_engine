@@ -152,7 +152,7 @@ class Representation:
     def _set_coordinates_to_buffer(self, coord_vbo=True, sel_coord_vbo=True):
         """ This function assigns the coordinates to 
         be drawn by the function  draw_representation"""
-        frame = self.vm_glcore._safe_frame_exchange(self.vm_object)
+        frame = self.vm_glcore._safe_frame_coords(self.vm_object)
         if coord_vbo:
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
@@ -185,8 +185,7 @@ class Representation:
         if input_indexes is None:
             input_indexes = []
         self._check_vao_and_vbos()
-        self.indexes = input_indexes
-        self.indexes = np.array(self.indexes, dtype=np.uint32)
+        self.indexes = np.array(input_indexes, dtype=np.uint32)
         
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
         GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)

@@ -493,8 +493,8 @@ class VismolGLCore:
         
         for index, vm_object in self.vm_session.vm_objects_dic.items():
             if vm_object.active:
-                if len(vm_object.frames) > 0:
-                    for rep_name in vm_object.representations:
+                if vm_object.frames.shape[0] > 0:
+                    for rep_name in vm_object.representations.keys():
                         if vm_object.representations[rep_name] is not None:
                             # Only shows the representation if
                             # representations[rep_name].active = True
@@ -682,7 +682,6 @@ class VismolGLCore:
             #converting RGB values to atoms address (unique id)
             pickedID = data[i] + data[i+1] * 256 + data[i+2] * 256 * 256;
             picked_set.add(pickedID)
-        logger.debug("Improve this part of selection")
         _selected = set()
         for pickedID in picked_set:
             if pickedID == 16777215:
@@ -696,7 +695,6 @@ class VismolGLCore:
                 # selection by area (selection box)
                 # self.vm_session._selection_function(selected=self.atom_picked, disable=False)
         self.vm_session._selection_function_set(_selected, disable=False)
-        logger.debug("Improve this part of selection")
         self.selection_box_picking = False
     
     def _pick(self):
@@ -989,7 +987,7 @@ class VismolGLCore:
                                                               shaders_spheres.fragment_shader_spheres)
     #----------------------------NOT IMPLEMENTED YET---------------------------#
     
-    def _safe_frame_exchange(self, vismol_object):
+    def _safe_frame_coords(self, vismol_object):
         """ Function doc 
         This function checks if the number of the called frame will not exceed 
         the limit of frames that each object has. Allowing two objects with 
@@ -998,18 +996,18 @@ class VismolGLCore:
         """
         if self.frame < 0:
             self.frame = 0
-        if self.frame >= (len(vismol_object.frames) - 1):
-            frame = vismol_object.frames[len(vismol_object.frames) - 1]
+        if self.frame >= vismol_object.frames.shape[0] - 1:
+            frame_coords = vismol_object.frames[vismol_object.frames.shape[0] - 1]
         else:
-            frame = vismol_object.frames[self.frame]
-        return frame
+            frame_coords = vismol_object.frames[self.frame]
+        return frame_coords
     
     def _get_vismol_object_frame(self, vismol_object):
         """ Function doc """
         if self.frame < 0:
             self.frame = 0
-        if self.frame >= (len(vismol_object.frames) - 1):
-            frame = len(vismol_object.frames) - 1
+        if self.frame >= vismol_object.frames.shape[0] - 1:
+            frame = vismol_object.frames.shape[0] - 1
         else:
             frame = self.frame
         return frame
@@ -1038,7 +1036,6 @@ class VismolGLCore:
         """
         frame_index = self._get_vismol_object_frame(atom.vm_object)
         self.center_on_coordinates(atom.vm_object, atom.coords(frame_index))
-        return True
     
     def center_on_coordinates(self, vismol_object, target):
         """ Takes the coordinates of an atom in absolute coordinates and first
@@ -1075,8 +1072,12 @@ class VismolGLCore:
                         vm_object.model_mat = mop.my_glTranslatef(vm_object.model_mat, -to_move)
                 
                 # WARNING: Method only works with GTK!!!
-                self.parent_widget.get_window().invalidate_rect(None, False)
-                self.parent_widget.get_window().process_updates(False)
+                if self.vm_session.toolkit == "Gtk_3.0":
+                    self.parent_widget.get_window().invalidate_rect(None, False)
+                    self.parent_widget.get_window().process_updates(False)
+                elif self.vm_session.toolkit == "Qt4":
+                    logger.critical("Not implemented for Qt4 yet :(")
+                    raise RuntimeError("Not implemented for Qt4 yet :(")
                 # WARNING: Method only works with GTK!!!
                 time.sleep(self.vm_config.gl_parameters["center_on_coord_sleep_time"])
             
@@ -1091,17 +1092,7 @@ class VismolGLCore:
                     vm_object.model_mat = mop.my_glTranslatef(vm_object.model_mat, -model_pos)
             
             self.parent_widget.queue_draw()
-        return True
     
     def queue_draw(self):
         """ Function doc """
         self.parent_widget.queue_draw()
-    
-    def _print_matrices(self):
-        """ Function doc
-        """
-        print(self.model_mat,"<== widget model_mat")
-        for index, vm_object in self.vm_session.vm_objects_dic.items():
-            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            print(vm_object.model_mat,"<== vismol_object model_mat")
-    
