@@ -239,9 +239,9 @@ class VismolGLCore:
                         if self.atom_picked is not None:
                             # Getting the info about the atom that was identified in the click
                             label = "{} / {} / {}({}) / {}({} / {})".format(self.atom_picked.vm_object.name,
-                                                                        self.atom_picked.chain,
-                                                                        self.atom_picked.resn,
-                                                                        self.atom_picked.resi,
+                                                                        self.atom_picked.chain.name,
+                                                                        self.atom_picked.residue.name,
+                                                                        self.atom_picked.residue.index,
                                                                         self.atom_picked.name,
                                                                         self.atom_picked.index,
                                                                         self.atom_picked.symbol)
@@ -512,26 +512,30 @@ class VismolGLCore:
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
                 # Here are represented the blue dots referring to the atom's selections
                 if vm_object.selection_dots_vao is None:
-                    shapes._make_gl_selection_dots(self.shader_programs["picking_dots"],
-                                                   vismol_object=vm_object)
+                    shapes._make_gl_selection_dots(self.shader_programs["picking_dots"], vm_object)
                 
                 # Extracting the indexes for each vismol_object that was selected
-                indexes = self.vm_session.selections[self.vm_session.current_selection].selected_objects[vm_object]
-                size = self.vm_config.gl_parameters["dot_sel_size"]
+                # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_objects[vm_object]
+                # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_coords
+                _coords = self.vm_session.selections[self.vm_session.current_selection].selected_coords
+                _inds = np.int32(_coords.shape[0]*3)
+                _size = self.vm_config.gl_parameters["dot_sel_size"]
                
-                GL.glPointSize(size * self.height / (abs(self.dist_cam_zrp)) / 2)
+                GL.glPointSize(_size * self.height / (abs(self.dist_cam_zrp)) / 2)
                 GL.glUseProgram(self.shader_programs["picking_dots"])
                 GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                 self.load_matrices(self.shader_programs["picking_dots"], vm_object.model_mat)
                 GL.glBindVertexArray(vm_object.selection_dots_vao)
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[0])
-                GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize * len(indexes),
-                                indexes, GL.GL_STATIC_DRAW)
-                frame = self._safe_frame_exchange(vm_object)
+                # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[0])
+                # GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize * len(indexes),
+                #                 indexes, GL.GL_STATIC_DRAW)
+                # frame = self._safe_frame_exchange(vm_object)
+                # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[1])
+                # GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.itemsize * len(frame),
+                #                 frame, GL.GL_STATIC_DRAW)
                 GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[1])
-                GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.itemsize * len(frame),
-                                frame, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, np.int32(len(indexes)), GL.GL_UNSIGNED_INT, None)
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, _coords.itemsize * _inds, _coords, GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, _inds, GL.GL_UNSIGNED_INT, None)
                 GL.glBindVertexArray(0)
                 GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                 GL.glPointSize(1)
@@ -678,16 +682,21 @@ class VismolGLCore:
             #converting RGB values to atoms address (unique id)
             pickedID = data[i] + data[i+1] * 256 + data[i+2] * 256 * 256;
             picked_set.add(pickedID)
+        logger.debug("Improve this part of selection")
+        _selected = set()
         for pickedID in picked_set:
             if pickedID == 16777215:
                 pass
             else:
                 self.atom_picked = self.vm_session.atom_dic_id[pickedID]
+                _selected.add(self.vm_session.atom_dic_id[pickedID])
                 # The disable variable does not allow, if the selected 
                 # atom is already in the selected list, to be removed.
                 # The disable variable is "False" for when we use 
                 # selection by area (selection box)
-                self.vm_session._selection_function(selected=self.atom_picked, disable=False)
+                # self.vm_session._selection_function(selected=self.atom_picked, disable=False)
+        self.vm_session._selection_function_set(_selected, disable=False)
+        logger.debug("Improve this part of selection")
         self.selection_box_picking = False
     
     def _pick(self):
@@ -724,6 +733,7 @@ class VismolGLCore:
                 # rare, but can impair viewing if it is not properly ignored
                 self.atom_picked = self.vm_session.atom_dic_id[pickedID]
                 if self.button == 1:
+                    # print(self.atom_picked.atom_id)
                     self.vm_session._selection_function(self.atom_picked)
                     self.button = None
             except KeyError as ke:

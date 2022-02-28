@@ -33,8 +33,8 @@ class Residue:
     def __init__(self, vismol_object, name="UNK", index=None, atoms=None, chain=None):
         """ Class initialiser """
         self.vm_object = vismol_object
-        self.resn = name
-        self.resi = index
+        self.name = name
+        self.index = index
         if atoms is None:
             self.atoms = {}
         else:
@@ -48,10 +48,10 @@ class Residue:
     def _is_protein(self):
         """ Function doc """
         # is it a protein residue?
-        if self.resn in residues_dictionary.keys():
+        if self.name in residues_dictionary.keys():
             self.is_protein = True
         # is it a salvent molecule?
-        if self.resn in solvent_dictionary.keys():
+        if self.name in solvent_dictionary.keys():
             self.is_solvent = True
     
     def geometry_center(self, frame=0):
@@ -93,8 +93,8 @@ class Residue:
         if self.is_protein:
             dihedral_atoms = { 
                              } 
-            print(self.resn,self.resi) 
+            print(self.name,self.index) 
             for atom in self.atoms:
-                print(self.resn, atom.name, atom.symbol, atom.coords(), atom.bonds, atom.connected2 )
+                print(self.name, atom.name, atom.symbol, atom.coords(), atom.bonds, atom.connected2 )
         else:
             pass

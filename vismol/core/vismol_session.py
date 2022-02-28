@@ -143,14 +143,14 @@ class VismolSession():
                 raise NotImplementedError("Not implementer for 'ribbon' yet.")
             
             elif rep_type == "dots":
-                for atom in vm_object.atoms:
+                for atom in vm_object.atoms.values():
                     if atom.dots:
-                        show_hide_indexes.append(vm_object.atoms.index(atom))
+                        show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "nonbonded":
-                for atom in vm_object.atoms:
+                for atom in vm_object.atoms.values():
                     if atom.nonbonded:
-                        show_hide_indexes.append(vm_object.atoms.index(atom))
+                        show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "impostor":
                 logger.error("Not implementer for 'impostor' yet.")
@@ -296,3 +296,11 @@ class VismolSession():
         #"""     V I E W I N G     S E L E C T I O N S     """
         else:
             self.selections[self.current_selection].selection_function_viewing(selected, _type, disable)
+    
+    def _selection_function_set(self, selected, _type=None, disable=True):
+        #"""     P I C K I N G     S E L E C T I O N S     """
+        if self.picking_selection_mode:
+            self.picking_selections.selection_function_picking(selected)
+        #"""     V I E W I N G     S E L E C T I O N S     """
+        else:
+            self.selections[self.current_selection].selection_function_viewing_set(selected, _type, disable)

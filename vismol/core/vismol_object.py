@@ -84,7 +84,6 @@ class VismolObject:
         self.bonds = None
         self.index_bonds = None # Pair of atoms, something like: [1, 3, 1, 17, 3, 4, 4, 20]
         self.non_bonded_atoms = None # Array of indexes
-        self.atoms_frame_mask = None
         self.cov_radii_array = None    # a list of covalent radius values for all  --> will be used to calculate de bonds
         
         self.representations = {}
@@ -279,10 +278,7 @@ class VismolObject:
                 the contacts in this VismolObject, trying to override the data \
                 can produce serious problems :(")
         initial = time.time()
-        if self.atoms_frame_mask is None:
-            self.atoms_frame_mask = np.zeros(len(self.atoms), dtype=np.bool)
-        else:
-            self.atoms_frame_mask[:] = False
+        atoms_frame_mask = np.zeros(len(self.atoms), dtype=np.bool)
         if self.cov_radii_array is None:
             self.cov_radii_array = np.empty(len(self.atoms), dtype=np.float32)
             for i, atom in self.atoms.items():
@@ -290,14 +286,14 @@ class VismolObject:
         
         if selection is None:
             selection = self.atoms
-            self.atoms_frame_mask[:] = True
+            atoms_frame_mask[:] = True
         else:
-            self.atoms_frame_mask[:] = False
+            atoms_frame_mask[:] = False
             for atom in selection:
-                self.atoms_frame_mask[atom.atom_id] = True
+                atoms_frame_mask[atom.atom_id] = True
         
-        cov_rads = self.cov_radii_array[self.atoms_frame_mask]
-        coords = self.frames[frame][self.atoms_frame_mask]
+        cov_rads = self.cov_radii_array[atoms_frame_mask]
+        coords = self.frames[frame][atoms_frame_mask]
         indexes = []
         gridpos_list = []
         for atom in selection.values():

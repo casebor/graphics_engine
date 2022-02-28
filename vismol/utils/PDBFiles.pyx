@@ -154,7 +154,7 @@ cpdef get_list_of_atoms_from_rawframe(rawframe):
             at_bfactor = np.float32(line[60:66])
             at_charge  = 0.0
             if at_index != index:
-                logger.debug("Atom index is different from number of atoms in rawframe")
+                logger.debug("Atom index {} is different from number of atoms in rawframe".format(at_index))
             atoms.append({"name"     : at_name,
                           "resn"     : at_resn,
                           "chain"    : at_ch,
