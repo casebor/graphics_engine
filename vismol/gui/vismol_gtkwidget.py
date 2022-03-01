@@ -126,7 +126,16 @@ class VismolGTKWidget(Gtk.GLArea):
             func()
         except AttributeError as ae:
             pass
-            # print(ae)
+    
+    def _pressed_Right(self):
+        """ Function doc """
+        self.vm_session.frame += 1
+        self.queue_draw()
+    
+    def _pressed_Left(self):
+        """ Function doc """
+        self.vm_session.frame -= 1
+        self.queue_draw()
     
     def _pressed_Control_L(self):
         """ Function doc """
@@ -360,16 +369,12 @@ class VismolGTKWidget(Gtk.GLArea):
         def invert_selection(_):
             """ Function doc """
             self.selections[self.current_selection].invert_selection()
-            
+        
         if obj_menu is None:
             """ Standard Obj Menu"""
             obj_menu = { 
                     "OBJ menu" : ["MenuItem", None],
-                    
-                    
                     "separator1":["separator", None],
-                    
-                    
                     "show"   : [
                                 "submenu" ,{
                                             
@@ -378,11 +383,8 @@ class VismolGTKWidget(Gtk.GLArea):
                                             "spheres"  : ["MenuItem", menu_show_spheres],
                                             "separator2":["separator", None],
                                             "nonbonded": ["MenuItem", None],
-                    
                                            }
                                ],
-                    
-                    
                     "hide"   : [
                                 "submenu",  {
                                             "lines"    : ["MenuItem", menu_hide_lines],
@@ -391,12 +393,7 @@ class VismolGTKWidget(Gtk.GLArea):
                                             "nonbonded": ["MenuItem", None],
                                             }
                                 ],
-                    
-                    
                     "separator2":["separator", None],
-
-                    
-                    
                     "label":  ["submenu" , {
                                             "Atom"         : [
                                                                "submenu", {
@@ -406,7 +403,6 @@ class VismolGTKWidget(Gtk.GLArea):
                                                                            "nonbonded": ["MenuItem", None],
                                                                            }
                                                               ],
-                                            
                                             "atomic index" : ["MenuItem", None],
                                             "residue name" : ["MenuItem", None],
                                             "residue_index": ["MenuItem", None],
@@ -418,12 +414,7 @@ class VismolGTKWidget(Gtk.GLArea):
             """ Standard Sele Menu """
             pick_menu = { 
                     "header" : ["MenuItem", None],
-                    
-                    
-                    
                     "separator1":["separator", None],
-                    
-                    
                     "show"   : [
                                 "submenu" ,{
                                             
@@ -432,11 +423,8 @@ class VismolGTKWidget(Gtk.GLArea):
                                             "spheres"       : ["MenuItem", menu_show_spheres],
                                             "separator2"    : ["separator", None],
                                             "nonbonded"     : ["MenuItem", None],
-                    
                                            }
                                ],
-                    
-                    
                     "hide"   : [
                                 "submenu",  {
                                             "lines"    : ["MenuItem", menu_hide_lines],
@@ -445,10 +433,7 @@ class VismolGTKWidget(Gtk.GLArea):
                                             "nonbonded": ["MenuItem", None],
                                             }
                                 ],
-                    
-                    
                     "separator2":["separator", None],
-
                     }
         
         self.build_glmenu(bg_menu=bg_menu, sele_menu=sele_menu, obj_menu=obj_menu, pick_menu=pick_menu)

@@ -84,7 +84,6 @@ class VismolGLCore:
         self.dynamic_line = DynamicLine()
         self.parent_widget.set_has_depth_buffer(True)
         self.parent_widget.set_has_alpha(True)
-        self.frame = self.vm_session.frame
         self.scroll = self.vm_config.gl_parameters["scroll_step"]
         self.bckgrnd_color = self.vm_config.gl_parameters["background_color"]
         #                       Light Parameters                                
@@ -517,8 +516,8 @@ class VismolGLCore:
                 # Extracting the indexes for each vismol_object that was selected
                 # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_objects[vm_object]
                 # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_coords
-                _coords = self.vm_session.selections[self.vm_session.current_selection].selected_coords
-                _inds = np.int32(_coords.shape[0]*3)
+                _coords = self.vm_session.selections[self.vm_session.current_selection].selected_coords[1:]
+                _inds = np.int32(_coords.shape[0])
                 _size = self.vm_config.gl_parameters["dot_sel_size"]
                
                 GL.glPointSize(_size * self.height / (abs(self.dist_cam_zrp)) / 2)
@@ -534,7 +533,7 @@ class VismolGLCore:
                 # GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.itemsize * len(frame),
                 #                 frame, GL.GL_STATIC_DRAW)
                 GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[1])
-                GL.glBufferData(GL.GL_ARRAY_BUFFER, _coords.itemsize * _inds, _coords, GL.GL_STATIC_DRAW)
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, _coords.itemsize * _inds * 3, _coords, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, _inds, GL.GL_UNSIGNED_INT, None)
                 GL.glBindVertexArray(0)
                 GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
@@ -994,22 +993,22 @@ class VismolGLCore:
         different trajectory sizes to be manipulated at the same time within the 
         glArea
         """
-        if self.frame < 0:
-            self.frame = 0
-        if self.frame >= vismol_object.frames.shape[0] - 1:
+        if self.vm_session.frame < 0:
+            self.vm_session.frame = 0
+        if self.vm_session.frame >= vismol_object.frames.shape[0] - 1:
             frame_coords = vismol_object.frames[vismol_object.frames.shape[0] - 1]
         else:
-            frame_coords = vismol_object.frames[self.frame]
+            frame_coords = vismol_object.frames[self.vm_session.frame]
         return frame_coords
     
     def _get_vismol_object_frame(self, vismol_object):
         """ Function doc """
-        if self.frame < 0:
-            self.frame = 0
-        if self.frame >= vismol_object.frames.shape[0] - 1:
+        if self.vm_session.frame < 0:
+            self.vm_session.frame = 0
+        if self.vm_session.frame >= vismol_object.frames.shape[0] - 1:
             frame = vismol_object.frames.shape[0] - 1
         else:
-            frame = self.frame
+            frame = self.vm_session.frame
         return frame
     
     def get_viewport_pos(self, x, y):
