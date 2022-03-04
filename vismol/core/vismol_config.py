@@ -64,7 +64,8 @@ class VismolConfig:
                               "center_on_coord_sleep_time": 0.001,
                               "gridsize": 0.8,
                               "maxbond": 2.4,
-                              "bond_tolerance": 1.4}
+                              "bond_tolerance": 1.4,
+                              "picking_dots_color": [0.0, 1.0, 1.0]}
         self.n_proc = 2
         # self.representations_available = {"dots", "lines", "nonbonded", "dotted_lines",
         #                                   "ribbon", "sticks", "spheres", "impostor",

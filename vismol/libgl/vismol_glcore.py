@@ -493,20 +493,21 @@ class VismolGLCore:
         
         if self.modified_view:
             for vm_object in self.vm_session.vm_objects_dic.values():
+                vm_object.core_representations["picking_dots"].was_rep_modified = True
                 for rep in vm_object.representations.values():
                     if rep is not None:
                         rep.was_rep_modified = True
                         rep.was_sel_modified = True
         
-        for index, vm_object in self.vm_session.vm_objects_dic.items():
+        for vm_object in self.vm_session.vm_objects_dic.values():
             if vm_object.active:
                 if vm_object.frames.shape[0] > 0:
-                    for rep_name in vm_object.representations.keys():
-                        if vm_object.representations[rep_name] is not None:
+                    for representation in vm_object.representations.values():
+                        if representation is not None:
                             # Only shows the representation if
                             # representations[rep_name].active = True
-                            if vm_object.representations[rep_name].active:
-                                vm_object.representations[rep_name].draw_representation()
+                            if representation.active:
+                                representation.draw_representation()
         # Check if the picking function is active.
         # Viewing and picking selections cannot be displayed at the same time.
         if self.vm_session.picking_selection_mode:
@@ -518,36 +519,43 @@ class VismolGLCore:
         else:
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
                 # Here are represented the blue dots referring to the atom's selections
-                if vm_object.selection_dots_vao is None:
-                    shapes._make_gl_selection_dots(self.core_shader_programs["picking_dots"], vm_object)
-                
-                # Extracting the indexes for each vismol_object that was selected
-                # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_objects[vm_object]
-                # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_coords
+                if vm_object.core_representations["picking_dots"] is None:
+                    vm_object.build_core_representations()
                 _coords = self.vm_session.selections[self.vm_session.current_selection].selected_coords[1:]
-                _inds = np.int32(_coords.shape[0])
-                _size = self.vm_config.gl_parameters["dot_sel_size"]
+                _indexes = self.vm_session.selections[self.vm_session.current_selection].selected_atom_ids
+                vm_object.core_representations["picking_dots"].define_new_indexes_to_vbo(list(_indexes))
+                vm_object.core_representations["picking_dots"].draw_representation()
+                
+                # if vm_object.selection_dots_vao is None:
+                #     shapes._make_gl_selection_dots(self.core_shader_programs["picking_dots"], vm_object)
+                
+                # # Extracting the indexes for each vismol_object that was selected
+                # # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_objects[vm_object]
+                # # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_coords
+                # _coords = self.vm_session.selections[self.vm_session.current_selection].selected_coords[1:]
+                # _inds = np.int32(_coords.shape[0])
+                # _size = self.vm_config.gl_parameters["dot_sel_size"]
                
-                GL.glPointSize(_size * self.height / (abs(self.dist_cam_zrp)) / 2)
-                GL.glUseProgram(self.core_shader_programs["picking_dots"])
-                GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                self.load_matrices(self.core_shader_programs["picking_dots"], vm_object.model_mat)
-                GL.glBindVertexArray(vm_object.selection_dots_vao)
-                # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[0])
-                # GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize * len(indexes),
-                #                 indexes, GL.GL_STATIC_DRAW)
-                # frame = self._safe_frame_exchange(vm_object)
+                # GL.glPointSize(_size * self.height / (abs(self.dist_cam_zrp)) / 2)
+                # GL.glUseProgram(self.core_shader_programs["picking_dots"])
+                # GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                # self.load_matrices(self.core_shader_programs["picking_dots"], vm_object.model_mat)
+                # GL.glBindVertexArray(vm_object.selection_dots_vao)
+                # # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[0])
+                # # GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize * len(indexes),
+                # #                 indexes, GL.GL_STATIC_DRAW)
+                # # frame = self._safe_frame_exchange(vm_object)
+                # # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[1])
+                # # GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.itemsize * len(frame),
+                # #                 frame, GL.GL_STATIC_DRAW)
                 # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[1])
-                # GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.itemsize * len(frame),
-                #                 frame, GL.GL_STATIC_DRAW)
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[1])
-                GL.glBufferData(GL.GL_ARRAY_BUFFER, _coords.itemsize * _inds * 3, _coords, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, _inds, GL.GL_UNSIGNED_INT, None)
-                GL.glBindVertexArray(0)
-                GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                GL.glPointSize(1)
-                GL.glUseProgram(0)
-                GL.glDisable(GL.GL_DEPTH_TEST)
+                # GL.glBufferData(GL.GL_ARRAY_BUFFER, _coords.itemsize * _inds * 3, _coords, GL.GL_STATIC_DRAW)
+                # GL.glDrawElements(GL.GL_POINTS, _inds, GL.GL_UNSIGNED_INT, None)
+                # GL.glBindVertexArray(0)
+                # GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                # GL.glPointSize(1)
+                # GL.glUseProgram(0)
+                # GL.glDisable(GL.GL_DEPTH_TEST)
         
         if self.show_dynamic_line and self.shift:
             if self.dynamic_line.vao is None:

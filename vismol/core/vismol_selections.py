@@ -37,6 +37,7 @@ class VismolViewingSelection:
         self.selection_mode = "residue"
         self.selected_objects = set() #dic of VisMol objects (obj)
         self.selected_atoms = set() #List of atoms objects (obj)
+        self.selected_atom_ids = set() #List of atoms ids
         self.selected_coords = None #coordinate (floats) x y z
         self.vm_session = vismol_session
     
@@ -66,19 +67,10 @@ class VismolViewingSelection:
             coords = np.vstack((coords, vm_object.frames[frame][atom_mask]))
         self.selected_coords = coords
         self.selected_objects = set()
+        self.selected_atom_ids = set()
         for atom in self.selected_atoms:
             self.selected_objects.add(atom.vm_object)
-        
-        # self.selected_atoms_coords = []
-        # self.selected_objects = {}
-        # for atom in self.selected_atoms:
-        #     if atom.vm_object in self.selected_objects:
-        #         self.selected_objects[atom.vm_object] += [atom.atom_id]
-        #     else:
-        #         self.selected_objects[atom.vm_object] = [atom.atom_id]
-        
-        # for vm_object in self.selected_objects:
-        #     self.selected_objects[vm_object] = np.array(self.selected_objects[vm_object], dtype=np.uint32)
+            self.selected_atom_ids.add(atom.atom_id)
     
     def selection_function_viewing_set(self, selected, _type=None, disable=True):
         """ Takes a selected atom and passes it to the appropriate selection function.

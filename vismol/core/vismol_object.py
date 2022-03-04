@@ -31,6 +31,7 @@ from model.chain import Chain
 from model.residue import Residue
 from model.molecular_properties import COLOR_PALETTE
 from libgl.vismol_font import VismolFont
+from libgl.representations import PickingDotsRepresentation
 from libgl.representations import DotsRepresentation
 from libgl.representations import LinesRepresentation
 from libgl.representations import NonBondedRepresentation
@@ -92,6 +93,7 @@ class VismolObject:
         self.model_mat = np.identity(4, dtype=np.float32)
         self.trans_mat = np.identity(4, dtype=np.float32)
         
+        self.core_representations = {"picking_dots":None, "picking_text":None}
         self.selection_dots_vao = None
         self.selection_dot_buffers = None
         self.picking_dots_vao = None
@@ -100,6 +102,12 @@ class VismolObject:
         # self.dynamic_bons       = [] # Pair of atoms, something like: [0,1,1,2,3,4] 
         self.c_alpha_bonds = []
         self.c_alpha_atoms = []
+    
+    def build_core_representations(self):
+        """ Function doc """
+        self.core_representations["picking_dots"] = PickingDotsRepresentation(self,
+                                                    self.vm_session.vm_glcore, active=True,
+                                                    indexes=list(self.atoms.keys()))
     
     def create_representation(self, rep_type="lines", indexes=None):
         """ Function doc """
@@ -129,9 +137,8 @@ class VismolObject:
             logger.error("Representation {} not implemented".format(rep_type))
             raise NotImplementedError("Representation {} not implemented".format(rep_type))
     
-    def _generate_color_vectors(self, colors_id_start, do_colors=True,
-                                do_colors_raindow=True, do_vdw_dot_sizes=True,
-                                do_cov_dot_sizes=True):
+    def _generate_color_vectors(self, colors_id_start, do_colors_raindow=True,
+                                do_vdw_dot_sizes=True, do_cov_dot_sizes=True):
         """ (1) This method assigns to each atom of the system a 
             unique identifier based on the RGB color standard. 
             This identifier will be used in the selection function. 
@@ -149,8 +156,8 @@ class VismolObject:
         green = 0.0
         blue = 1.0
         
-        self.color_indexes = np.empty([len(self.atoms), 3], dtype=np.float32)
         self.colors = np.empty([len(self.atoms), 3], dtype=np.float32)
+        self.color_indexes = np.empty([len(self.atoms), 3], dtype=np.float32)
         if do_colors_raindow:
             self.color_rainbow = np.empty([len(self.atoms), 3], dtype=np.float32)
         if do_vdw_dot_sizes:

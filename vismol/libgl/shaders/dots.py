@@ -141,20 +141,34 @@ void main(){
 }
 """
 
+sel_fragment_shader_dot = """
+# version 330
+
+in vec3 v_color;
+out vec4 out_color;
+
+void main(){
+    float dist = length(gl_PointCoord.xy - vec2(0.5,0.5));
+    if (dist > 0.5)
+        discard;
+    out_color = vec4(v_color, 1.0);
+}
+"""
+
 
 shader_type = {0: { "vertex_shader"      : vertex_shader_dot_simple,
                     "fragment_shader"    : fragment_shader_dot_simple,
                     "sel_vertex_shader"  : vertex_shader_dot_simple,
-                    "sel_fragment_shader": fragment_shader_dot_simple
+                    "sel_fragment_shader": sel_fragment_shader_dot
                   },
                1: {"vertex_shader"      : vertex_shader_dot_simple2,
                    "fragment_shader"    : fragment_shader_dot_simple2 ,
                    "sel_vertex_shader"  : vertex_shader_dot_simple,
-                   "sel_fragment_shader": fragment_shader_dot_simple
+                   "sel_fragment_shader": sel_fragment_shader_dot
                    },
                2: {"vertex_shader"      : vertex_shader_dot_simple3,
                    "fragment_shader"    : fragment_shader_dot_simple3,
                    "sel_vertex_shader"  : vertex_shader_dot_simple,
-                   "sel_fragment_shader": fragment_shader_dot_simple
+                   "sel_fragment_shader": sel_fragment_shader_dot
                    }
 }
