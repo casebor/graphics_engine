@@ -222,12 +222,13 @@ class DotsRepresentation(Representation):
     
     def draw_representation(self):
         """ Function doc """
-        # print("drawing dots", len(self.indexes))
         self._check_vao_and_vbos()
-        height = self.vm_glcore.height
+        self._enable_anti_alias_to_lines()
+        _size = self.vm_glcore.vm_config.gl_parameters["dots_size"]
+        _height = self.vm_glcore.height
         GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
         GL.glUseProgram(self.shader_program)
-        GL.glPointSize(15)
+        GL.glPointSize(_size * _height / (abs(self.vm_glcore.dist_cam_zrp)) / 2)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
@@ -240,6 +241,7 @@ class DotsRepresentation(Representation):
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
+        self._disable_anti_alias_to_lines()
         GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
         GL.glPointSize(1)
         GL.glUseProgram(0)
@@ -257,6 +259,7 @@ class DotsRepresentation(Representation):
         if self.was_sel_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
             self.was_sel_modified = False
+        
         self._load_ind_vbo(sel_coord_vbo=True)
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
@@ -285,16 +288,12 @@ class LinesRepresentation(Representation):
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            # self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
-            self._load_ind_vbo(coord_vbo=True)
-            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        if self.was_rep_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_modified = False
+        
+        self._load_ind_vbo(coord_vbo=True)
+        GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         self._disable_anti_alias_to_lines()
@@ -312,16 +311,12 @@ class LinesRepresentation(Representation):
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            # self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
-            self._load_ind_vbo(sel_coord_vbo=True)
-            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        if self.was_sel_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self.was_sel_modified = False
+        
+        self._load_ind_vbo(sel_coord_vbo=True)
+        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
@@ -347,16 +342,12 @@ class NonBondedRepresentation(Representation):
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            # self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
-            self._load_ind_vbo(coord_vbo=True)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
+        if self.was_rep_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_modified = False
+        
+        self._load_ind_vbo(coord_vbo=True)
+        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         self._disable_anti_alias_to_lines()
@@ -373,22 +364,24 @@ class NonBondedRepresentation(Representation):
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            # self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
-            self._load_ind_vbo(sel_coord_vbo=True)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
+        if self.was_sel_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self.was_sel_modified = False
+        
+        self._load_ind_vbo(sel_coord_vbo=True)
+        GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glLineWidth(1)
         GL.glUseProgram(0)
 
+
+class PickingDots:
+    """docstring for PickingDots"""
+    def __init__(self, vismol_object, vismol_glcore, indexes=None, active=True):
+        self.arg = arg
+        
 
 
 '''

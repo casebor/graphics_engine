@@ -62,6 +62,7 @@ class VismolGLCore:
         self.width = np.float32(width)
         self.height = np.float32(height)
         self.shader_programs = {}
+        self.core_shader_programs = {}
         self.representations_available = self.vm_config.representations_available
     
     def initialize(self):
@@ -490,6 +491,13 @@ class VismolGLCore:
                         self.bckgrnd_color[2], self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         
+        if self.modified_view:
+            for vm_object in self.vm_session.vm_objects_dic.values():
+                for rep in vm_object.representations.values():
+                    if rep is not None:
+                        rep.was_rep_modified = True
+                        rep.was_sel_modified = True
+        
         for index, vm_object in self.vm_session.vm_objects_dic.items():
             if vm_object.active:
                 if vm_object.frames.shape[0] > 0:
@@ -499,7 +507,6 @@ class VismolGLCore:
                             # representations[rep_name].active = True
                             if vm_object.representations[rep_name].active:
                                 vm_object.representations[rep_name].draw_representation()
-        self.modified_view = False
         # Check if the picking function is active.
         # Viewing and picking selections cannot be displayed at the same time.
         if self.vm_session.picking_selection_mode:
@@ -512,7 +519,7 @@ class VismolGLCore:
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
                 # Here are represented the blue dots referring to the atom's selections
                 if vm_object.selection_dots_vao is None:
-                    shapes._make_gl_selection_dots(self.shader_programs["picking_dots"], vm_object)
+                    shapes._make_gl_selection_dots(self.core_shader_programs["picking_dots"], vm_object)
                 
                 # Extracting the indexes for each vismol_object that was selected
                 # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_objects[vm_object]
@@ -522,9 +529,9 @@ class VismolGLCore:
                 _size = self.vm_config.gl_parameters["dot_sel_size"]
                
                 GL.glPointSize(_size * self.height / (abs(self.dist_cam_zrp)) / 2)
-                GL.glUseProgram(self.shader_programs["picking_dots"])
+                GL.glUseProgram(self.core_shader_programs["picking_dots"])
                 GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                self.load_matrices(self.shader_programs["picking_dots"], vm_object.model_mat)
+                self.load_matrices(self.core_shader_programs["picking_dots"], vm_object.model_mat)
                 GL.glBindVertexArray(vm_object.selection_dots_vao)
                 # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[0])
                 # GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize * len(indexes),
@@ -722,7 +729,7 @@ class VismolGLCore:
         if pickedID == 16777215:
             self.atom_picked = None
             if self.button == 1:
-                self.vm_session._selection_function(self.atom_picked)
+                self.vm_session._selection_function_set(None)
                 self.button = None
         else:
             try:
@@ -731,8 +738,7 @@ class VismolGLCore:
                 # rare, but can impair viewing if it is not properly ignored
                 self.atom_picked = self.vm_session.atom_dic_id[pickedID]
                 if self.button == 1:
-                    # print(self.atom_picked.atom_id)
-                    self.vm_session._selection_function(self.atom_picked)
+                    self.vm_session._selection_function_set({self.atom_picked})
                     self.button = None
             except KeyError as ke:
                 logger.debug("pickedID {} not found".format(pickedID))
@@ -874,7 +880,7 @@ class VismolGLCore:
     
     def _compile_shader_picking_dots(self):
         """ Function doc """
-        self.shader_programs["picking_dots"] = self.load_shaders(shaders_pick.vertex_shader_picking_dots,
+        self.core_shader_programs["picking_dots"] = self.load_shaders(shaders_pick.vertex_shader_picking_dots,
                                                                  shaders_pick.fragment_shader_picking_dots)
     
     def _compile_shader_dots(self):

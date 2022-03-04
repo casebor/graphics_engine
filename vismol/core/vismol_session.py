@@ -178,6 +178,40 @@ class VismolSession():
         
         self.vm_widget.queue_draw()
     
+    def forward_frame(self):
+        """ Function doc """
+        _frame = self.frame + 1
+        _flags = np.zeros(len(self.vm_objects_dic), dtype=bool)
+        for i, vm_object in enumerate(self.vm_objects_dic.values()):
+            if _frame < vm_object.frames.shape[0]:
+                _flags[i] = True
+        if _flags.any():
+            self.frame += 1
+            return True
+        return False
+    
+    def reverse_frame(self):
+        """ Function doc """
+        if self.frame - 1 >= 0:
+            self.frame = self.frame - 1
+            return True
+        return False
+    
+    def viewing_selection_mode(self, sel_type="atom"):
+        """ Function doc """
+        if self.selection_box_frame:
+            self.selection_box_frame.change_sel_type_in_combobox(sel_type)
+            
+        self.selections[self.current_selection].selection_mode = sel_type
+    
+    def _selection_function_set(self, selected, _type=None, disable=True):
+        #"""     P I C K I N G     S E L E C T I O N S     """
+        if self.picking_selection_mode:
+            self.picking_selections.selection_function_picking(selected)
+        #"""     V I E W I N G     S E L E C T I O N S     """
+        else:
+            self.selections[self.current_selection].selection_function_viewing_set(selected, _type, disable)
+    
     def delete_vismol_object_by_index(self, index):
         """ Function doc
         """
@@ -282,27 +316,3 @@ class VismolSession():
         """ Function doc """
         return self.frame
     
-    def viewing_selection_mode(self, sel_type="atom"):
-        """ Function doc
-        """
-        if self.selection_box_frame:
-            self.selection_box_frame.change_sel_type_in_combobox(sel_type)
-            
-        #print(sel_type)
-        self.selections[self.current_selection].selection_mode = sel_type
-    
-    def _selection_function(self, selected, _type=None, disable=True):
-        #"""     P I C K I N G     S E L E C T I O N S     """
-        if self.picking_selection_mode:
-            self.picking_selections.selection_function_picking(selected)
-        #"""     V I E W I N G     S E L E C T I O N S     """
-        else:
-            self.selections[self.current_selection].selection_function_viewing(selected, _type, disable)
-    
-    def _selection_function_set(self, selected, _type=None, disable=True):
-        #"""     P I C K I N G     S E L E C T I O N S     """
-        if self.picking_selection_mode:
-            self.picking_selections.selection_function_picking(selected)
-        #"""     V I E W I N G     S E L E C T I O N S     """
-        else:
-            self.selections[self.current_selection].selection_function_viewing_set(selected, _type, disable)

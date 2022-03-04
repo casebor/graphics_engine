@@ -80,7 +80,7 @@ class VismolViewingSelection:
         # for vm_object in self.selected_objects:
         #     self.selected_objects[vm_object] = np.array(self.selected_objects[vm_object], dtype=np.uint32)
     
-    def selection_function_viewing(self, selected, _type=None, disable=True):
+    def selection_function_viewing_set(self, selected, _type=None, disable=True):
         """ Takes a selected atom and passes it to the appropriate selection function.
         """
         if selected is None:
@@ -98,42 +98,7 @@ class VismolViewingSelection:
             self.active = True
         self._build_selected_atoms_coords_and_selected_objects_from_selected_atoms()
     
-    def selection_function_viewing_set(self, selected, _type=None, disable=True):
-        """ Takes a selected atom and passes it to the appropriate selection function.
-        """
-        if selected is None:
-            self.selected_atoms.clear()
-            self.active = False
-        else:
-            if self.selection_mode == "atom":
-                self.selecting_by_atom(selected, disable)
-            elif self.selection_mode == "residue":
-                self.selecting_by_residue2(selected, disable)
-            elif self.selection_mode == "chain":
-                self.selecting_by_chain(selected, disable)
-            else:
-                pass
-            self.active = True
-        self._build_selected_atoms_coords_and_selected_objects_from_selected_atoms()
-    
-    def selecting_by_residue2(self, selected_atoms, disable=True):
-        """ """
-        self._clear_selection_buffer()
-        # if the selected atoms IS in the selected list
-        for selected_atom in selected_atoms:
-            if selected_atom in self.selected_atoms:
-                if disable:
-                    for atom in selected_atom.residue.atoms.values():
-                        if atom in self.selected_atoms:
-                            self.selected_atoms.remove(atom)
-                            atom.selected = False
-            # if the selected atoms is not in the selected list add atom by atom
-            else:
-                for atom in selected_atom.residue.atoms.values():
-                    self.selected_atoms.add(atom)
-                    atom.selected = True
-    
-    def selecting_by_atom(self, selected_atom, disable=True):
+    def selecting_by_atom(self, selected_atoms, disable=True):
         """ The "disable" variable does not allow, if the selected 
             atom is already in the selected list, to be removed. 
             
@@ -141,40 +106,32 @@ class VismolViewingSelection:
             selection by area (selection box)
         """
         self._clear_selection_buffer()
-        if selected_atom in self.selected_atoms:
-            if disable:
-                self.selected_atoms.remove(selected_atom)
-                selected_atom.selected = False
-        else:
-            self.selected_atoms.add(selected_atom)
-            selected_atom.selected = True
+        for selected_atom in selected_atoms:
+            if selected_atom in self.selected_atoms:
+                if disable:
+                    self.selected_atoms.discard(selected_atom)
+                    selected_atom.selected = False
+            else:
+                self.selected_atoms.add(selected_atom)
+                selected_atom.selected = True
     
-    def selecting_by_residue(self, selected_atom, disable=True):
-        """ when disable = True
-            If the object selection is disabled, all atoms within the 
-            residue will be set to False 
-            
-            The disable variable does not allow, if the selected 
-            atom is already in the selected list, to be removed. 
-            
-            The disable variable is "False" for when we use 
-            selection by area (selection box)
-        """
+    def selecting_by_residue(self, selected_atoms, disable=True):
+        """ """
         self._clear_selection_buffer()
         # if the selected atoms IS in the selected list
-        if selected_atom in self.selected_atoms:
-            if disable:
-                for atom in selected_atom.residue.atoms.values():
-                    if atom in self.selected_atoms:
-                        self.selected_atoms.remove(atom)
+        for selected_atom in selected_atoms:
+            if selected_atom in self.selected_atoms:
+                if disable:
+                    for atom in selected_atom.residue.atoms.values():
+                        self.selected_atoms.discard(atom)
                         atom.selected = False
-        # if the selected atoms is not in the selected list add atom by atom
-        else:
-            for atom in selected_atom.residue.atoms.values():
-                self.selected_atoms.add(atom)
-                atom.selected = True
+            # if the selected atoms is not in the selected list add atom by atom
+            else:
+                for atom in selected_atom.residue.atoms.values():
+                    self.selected_atoms.add(atom)
+                    atom.selected = True
     
-    def selecting_by_chain(self, selected_atom, disable=True):
+    def selecting_by_chain(self, selected_atoms, disable=True):
         """ 
         when disable = True
         If the object selection is disabled, all atoms in the system will be set to False 
@@ -187,18 +144,18 @@ class VismolViewingSelection:
         
         """
         self._clear_selection_buffer()
-        if selected_atom in self.selected_atoms:
-            if disable:
+        for selected_atom in selected_atoms:
+            if selected_atom in self.selected_atoms:
+                if disable:
+                    for residue in selected_atom.chain.residues.values():
+                        for atom in residue.atoms.values():
+                            self.selected_atoms.discard(atom)
+                            atom.selected = False
+            else:
                 for residue in selected_atom.chain.residues.values():
                     for atom in residue.atoms.values():
-                        if atom in self.selected_atoms:
-                            self.selected_atoms.remove(atom)
-                            atom.selected = False
-        else:
-            for residue in selected_atom.chain.residues.values():
-                for atom in residue.atoms.values():
-                    self.selected_atoms.add(atom)
-                    atom.selected = True
+                        self.selected_atoms.add(atom)
+                        atom.selected = True
     
     def selecting_by_vismol_object(self, selected_atom, disable=True):
         """ when disable = True

@@ -34,6 +34,7 @@ class VismolConfig:
         self.gl_parameters = {"background_color": [0.0, 0.0, 0.0, 1.0],
                               "color_type": 0,
                               "dot_size": 20,
+                              "dots_size": 2,
                               "dot_type": 1,
                               "dot_sel_size": 1.5,
                               "line_width": 2,

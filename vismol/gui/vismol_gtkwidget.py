@@ -133,12 +133,14 @@ class VismolGTKWidget(Gtk.GLArea):
     
     def _pressed_Right(self):
         """ Function doc """
-        self.vm_session.frame += 1
+        if self.vm_session.forward_frame():
+            self.vm_glcore.modified_view = True
         self.queue_draw()
     
     def _pressed_Left(self):
         """ Function doc """
-        self.vm_session.frame -= 1
+        if self.vm_session.reverse_frame():
+            self.vm_glcore.modified_view = True
         self.queue_draw()
     
     def _pressed_Control_L(self):
