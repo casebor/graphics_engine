@@ -499,6 +499,7 @@ class VismolGLCore:
                             # representations[rep_name].active = True
                             if vm_object.representations[rep_name].active:
                                 vm_object.representations[rep_name].draw_representation()
+        self.modified_view = False
         # Check if the picking function is active.
         # Viewing and picking selections cannot be displayed at the same time.
         if self.vm_session.picking_selection_mode:

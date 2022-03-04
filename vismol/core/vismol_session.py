@@ -171,6 +171,8 @@ class VismolSession():
             if len(show_hide_indexes) > 0:
                 vm_object.representations[rep_type].define_new_indexes_to_vbo(show_hide_indexes)
                 vm_object.representations[rep_type].active = True
+                vm_object.representations[rep_type].was_rep_modified = True
+                vm_object.representations[rep_type].was_sel_modified = True
             else:
                 vm_object.representations[rep_type].active = False
         

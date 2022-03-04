@@ -127,6 +127,10 @@ class VismolGTKWidget(Gtk.GLArea):
         except AttributeError as ae:
             pass
     
+    def _pressed_Escape(self):
+        """ Function doc """
+        Gtk.main_quit()
+    
     def _pressed_Right(self):
         """ Function doc """
         self.vm_session.frame += 1

@@ -41,7 +41,10 @@ class Representation:
         self.name = name
         self.active = active
         self.indexes = np.array(indexes, dtype=np.uint32)
+        self.elements = np.uint32(self.indexes.shape[0])
         
+        self.was_rep_modified = False
+        self.was_sel_modified = False
         # representation
         self.vao = None
         self.ind_vbo = None
@@ -58,33 +61,30 @@ class Representation:
         self.shader_program = None
         self.sel_shader_program = None
     
-    def _make_gl_vao_and_vbos(self):
-        """ Function doc """
+    def _check_vao_and_vbos(self):
         self.shader_program = self.vm_glcore.shader_programs[self.name]
         self.sel_shader_program = self.vm_glcore.shader_programs[self.name + "_sel"]
-        self._make_gl_representation_vao_and_vbos()
-        self._make_gl_sel_representation_vao_and_vbos()
+        if self.vao is None:
+            self._make_gl_representation_vao_and_vbos()
+        if self.sel_vao is None:
+            self._make_gl_sel_representation_vao_and_vbos()
     
-    def _make_gl_representation_vao_and_vbos(self, dot_sizes=None, normals=None):
+    def _make_gl_representation_vao_and_vbos(self):
         """ Function doc """
-        self.vao       = self._make_gl_vao()
-        self.ind_vbo   = self._make_gl_index_buffer(self.indexes)
+        logger.debug("building '{}' representation VAO and VBOs".format(self.name))
+        self.vao = self._make_gl_vao()
+        self.ind_vbo = self._make_gl_index_buffer(self.indexes)
         self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.shader_program)
-        self.col_vbo   = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
-        if dot_sizes is not None:
-            self.col_vbo = self._make_gl_color_buffer(colors, self.shader_program)
-        if normals is not None and self.name == "surface":
-            self.norm_vbo = self._make_gl_normal_buffer(normals, self.shader_program)
+        self.col_vbo = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
+        # self.elements = self.vm_object.frames[0].shape[0] * self.vm_object.frames[0].shape[1]
     
-    def _make_gl_sel_representation_vao_and_vbos(self, dot_sizes=None, normals=None):
+    def _make_gl_sel_representation_vao_and_vbos(self):
         """ Function doc """
         logger.debug("building '{}' background selection VAO and VBOs".format(self.name))
-        self.sel_vao       = self._make_gl_vao()
-        self.sel_ind_vbo   = self._make_gl_index_buffer(self.indexes)
+        self.sel_vao = self._make_gl_vao()
+        self.sel_ind_vbo = self._make_gl_index_buffer(self.indexes)
         self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.sel_shader_program)
-        self.sel_col_vbo   = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
-        if dot_sizes is not None:
-            self.sel_size_vbo = self._make_gl_size_buffer(dot_sizes ,self.sel_shader_program)
+        self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
     
     def _make_gl_vao(self):
         """ Function doc """
@@ -95,7 +95,6 @@ class Representation:
     def _make_gl_index_buffer(self, indexes):
         """ Function doc """
         ind_vbo = GL.glGenBuffers(1)
-        self.vm_session.vm_vbos.append(ind_vbo)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
         GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.nbytes, indexes, GL.GL_DYNAMIC_DRAW)
         return ind_vbo
@@ -120,36 +119,7 @@ class Representation:
         GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
         return col_vbo
     
-    def _make_gl_normal_buffer(self, normals, program):
-        """ Function doc """
-        normal_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, normal_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.nbytes, normals, GL.GL_STATIC_DRAW)
-        att_normals = GL.glGetAttribLocation(program, "vert_normal")
-        if att_normals > 0:
-            GL.glEnableVertexAttribArray(att_normals)
-            GL.glVertexAttribPointer(att_normals, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*normals.itemsize, ctypes.c_void_p(0))
-        return normal_vbo
-    
-    def _make_gl_size_buffer(self, dot_sizes, program):
-        """ Function doc """
-        size_vbo = GL.glGenBuffers(1)
-        self.vm_session.vm_vbos.append(size_vbo)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, size_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, dot_sizes.nbytes, dot_sizes, GL.GL_STATIC_DRAW)
-        att_size = GL.glGetAttribLocation(program, "vert_dot_size")
-        GL.glEnableVertexAttribArray(att_size)
-        GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, dot_sizes.itemsize, ctypes.c_void_p(0))
-        return size_vbo
-    
-    def _set_colors_to_buffer(self, col_vbo=True):
-        """ Function doc """
-        frame = self.vm_object.colors
-        if col_vbo:
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
-    
-    def _set_coordinates_to_buffer(self, coord_vbo=True, sel_coord_vbo=True):
+    def _load_coord_vbo(self, coord_vbo=False, sel_coord_vbo=False):
         """ This function assigns the coordinates to 
         be drawn by the function  draw_representation"""
         frame = self.vm_glcore._safe_frame_coords(self.vm_object)
@@ -161,10 +131,15 @@ class Representation:
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_coord_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
     
-    def _check_vao_and_vbos(self, indexes=None):
+    def _load_ind_vbo(self, coord_vbo=False, sel_coord_vbo=False):
         """ Function doc """
-        if self.sel_vao is None:
-            self._make_gl_vao_and_vbos()
+        if coord_vbo:
+            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
+            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
+        
+        if sel_coord_vbo:
+            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.sel_ind_vbo)
+            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
     
     def _enable_anti_alias_to_lines(self):
         """ Function doc """
@@ -180,29 +155,62 @@ class Representation:
         GL.glDisable(GL.GL_BLEND)
         GL.glDisable(GL.GL_DEPTH_TEST)
     
-    def define_new_indexes_to_vbo(self, input_indexes=None):
+    def define_new_indexes_to_vbo(self, input_indexes):
         """ Function doc """
-        if input_indexes is None:
-            input_indexes = []
-        self._check_vao_and_vbos()
         self.indexes = np.array(input_indexes, dtype=np.uint32)
-        
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
-        
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.sel_ind_vbo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
+        self.elements = np.uint32(self.indexes.shape[0])
     
-    def change_vbo_colors(self, colors=None):
-        """ Function doc """
-        if colors is None:
-            colors = []
-        colors = np.array(colors, dtype=np.float32)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
-        att_colors = GL.glGetAttribLocation(self.shader_program, "vert_color")
-        GL.glEnableVertexAttribArray(att_colors)
-        GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+    # def _make_gl_normal_buffer(self, normals, program):
+    #     """ Function doc """
+    #     normal_vbo = GL.glGenBuffers(1)
+    #     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, normal_vbo)
+    #     GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.nbytes, normals, GL.GL_STATIC_DRAW)
+    #     att_normals = GL.glGetAttribLocation(program, "vert_normal")
+    #     if att_normals > 0:
+    #         GL.glEnableVertexAttribArray(att_normals)
+    #         GL.glVertexAttribPointer(att_normals, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*normals.itemsize, ctypes.c_void_p(0))
+    #     return normal_vbo
+    
+    # def _make_gl_size_buffer(self, dot_sizes, program):
+    #     """ Function doc """
+    #     size_vbo = GL.glGenBuffers(1)
+    #     self.vm_session.vm_vbos.append(size_vbo)
+    #     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, size_vbo)
+    #     GL.glBufferData(GL.GL_ARRAY_BUFFER, dot_sizes.nbytes, dot_sizes, GL.GL_STATIC_DRAW)
+    #     att_size = GL.glGetAttribLocation(program, "vert_dot_size")
+    #     GL.glEnableVertexAttribArray(att_size)
+    #     GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, dot_sizes.itemsize, ctypes.c_void_p(0))
+    #     return size_vbo
+    
+    # def _set_colors_to_buffer(self, col_vbo=True):
+    #     """ Function doc """
+    #     colors = self.vm_object.colors
+    #     if col_vbo:
+    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
+    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
+    
+    # def _set_coordinates_to_buffer(self, coord_vbo=False, sel_coord_vbo=False):
+    #     """ This function assigns the coordinates to 
+    #     be drawn by the function  draw_representation"""
+    #     frame = self.vm_glcore._safe_frame_coords(self.vm_object)
+    #     if coord_vbo:
+    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
+    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
+        
+    #     if sel_coord_vbo:
+    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_coord_vbo)
+    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
+    
+    # def change_vbo_colors(self, colors=None):
+    #     """ Function doc """
+    #     if colors is None:
+    #         colors = []
+    #     colors = np.array(colors, dtype=np.float32)
+    #     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
+    #     GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
+    #     att_colors = GL.glGetAttribLocation(self.shader_program, "vert_color")
+    #     GL.glEnableVertexAttribArray(att_colors)
+    #     GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
 
 
 class DotsRepresentation(Representation):
@@ -214,49 +222,43 @@ class DotsRepresentation(Representation):
     
     def draw_representation(self):
         """ Function doc """
+        # print("drawing dots", len(self.indexes))
         self._check_vao_and_vbos()
-        self._enable_anti_alias_to_lines()
         height = self.vm_glcore.height
+        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
         GL.glUseProgram(self.shader_program)
-        GL.glPointSize(1.5*height/abs(self.vm_glcore.dist_cam_zrp))
+        GL.glPointSize(15)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.atoms)), GL.GL_UNSIGNED_INT, None)
+        if self.was_rep_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_modified = False
+        
+        self._load_ind_vbo(coord_vbo=True)
+        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
-        self._disable_anti_alias_to_lines()
+        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
         GL.glPointSize(1)
         GL.glUseProgram(0)
     
     def draw_background_sel_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()
-        self._disable_anti_alias_to_lines()
         GL.glUseProgram(self.sel_shader_program)
+        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
         GL.glPointSize(200/abs(self.vm_glcore.dist_cam_zrp))
         GL.glEnable(GL.GL_DEPTH_TEST)
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
-            GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.atoms)), GL.GL_UNSIGNED_INT, None)
+        if self.was_sel_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self.was_sel_modified = False
+        self._load_ind_vbo(sel_coord_vbo=True)
+        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
@@ -290,7 +292,8 @@ class LinesRepresentation(Representation):
             # the limit of frames that each object has. Allowing two objects with 
             # different trajectory sizes to be manipulated at the same time within the 
             # glArea
-            self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
+            # self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
+            self._load_ind_vbo(coord_vbo=True)
             GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -316,7 +319,8 @@ class LinesRepresentation(Representation):
             # the limit of frames that each object has. Allowing two objects with 
             # different trajectory sizes to be manipulated at the same time within the 
             # glArea
-            self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
+            # self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
+            self._load_ind_vbo(sel_coord_vbo=True)
             GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -350,7 +354,8 @@ class NonBondedRepresentation(Representation):
             # the limit of frames that each object has. Allowing two objects with 
             # different trajectory sizes to be manipulated at the same time within the 
             # glArea
-            self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
+            # self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
+            self._load_ind_vbo(coord_vbo=True)
             GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -375,7 +380,8 @@ class NonBondedRepresentation(Representation):
             # the limit of frames that each object has. Allowing two objects with 
             # different trajectory sizes to be manipulated at the same time within the 
             # glArea
-            self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
+            # self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
+            self._load_ind_vbo(sel_coord_vbo=True)
             GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
