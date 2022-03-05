@@ -31,10 +31,10 @@ from model.chain import Chain
 from model.residue import Residue
 from model.molecular_properties import COLOR_PALETTE
 from libgl.vismol_font import VismolFont
-from libgl.representations import PickingDotsRepresentation
 from libgl.representations import DotsRepresentation
 from libgl.representations import LinesRepresentation
 from libgl.representations import NonBondedRepresentation
+from libgl.representations import PickingDotsRepresentation
 # from libgl.representations import SticksRepresentation
 # from libgl.representations import SpheresRepresentation
 # from libgl.representations import ImpostorRepresentation

@@ -65,10 +65,10 @@ class VismolSession():
             self.vm_glcore = self.vm_widget.vm_glcore
             self.vm_glcore.queue_draw()
             self.gtk_widgets_update_list = []
-        elif toolkit == "Qt4":
+        elif toolkit == "Qt5":
             self.vm_widget = None
-            logger.error("Not implemented yet for Qt4 :(")
-            raise NotImplementedError("Not implemented yet for Qt4 :(")
+            logger.error("Not implemented yet for Qt5 :(")
+            raise NotImplementedError("Not implemented yet for Qt5 :(")
             quit()
         else:
             self.vm_widget = None

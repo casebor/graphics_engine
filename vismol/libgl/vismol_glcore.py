@@ -521,41 +521,9 @@ class VismolGLCore:
                 # Here are represented the blue dots referring to the atom's selections
                 if vm_object.core_representations["picking_dots"] is None:
                     vm_object.build_core_representations()
-                _coords = self.vm_session.selections[self.vm_session.current_selection].selected_coords[1:]
                 _indexes = self.vm_session.selections[self.vm_session.current_selection].selected_atom_ids
                 vm_object.core_representations["picking_dots"].define_new_indexes_to_vbo(list(_indexes))
                 vm_object.core_representations["picking_dots"].draw_representation()
-                
-                # if vm_object.selection_dots_vao is None:
-                #     shapes._make_gl_selection_dots(self.core_shader_programs["picking_dots"], vm_object)
-                
-                # # Extracting the indexes for each vismol_object that was selected
-                # # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_objects[vm_object]
-                # # indexes = self.vm_session.selections[self.vm_session.current_selection].selected_coords
-                # _coords = self.vm_session.selections[self.vm_session.current_selection].selected_coords[1:]
-                # _inds = np.int32(_coords.shape[0])
-                # _size = self.vm_config.gl_parameters["dot_sel_size"]
-               
-                # GL.glPointSize(_size * self.height / (abs(self.dist_cam_zrp)) / 2)
-                # GL.glUseProgram(self.core_shader_programs["picking_dots"])
-                # GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                # self.load_matrices(self.core_shader_programs["picking_dots"], vm_object.model_mat)
-                # GL.glBindVertexArray(vm_object.selection_dots_vao)
-                # # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[0])
-                # # GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize * len(indexes),
-                # #                 indexes, GL.GL_STATIC_DRAW)
-                # # frame = self._safe_frame_exchange(vm_object)
-                # # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[1])
-                # # GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.itemsize * len(frame),
-                # #                 frame, GL.GL_STATIC_DRAW)
-                # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vm_object.selection_dot_buffers[1])
-                # GL.glBufferData(GL.GL_ARRAY_BUFFER, _coords.itemsize * _inds * 3, _coords, GL.GL_STATIC_DRAW)
-                # GL.glDrawElements(GL.GL_POINTS, _inds, GL.GL_UNSIGNED_INT, None)
-                # GL.glBindVertexArray(0)
-                # GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                # GL.glPointSize(1)
-                # GL.glUseProgram(0)
-                # GL.glDisable(GL.GL_DEPTH_TEST)
         
         if self.show_dynamic_line and self.shift:
             if self.dynamic_line.vao is None:
@@ -580,6 +548,7 @@ class VismolGLCore:
         logger.info("OpenGL version: {}".format(GL.glGetString(GL.GL_VERSION)))
         logger.info("OpenGL major version: {}".format(GL.glGetDoublev(GL.GL_MAJOR_VERSION)))
         logger.info("OpenGL minor version: {}".format(GL.glGetDoublev(GL.GL_MINOR_VERSION)))
+        self._compile_shader_picking_dots()
         for rep in self.representations_available:
             func = getattr(self, "_compile_shader_" + rep)
             try:
@@ -1089,9 +1058,9 @@ class VismolGLCore:
                 if self.vm_session.toolkit == "Gtk_3.0":
                     self.parent_widget.get_window().invalidate_rect(None, False)
                     self.parent_widget.get_window().process_updates(False)
-                elif self.vm_session.toolkit == "Qt4":
-                    logger.critical("Not implemented for Qt4 yet :(")
-                    raise RuntimeError("Not implemented for Qt4 yet :(")
+                elif self.vm_session.toolkit == "Qt5":
+                    logger.critical("Not implemented for Qt5 yet :(")
+                    raise RuntimeError("Not implemented for Qt5 yet :(")
                 # WARNING: Method only works with GTK!!!
                 time.sleep(self.vm_config.gl_parameters["center_on_coord_sleep_time"])
             
