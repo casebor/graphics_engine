@@ -63,7 +63,7 @@ def _load_pdb_file(vismol_session, infile):
     """
     vm_object_name = os.path.basename(infile)
     topo = PDBFiles.get_topology(infile)
-    vm_object = VismolObject(vismol_session, vismol_session.vm_object_counter, name=vm_object_name)
+    vm_object = VismolObject(vismol_session, len(vismol_session.vm_objects_dic), name=vm_object_name)
     vm_object.set_model_matrix(vismol_session.vm_glcore.model_mat)
     unique_id = len(vismol_session.atom_dic_id)
     atom_id = 0

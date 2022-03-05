@@ -31,11 +31,13 @@ uniform mat4 proj_mat;
 
 in vec3 vert_coord;
 in vec3 vert_color;
-out vec3 v_color;
+out vec3 frag_coord;
+out vec3 frag_color;
 
 void main(){
     gl_Position = proj_mat * view_mat * model_mat * vec4(vert_coord, 1.0);
-    v_color     = vert_color; 
+    frag_coord = (view_mat * model_mat * vec4(vert_coord, 1.0)).xyz;
+    frag_color = vert_color;
 }
 """
 
@@ -44,21 +46,37 @@ fragment_shader_dot_simple = """
 
 uniform vec4 fog_color;
 uniform float fog_start;
+uniform float fog_end;
 
-in vec3 v_color;
-out vec4 out_color;
+in vec3 frag_coord;
+in vec3 frag_color;
+out vec4 final_color;
 
 void main(){
-    float dist = length(gl_PointCoord.xy - vec2(0.5,0.5));
-    if (dist > 0.5)
-        discard;
-    float dist2 = length(gl_PointCoord.xy - vec2(0.4,0.4));
-    float sphere_factor = pow( 1.025 - dist2 , 1.75 ); 
-    out_color = vec4(v_color * sphere_factor, 1.0);
+    float dist = abs(frag_coord.z);
+    if(dist>=fog_start){
+        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+        final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
+    }
+    else{
+       final_color = vec4(frag_color, 1.0);
+    }
 }
 """
 
-vertex_shader_dot_simple2 = """
+sel_fragment_shader_dot_simple = """
+# version 330
+
+in vec3 frag_color;
+out vec4 final_color;
+
+void main(){
+    final_color = vec4(frag_color, 1.0);
+}
+"""
+
+
+vertex_shader_dot_circle = """
 # version 330
 
 uniform mat4 model_mat;
@@ -67,31 +85,123 @@ uniform mat4 proj_mat;
 
 in vec3 vert_coord;
 in vec3 vert_color;
-out vec3 v_color;
+out vec3 frag_coord;
+out vec3 frag_color;
 
 void main(){
     gl_Position = proj_mat * view_mat * model_mat * vec4(vert_coord, 1.0);
-    v_color     = vert_color; 
+    frag_coord = (view_mat * model_mat * vec4(vert_coord, 1.0)).xyz;
+    frag_color = vert_color;
 }
 """
 
-fragment_shader_dot_simple2 = """
+fragment_shader_dot_circle = """
 # version 330
 
-in vec3 v_color;
-out vec4 out_color;
+uniform vec4 fog_color;
+uniform float fog_start;
+uniform float fog_end;
 
-void main()
-{
+in vec3 frag_coord;
+in vec3 frag_color;
+out vec4 final_color;
+
+void main(){
+    float dist = length(gl_PointCoord.xy - vec2(0.5,0.5));
+    if (dist > 0.5)
+        discard;
+    
+    dist = abs(frag_coord.z);
+    if(dist>=fog_start){
+        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+        final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
+    }
+    else{
+       final_color = vec4(frag_color, 1.0);
+    }
+}
+"""
+
+sel_fragment_shader_dot_circle = """
+# version 330
+
+in vec3 frag_color;
+out vec4 final_color;
+
+void main(){
+    float dist = length(gl_PointCoord.xy - vec2(0.5,0.5));
+    if (dist > 0.5)
+        discard;
+    final_color = vec4(frag_color, 1.0);
+}
+"""
+
+
+vertex_shader_dot_disc = """
+# version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 proj_mat;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+out vec3 frag_coord;
+out vec3 frag_color;
+
+void main(){
+    gl_Position = proj_mat * view_mat * model_mat * vec4(vert_coord, 1.0);
+    frag_coord = (view_mat * model_mat * vec4(vert_coord, 1.0)).xyz;
+    frag_color = vert_color;
+}
+"""
+
+fragment_shader_dot_disc = """
+# version 330
+
+uniform vec4 fog_color;
+uniform float fog_start;
+uniform float fog_end;
+
+in vec3 frag_coord;
+in vec3 frag_color;
+out vec4 final_color;
+
+void main(){
+    vec4 circle_color;
     float dist = length(gl_PointCoord.xy - vec2(0.5,0.5));
     if (dist > 0.5)
         discard;
     float ligth_dist = length(gl_PointCoord - vec2(0.3, 0.3));
-    out_color = mix(vec4(v_color, 1), vec4(0, 0, 0, 1), sqrt(ligth_dist)*.78);
+    circle_color = mix(vec4(frag_color, 1), vec4(0, 0, 0, 1), sqrt(ligth_dist)*.78);
+    
+    dist = abs(frag_coord.z);
+    if(dist>=fog_start){
+        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+        final_color = mix(fog_color, circle_color, fog_factor);
+    }
+    else{
+       final_color = circle_color;
+    }
 }
 """
 
-vertex_shader_dot_simple3 = """
+sel_fragment_shader_dot_disc = """
+# version 330
+
+in vec3 frag_color;
+out vec4 final_color;
+
+void main(){
+    float dist = length(gl_PointCoord.xy - vec2(0.5,0.5));
+    if (dist > 0.5)
+        discard;
+    final_color = vec4(frag_color, 1.0);
+}
+"""
+
+
+vertex_shader_dot_extra = """
 # version 330
 
 uniform mat4 model_mat;
@@ -100,23 +210,23 @@ uniform mat4 proj_mat;
 
 in vec3 vert_coord;
 in vec3 vert_color;
-out vec3 v_color;
-out vec4 frag_pos;
+out vec4 frag_coord;
+out vec3 frag_color;
 
 void main(){
-    frag_pos = view_mat * model_mat * vec4(vert_coord, 1.0);
     gl_Position = proj_mat * view_mat * model_mat * vec4(vert_coord, 1.0);
-    v_color     = vert_color; 
+    frag_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
+    frag_color = vert_color;
 }
 """
 
-fragment_shader_dot_simple3 = """
+fragment_shader_dot_extra = """
 # version 330
 uniform mat4 proj_mat;
 
-in vec3 v_color;
-in vec4 frag_pos;
-out vec4 out_color;
+in vec4 frag_coord;
+in vec3 frag_color;
+out vec4 final_color;
 
 void main(){
     vec2 P = gl_PointCoord.xy - vec2(0.5,0.5);
@@ -129,7 +239,7 @@ void main(){
     if (d <= 0.0)
         discard;
     float z = sqrt(d);
-    vec4 pos = frag_pos;
+    vec4 pos = frag_coord;
     pos.z += z;
     pos = proj_mat * pos;
     gl_FragDepth = 0.5*(pos.z / pos.w)+0.5;
@@ -137,21 +247,21 @@ void main(){
     if (dist > 0.5)
         discard;
     float ligth_dist = length(gl_PointCoord - vec2(0.3, 0.3));
-    out_color = mix(vec4(v_color, 1), vec4(0, 0, 0, 1), sqrt(ligth_dist)*.78);
+    final_color = mix(vec4(frag_color, 1), vec4(0, 0, 0, 1), sqrt(ligth_dist)*.78);
 }
 """
 
-sel_fragment_shader_dot = """
+sel_fragment_shader_dot_extra = """
 # version 330
 
-in vec3 v_color;
-out vec4 out_color;
+in vec3 frag_color;
+out vec4 final_color;
 
 void main(){
     float dist = length(gl_PointCoord.xy - vec2(0.5,0.5));
     if (dist > 0.5)
         discard;
-    out_color = vec4(v_color, 1.0);
+    final_color = vec4(frag_color, 1.0);
 }
 """
 
@@ -159,16 +269,21 @@ void main(){
 shader_type = {0: { "vertex_shader"      : vertex_shader_dot_simple,
                     "fragment_shader"    : fragment_shader_dot_simple,
                     "sel_vertex_shader"  : vertex_shader_dot_simple,
-                    "sel_fragment_shader": sel_fragment_shader_dot
+                    "sel_fragment_shader": sel_fragment_shader_dot_simple
                   },
-               1: {"vertex_shader"      : vertex_shader_dot_simple2,
-                   "fragment_shader"    : fragment_shader_dot_simple2 ,
-                   "sel_vertex_shader"  : vertex_shader_dot_simple,
-                   "sel_fragment_shader": sel_fragment_shader_dot
+               1: {"vertex_shader"      : vertex_shader_dot_circle,
+                   "fragment_shader"    : fragment_shader_dot_circle ,
+                   "sel_vertex_shader"  : vertex_shader_dot_circle,
+                   "sel_fragment_shader": sel_fragment_shader_dot_circle
                    },
-               2: {"vertex_shader"      : vertex_shader_dot_simple3,
-                   "fragment_shader"    : fragment_shader_dot_simple3,
-                   "sel_vertex_shader"  : vertex_shader_dot_simple,
-                   "sel_fragment_shader": sel_fragment_shader_dot
-                   }
+               2: {"vertex_shader"      : vertex_shader_dot_disc,
+                   "fragment_shader"    : fragment_shader_dot_disc,
+                   "sel_vertex_shader"  : vertex_shader_dot_disc,
+                   "sel_fragment_shader": sel_fragment_shader_dot_disc
+                   },
+               3: {"vertex_shader"      : vertex_shader_dot_extra,
+                   "fragment_shader"    : fragment_shader_dot_extra,
+                   "sel_vertex_shader"  : vertex_shader_dot_extra,
+                   "sel_fragment_shader": sel_fragment_shader_dot_extra
+                   },
 }

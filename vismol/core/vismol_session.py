@@ -42,18 +42,16 @@ class VismolSession():
         self.main_session = None
         self.toolkit = toolkit
         self.frame = 0
-        self.vm_vbos = []
         self.vm_config = VismolConfig(self)
-        self.vm_objects_dic = {} # old Vobjects dic - include molecules
-        self.vm_object_counter = 0  # Each vismol object has a unique access key (int), which is generated in the method: add_vismol_object.
-        self.vm_geometric_object = []
-        self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None, "pk3pk4":None}
+        self.vm_objects_dic = {}
         self.atom_dic_id = {}
-        self.atom_id_counter = 0
+        self.atom_id_counter = np.uint32(0) # This variable could be replaced by len(self.atom_dic_id)?
         self.picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
         self.selections = {"sel_00": VMSele(self)}
         self.current_selection = "sel_00"
         self.picking_selections = VMPick(self)
+        
+        self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None, "pk3pk4":None}
         
         if toolkit == "Gtk_3.0":
             from gui.vismol_gtkwidget import VismolGTKWidget
@@ -64,27 +62,25 @@ class VismolSession():
                 self.vm_widget = widget
             self.vm_glcore = self.vm_widget.vm_glcore
             self.vm_glcore.queue_draw()
-            self.gtk_widgets_update_list = []
+        
         elif toolkit == "Qt5":
             self.vm_widget = None
             logger.error("Not implemented yet for Qt5 :(")
             raise NotImplementedError("Not implemented yet for Qt5 :(")
             quit()
+        
         else:
             self.vm_widget = None
-            logger.error("Toolkit not defined, quitting.")
-            raise RuntimeError("Toolkit not defined, quitting.")
+            logger.error("Toolkit not defined or syntax error, try 'Gtk_3.0'. Quitting.")
+            raise RuntimeError("Toolkit not defined or syntax error, try 'Gtk_3.0'. Quitting.")
             quit()
     
     def _add_vismol_object(self, vismol_object, show_molecule=True, autocenter=True):
-        """ Function doc
-        """
+        """ Function doc """
         if vismol_object.index in self.vm_objects_dic.keys():
             logger.warning("The VismolObject with id {} already exists. \
                 The data will be overwritten.".format(vismol_object.index))
-        # vismol_object.index = self.vm_object_counter
-        self.vm_objects_dic[self.vm_object_counter] = vismol_object
-        self.vm_object_counter += 1
+        self.vm_objects_dic[len(self.vm_objects_dic)] = vismol_object
         self.atom_id_counter += len(vismol_object.atoms)
         for atom in vismol_object.atoms.values():
             self.atom_dic_id[atom.unique_id] = atom
@@ -180,139 +176,144 @@ class VismolSession():
     
     def forward_frame(self):
         """ Function doc """
-        _frame = self.frame + 1
-        _flags = np.zeros(len(self.vm_objects_dic), dtype=bool)
+        frame = self.frame + 1
         for i, vm_object in enumerate(self.vm_objects_dic.values()):
-            if _frame < vm_object.frames.shape[0]:
-                _flags[i] = True
-        if _flags.any():
-            self.frame += 1
-            return True
-        return False
+            if frame < vm_object.frames.shape[0]:
+                self.frame += 1
+                self.vm_glcore.modified_view = True
+                break
+            else:
+                pass
+        else:
+            self.vm_glcore.modified_view = False
     
     def reverse_frame(self):
         """ Function doc """
         if self.frame - 1 >= 0:
             self.frame = self.frame - 1
-            return True
-        return False
-    
-    def viewing_selection_mode(self, sel_type="atom"):
-        """ Function doc """
-        if self.selection_box_frame:
-            self.selection_box_frame.change_sel_type_in_combobox(sel_type)
-            
-        self.selections[self.current_selection].selection_mode = sel_type
-    
-    def _selection_function_set(self, selected, _type=None, disable=True):
-        #"""     P I C K I N G     S E L E C T I O N S     """
-        if self.picking_selection_mode:
-            self.picking_selections.selection_function_picking(selected)
-        #"""     V I E W I N G     S E L E C T I O N S     """
+            self.vm_glcore.modified_view = True
         else:
-            self.selections[self.current_selection].selection_function_viewing_set(selected, _type, disable)
-    
-    def delete_vismol_object_by_index(self, index):
-        """ Function doc
-        """
-        try:
-            vm_object = self.vm_objects_dic.pop(index)
-        except KeyError:
-            logger.warning("VismolObject with index {} not found".format(index))
-            return None
-        return vm_object
-    
-    def select(self, vismol_object=None, indexes=None, sele=None):
-        """ Function doc """
-        if vismol_object is None:
-            vismol_object = self.vm_objects[-1]
-        
-        if sele is None:
-            sele = self.current_selection
-        
-        if indexes == "all":
-            self.selections[sele].selecting_by_indexes(vismol_object=vismol_object,
-                                                       indexes=range(0, int(len(vismol_object.atoms)/2)))
-        self.vm_widget.queue_draw()
-    
-    def disable_by_index(self, index):
-        """ When the variable "dictionary" is active, the function accesses 
-            a vismol object through the dictionary "self.vm_objects_dic". 
-            Each vismol object has a unique access key (int), which, in 
-            easyhybrid, is generated in the method: add_vismol_object.
-            
-            In the vismol interface the enable_by_index/disable_by_index methods
-            access the vismol objects by their position in the "self.vm_objects" 
-            list (this is because when an object is deleted in the vismol 
-            interface, the treeview"s liststore is rewritten)
-        """
-        try:
-            self.vm_objects_dic[index].active = False
-            self.vm_glcore.queue_draw()
-        except KeyError:
-            logger.error("VismolObject with index {} not found".format(index))
-            return False
-        return True
-    
-    def enable_by_index(self, index):
-        """ When the variable "dictionary" is active, the function accesses 
-            a vismol object through the dictionary "self.vm_objects_dic". 
-            Each vismol object has a unique access key (int), which, in 
-            easyhybrid, is generated in the method: add_vismol_object.
-            
-            In the vismol interface the enable_by_index/disable_by_index methods
-            access the vismol objects by their position in the "self.vm_objects" 
-            list (this is because when an object is deleted in the vismol 
-            interface, the treeview"s liststore is rewritten)
-        """
-        try:
-            self.vm_objects_dic[index].active = True
-            self.vm_glcore.queue_draw()
-        except KeyError:
-            logger.error("VismolObject with index {} not found".format(index))
-            return False
-        return True
-    
-    def edit_by_index(self, index):
-        """ Function doc
-        """
-        try:
-            self.vm_objects_dic[index].editing = not self.vm_objects_dic[index].editing
-            self.vm_glcore.queue_draw()
-        except KeyError:
-            logger.error("VismolObject with index {} not found".format(index))
-            return False
-        return True
-    
-    def set_color_by_index(self, vismol_object, indexes=None, color=None):
-        """ NOT SURE WHAT THIS FUNCTION DOES
-        """
-        if indexes is None:
-            indexes = []
-        if color is None:
-            color = np.array([0.9, 0.9, 0.9], dtype=np.float32)
-        
-        for atom_index in indexes:
-            vismol_object.atoms[atom_index].color = color
-        vismol_object._generate_color_vectors(do_colors=True, do_colors_idx=False,
-                                              do_colors_raindow=False, do_vdw_dot_sizes=False,
-                                              do_cov_dot_sizes=False)
-        self.vm_widget.queue_draw()
-        for rep  in vismol_object.representations.keys():
-            if vismol_object.representations[rep]:
-                vismol_object.representations[rep]._set_colors_to_buffer()
-                # try:
-                #     vismol_object.representations[rep]._set_colors_to_buffer()
-                # except:
-                #     print('"VisMol/vModel/Representations.py, line 123, in _set_colors_to_buffer GL.glBindBuffer(GL.GL_ARRAY_BUFFER, ctypes.ArgumentError: argument 2: <class "TypeError">: wrong type"')
-        return True
+            self.vm_glcore.modified_view = False
     
     def set_frame(self, frame=0):
         """ Function doc """
-        self.frame = frame
+        assert frame >= 0
+        self.frame = np.uint32(frame)
         self.vm_widget.queue_draw()
     
     def get_frame(self):
         """ Function doc """
         return self.frame
+    
+    def _selection_function_set(self, selected, _type=None, disable=True):
+        """ Function doc """
+        if self.picking_selection_mode: # True for picking mode
+            assert len(selected) == 1
+            selected = list(selected)[0]
+            self.picking_selections.selection_function_picking(selected)
+        else: # False for viewing mode
+            self.selections[self.current_selection].selection_function_viewing_set(selected, _type, disable)
+    
+    def viewing_selection_mode(self, sel_type="atom"):
+        """ Function doc """
+        if self.selection_box_frame:
+            self.selection_box_frame.change_sel_type_in_combobox(sel_type)
+        self.selections[self.current_selection].selection_mode = sel_type
+    
+    
+    
+    # def delete_vismol_object_by_index(self, index):
+    #     """ Function doc
+    #     """
+    #     try:
+    #         vm_object = self.vm_objects_dic.pop(index)
+    #     except KeyError:
+    #         logger.warning("VismolObject with index {} not found".format(index))
+    #         return None
+    #     return vm_object
+    
+    # def select(self, vismol_object=None, indexes=None, sele=None):
+    #     """ Function doc """
+    #     if vismol_object is None:
+    #         vismol_object = self.vm_objects[-1]
+        
+    #     if sele is None:
+    #         sele = self.current_selection
+        
+    #     if indexes == "all":
+    #         self.selections[sele].selecting_by_indexes(vismol_object=vismol_object,
+    #                                                    indexes=range(0, int(len(vismol_object.atoms)/2)))
+    #     self.vm_widget.queue_draw()
+    
+    # def disable_by_index(self, index):
+    #     """ When the variable "dictionary" is active, the function accesses 
+    #         a vismol object through the dictionary "self.vm_objects_dic". 
+    #         Each vismol object has a unique access key (int), which, in 
+    #         easyhybrid, is generated in the method: add_vismol_object.
+            
+    #         In the vismol interface the enable_by_index/disable_by_index methods
+    #         access the vismol objects by their position in the "self.vm_objects" 
+    #         list (this is because when an object is deleted in the vismol 
+    #         interface, the treeview"s liststore is rewritten)
+    #     """
+    #     try:
+    #         self.vm_objects_dic[index].active = False
+    #         self.vm_glcore.queue_draw()
+    #     except KeyError:
+    #         logger.error("VismolObject with index {} not found".format(index))
+    #         return False
+    #     return True
+    
+    # def enable_by_index(self, index):
+    #     """ When the variable "dictionary" is active, the function accesses 
+    #         a vismol object through the dictionary "self.vm_objects_dic". 
+    #         Each vismol object has a unique access key (int), which, in 
+    #         easyhybrid, is generated in the method: add_vismol_object.
+            
+    #         In the vismol interface the enable_by_index/disable_by_index methods
+    #         access the vismol objects by their position in the "self.vm_objects" 
+    #         list (this is because when an object is deleted in the vismol 
+    #         interface, the treeview"s liststore is rewritten)
+    #     """
+    #     try:
+    #         self.vm_objects_dic[index].active = True
+    #         self.vm_glcore.queue_draw()
+    #     except KeyError:
+    #         logger.error("VismolObject with index {} not found".format(index))
+    #         return False
+    #     return True
+    
+    # def edit_by_index(self, index):
+    #     """ Function doc
+    #     """
+    #     try:
+    #         self.vm_objects_dic[index].editing = not self.vm_objects_dic[index].editing
+    #         self.vm_glcore.queue_draw()
+    #     except KeyError:
+    #         logger.error("VismolObject with index {} not found".format(index))
+    #         return False
+    #     return True
+    
+    # def set_color_by_index(self, vismol_object, indexes=None, color=None):
+    #     """ NOT SURE WHAT THIS FUNCTION DOES
+    #     """
+    #     if indexes is None:
+    #         indexes = []
+    #     if color is None:
+    #         color = np.array([0.9, 0.9, 0.9], dtype=np.float32)
+        
+    #     for atom_index in indexes:
+    #         vismol_object.atoms[atom_index].color = color
+    #     vismol_object._generate_color_vectors(do_colors=True, do_colors_idx=False,
+    #                                           do_colors_raindow=False, do_vdw_dot_sizes=False,
+    #                                           do_cov_dot_sizes=False)
+    #     self.vm_widget.queue_draw()
+    #     for rep  in vismol_object.representations.keys():
+    #         if vismol_object.representations[rep]:
+    #             vismol_object.representations[rep]._set_colors_to_buffer()
+    #             # try:
+    #             #     vismol_object.representations[rep]._set_colors_to_buffer()
+    #             # except:
+    #             #     print('"VisMol/vModel/Representations.py, line 123, in _set_colors_to_buffer GL.glBindBuffer(GL.GL_ARRAY_BUFFER, ctypes.ArgumentError: argument 2: <class "TypeError">: wrong type"')
+    #     return True
     

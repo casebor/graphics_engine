@@ -493,6 +493,8 @@ class VismolGLCore:
         
         if self.modified_view:
             for vm_object in self.vm_session.vm_objects_dic.values():
+                if vm_object.core_representations["picking_dots"] is None:
+                    vm_object.build_core_representations()
                 vm_object.core_representations["picking_dots"].was_rep_modified = True
                 for rep in vm_object.representations.values():
                     if rep is not None:
@@ -531,7 +533,7 @@ class VismolGLCore:
             else:
                 self.dynamic_line._draw_selection_box()
         
-        if self.show_selection_box and self.shift:
+        if self.show_selection_box and self.shift and not self.vm_session.picking_selection_mode:
             if self.selection_box.vao is None:
                 self.selection_box._make_gl_selection_box()
             else:
@@ -549,6 +551,7 @@ class VismolGLCore:
         logger.info("OpenGL major version: {}".format(GL.glGetDoublev(GL.GL_MAJOR_VERSION)))
         logger.info("OpenGL minor version: {}".format(GL.glGetDoublev(GL.GL_MINOR_VERSION)))
         self._compile_shader_picking_dots()
+        self._compile_shader_freetype()
         for rep in self.representations_available:
             func = getattr(self, "_compile_shader_" + rep)
             try:
@@ -593,7 +596,7 @@ class VismolGLCore:
         GL.glShaderSource(shader, shader_prog)
         GL.glCompileShader(shader)
         if GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
-            logger.critical("Error compiling the shader: ", shader_type)
+            logger.critical("Error compiling the shader: {}".format(shader_type))
             raise RuntimeError(logger.critical(GL.glGetShaderInfoLog(shader)))
         return shader
     
@@ -801,7 +804,7 @@ class VismolGLCore:
         """
         if self.vm_font.vao is None:
             self.vm_font.make_freetype_font()
-            self.vm_font.make_freetype_texture(self.shader_programs["freetype"])
+            self.vm_font.make_freetype_texture(self.core_shader_programs["freetype"])
         
         number = 1
         self.chars     = 0
@@ -832,22 +835,22 @@ class VismolGLCore:
         self.xyz_pos = np.array(self.xyz_pos, dtype=np.float32)
         self.uv_coords = np.array(self.uv_coords, dtype=np.float32)
         
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.vbos[0])
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.coord_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.xyz_pos.itemsize * len(self.xyz_pos),
                         self.xyz_pos, GL.GL_DYNAMIC_DRAW)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.vbos[1])
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.text_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.uv_coords.itemsize * len(self.uv_coords),
                         self.uv_coords, GL.GL_DYNAMIC_DRAW)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-        GL.glUseProgram(self.shader_programs["freetype"])
+        GL.glUseProgram(self.core_shader_programs["freetype"])
         
-        self.vm_font.load_matrices(self.shader_programs["freetype"],
+        self.vm_font.load_matrices(self.core_shader_programs["freetype"],
                                    self.glcamera.view_matrix,
                                    self.glcamera.projection_matrix)
-        self.vm_font.load_font_params(self.shader_programs["freetype"])
+        self.vm_font.load_font_params(self.core_shader_programs["freetype"])
         
         GL.glBindVertexArray(self.vm_font.vao)
         GL.glDrawArrays(GL.GL_POINTS, 0, self.chars)
@@ -858,116 +861,116 @@ class VismolGLCore:
     def _compile_shader_picking_dots(self):
         """ Function doc """
         self.core_shader_programs["picking_dots"] = self.load_shaders(shaders_pick.vertex_shader_picking_dots,
-                                                                 shaders_pick.fragment_shader_picking_dots)
+                                                            shaders_pick.fragment_shader_picking_dots)
+    
+    def _compile_shader_freetype(self):
+        """ Function doc """
+        self.core_shader_programs["freetype"] = self.load_shaders(shaders_vm_freetype.vertex_shader_freetype,
+                                                         shaders_vm_freetype.fragment_shader_freetype,
+                                                         shaders_vm_freetype.geometry_shader_freetype)
     
     def _compile_shader_dots(self):
         """ Function doc """
         dot_type = self.vm_config.gl_parameters["dot_type"]
         self.shader_programs["dots"] = self.load_shaders(shaders_dots.shader_type[dot_type]["vertex_shader"],
-                                                         shaders_dots.shader_type[dot_type]["fragment_shader"])
+                                                shaders_dots.shader_type[dot_type]["fragment_shader"])
         self.shader_programs["dots_sel"] = self.load_shaders(shaders_dots.shader_type[dot_type]["sel_vertex_shader"],
-                                                             shaders_dots.shader_type[dot_type]["sel_fragment_shader"])
+                                                    shaders_dots.shader_type[dot_type]["sel_fragment_shader"])
     
     def _compile_shader_lines(self):
         """ Function doc """
         line_type = self.vm_config.gl_parameters["line_type"]
         self.shader_programs["lines"] = self.load_shaders(shaders_lines.shader_type[line_type]["vertex_shader"],
-                                                          shaders_lines.shader_type[line_type]["fragment_shader"],
-                                                          shaders_lines.shader_type[line_type]["geometry_shader"])
+                                                  shaders_lines.shader_type[line_type]["fragment_shader"],
+                                                  shaders_lines.shader_type[line_type]["geometry_shader"])
         self.shader_programs["lines_sel"] = self.load_shaders(shaders_lines.shader_type[line_type]["sel_vertex_shader"],
-                                                              shaders_lines.shader_type[line_type]["sel_fragment_shader"],
-                                                              shaders_lines.shader_type[line_type]["sel_geometry_shader"])
+                                                      shaders_lines.shader_type[line_type]["sel_fragment_shader"],
+                                                      shaders_lines.shader_type[line_type]["sel_geometry_shader"])
     
     def _compile_shader_nonbonded(self):
         """ Function doc """
         self.shader_programs["nonbonded"] = self.load_shaders(shaders_nonbonded.vertex_shader_non_bonded,
-                                                              shaders_nonbonded.fragment_shader_non_bonded,
-                                                              shaders_nonbonded.geometry_shader_non_bonded)
+                                                      shaders_nonbonded.fragment_shader_non_bonded,
+                                                      shaders_nonbonded.geometry_shader_non_bonded)
         self.shader_programs["nonbonded_sel"] = self.load_shaders(shaders_nonbonded.sel_vertex_shader_non_bonded,
-                                                                  shaders_nonbonded.sel_fragment_shader_non_bonded,
-                                                                  shaders_nonbonded.sel_geometry_shader_non_bonded)
+                                                          shaders_nonbonded.sel_fragment_shader_non_bonded,
+                                                          shaders_nonbonded.sel_geometry_shader_non_bonded)
     
     def _compile_shader_dotted_lines(self):
         """ Function doc """
         line_type = 3
         self.shader_programs["dotted_lines"] = self.load_shaders(shaders_lines.shader_type[line_type]["vertex_shader"],
-                                                                 shaders_lines.shader_type[line_type]["fragment_shader"],
-                                                                 shaders_lines.shader_type[line_type]["geometry_shader"])
+                                                         shaders_lines.shader_type[line_type]["fragment_shader"],
+                                                         shaders_lines.shader_type[line_type]["geometry_shader"])
         self.shader_programs["dotted_lines_sel"] = self.load_shaders( shaders_lines.shader_type[line_type]["sel_vertex_shader"],
-                                                                      shaders_lines.shader_type[line_type]["sel_fragment_shader"],
-                                                                      shaders_lines.shader_type[line_type]["sel_geometry_shader"])
+                                                              shaders_lines.shader_type[line_type]["sel_fragment_shader"],
+                                                              shaders_lines.shader_type[line_type]["sel_geometry_shader"])
     
     def _compile_shader_ribbon(self):
         """ Function doc """
         line_type = self.vm_config.gl_parameters["ribbon_type"]
         self.shader_programs["ribbon"] = self.load_shaders(shaders_lines.shader_type[line_type]["vertex_shader"],
-                                                            shaders_lines.shader_type[line_type]["fragment_shader"],
-                                                            shaders_lines.shader_type[line_type]["geometry_shader"])
+                                                    shaders_lines.shader_type[line_type]["fragment_shader"],
+                                                    shaders_lines.shader_type[line_type]["geometry_shader"])
         self.shader_programs["ribbon_sel"] = self.load_shaders(shaders_lines.shader_type[line_type]["sel_vertex_shader"],
-                                                                shaders_lines.shader_type[line_type]["sel_fragment_shader"],
-                                                                shaders_lines.shader_type[line_type]["sel_geometry_shader"])
+                                                        shaders_lines.shader_type[line_type]["sel_fragment_shader"],
+                                                        shaders_lines.shader_type[line_type]["sel_geometry_shader"])
     
     def _compile_shader_sticks(self):
         """ Function doc """
         self.shader_programs["sticks"] = self.load_shaders(shaders_sticks.vertex_shader_sticks,
-                                                           shaders_sticks.fragment_shader_sticks,
-                                                           shaders_sticks.geometry_shader_sticks)
+                                                   shaders_sticks.fragment_shader_sticks,
+                                                   shaders_sticks.geometry_shader_sticks)
         self.shader_programs["sticks_sel"] = self.load_shaders(shaders_sticks.sel_vertex_shader_sticks,
-                                                               shaders_sticks.sel_fragment_shader_sticks,
-                                                               shaders_sticks.sel_geometry_shader_sticks)
+                                                       shaders_sticks.sel_fragment_shader_sticks,
+                                                       shaders_sticks.sel_geometry_shader_sticks)
     
     def _compile_shader_spheres(self):
         """ Function doc """
         self.shader_programs["spheres"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                            shaders_spheres.fragment_shader_spheres)
+                                                    shaders_spheres.fragment_shader_spheres)
         self.shader_programs["spheres_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                                shaders_spheres.fragment_shader_spheres)
+                                                        shaders_spheres.fragment_shader_spheres)
     
     def _compile_shader_impostor(self):
         """ Function doc """
         im_type = 2
         self.shader_programs["impostor"] = self.load_shaders(shaders_impostor.shader_type[im_type]["vertex_shader"],
-                                                             shaders_impostor.shader_type[im_type]["fragment_shader"],
-                                                             shaders_impostor.shader_type[im_type]["geometry_shader"])
+                                                     shaders_impostor.shader_type[im_type]["fragment_shader"],
+                                                     shaders_impostor.shader_type[im_type]["geometry_shader"])
         self.shader_programs["impostor_sel"] = self.load_shaders(shaders_impostor.shader_type[0]["sel_vertex_shader"],
-                                                               shaders_impostor.shader_type[0]["sel_fragment_shader"])
+                                                        shaders_impostor.shader_type[0]["sel_fragment_shader"])
     
     def _compile_shader_surface(self):
         """ Function doc """
         self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_surface,
-                                                            shaders_surface.fragment_shader_surface,
-                                                            shaders_surface.geometry_shader_surface)
+                                                    shaders_surface.fragment_shader_surface,
+                                                    shaders_surface.geometry_shader_surface)
         self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                                shaders_spheres.fragment_shader_spheres)
+                                                        shaders_spheres.fragment_shader_spheres)
         
     def _compile_shader_cartoon(self):
         """ Function doc """
         self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
-                                                            shaders_cartoon.f_shader_triangles)
-    
-    def _compile_shader_freetype(self):
-        """ Function doc """
-        self.shader_programs["freetype"] = self.load_shaders(shaders_vm_freetype.vertex_shader_freetype,
-                                                             shaders_vm_freetype.fragment_shader_freetype,
-                                                             shaders_vm_freetype.geometry_shader_freetype)
+                                                    shaders_cartoon.f_shader_triangles)
     
     #----------------------------NOT IMPLEMENTED YET---------------------------#
     def _dynamic_bonds_shaders(self):
         """ Function doc """
         self.shader_programs["dynamic"] = self.load_shaders(shaders_sticks.vertex_shader_sticks,
-                                                            shaders_sticks.fragment_shader_sticks,
-                                                            shaders_sticks.geometry_shader_sticks)
+                                                    shaders_sticks.fragment_shader_sticks,
+                                                    shaders_sticks.geometry_shader_sticks)
         self.shader_programs["dynamic_sel"] = self.load_shaders(shaders_sticks.sel_vertex_shader_sticks,
-                                                               shaders_sticks.sel_fragment_shader_sticks,
-                                                               shaders_sticks.sel_geometry_shader_sticks)
+                                                       shaders_sticks.sel_fragment_shader_sticks,
+                                                       shaders_sticks.sel_geometry_shader_sticks)
     
     def _wires_dot_shaders(self):
         """ Function doc """
         self.shader_programs["wires"] = self.load_shaders(shaders_wires.vertex_shader_wires,
-                                                          shaders_wires.fragment_shader_wires,
-                                                          shaders_wires.geometry_shader_wires)
+                                                  shaders_wires.fragment_shader_wires,
+                                                  shaders_wires.geometry_shader_wires)
         self.shader_programs["wires_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                              shaders_spheres.fragment_shader_spheres)
+                                                        shaders_spheres.fragment_shader_spheres)
     #----------------------------NOT IMPLEMENTED YET---------------------------#
     
     def _safe_frame_coords(self, vismol_object):

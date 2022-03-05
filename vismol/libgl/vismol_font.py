@@ -27,8 +27,8 @@ import freetype as ft
 import ctypes
 from OpenGL import GL
 import os
-import libgl.shapes as shapes
-fontpath = os.path.split(shapes.__file__)[:-1]
+import libgl.glaxis as glaxis
+fontpath = os.path.split(glaxis.__file__)[:-1]
 fontpath = os.path.join(*fontpath, "fonts", "VeraMono.ttf")
 
 class VismolFont():
@@ -44,7 +44,7 @@ class VismolFont():
         """
         if color is None:
             color = [1, 1, 1, 1]
-        self.visObj    = vismol_object
+        self.vm_object = vismol_object
         self.font_file = font_file
         self.char_res = char_res
         self.char_width = char_width
@@ -56,7 +56,8 @@ class VismolFont():
         self.text_u = None
         self.text_v = None
         self.vao = None
-        self.vbos = None
+        self.text_vbo = None
+        self.coord_vbo = None
     
     def make_freetype_font(self):
         """ Function doc
@@ -91,7 +92,6 @@ class VismolFont():
         # Fill the font variables with data
         self.text_u = width/float(self.font_buffer.shape[1])
         self.text_v = height/float(self.font_buffer.shape[0])
-        return True
     
     def make_freetype_texture(self, program):
         """ Function doc
@@ -99,8 +99,8 @@ class VismolFont():
         coords = np.zeros(3, dtype=np.float32)
         uv_pos = np.zeros(4, dtype=np.float32)
         
-        vertex_array_object = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(vertex_array_object)
+        vao = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(vao)
         
         coord_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
@@ -109,8 +109,8 @@ class VismolFont():
         GL.glEnableVertexAttribArray(gl_coord)
         GL.glVertexAttribPointer(gl_coord, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
         
-        tex_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, tex_vbo)
+        text_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, text_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_pos.itemsize*len(uv_pos), uv_pos, GL.GL_DYNAMIC_DRAW)
         gl_texture = GL.glGetAttribLocation(program, "vert_uv")
         GL.glEnableVertexAttribArray(gl_texture)
@@ -121,9 +121,9 @@ class VismolFont():
         GL.glDisableVertexAttribArray(gl_texture)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         
-        self.vao = vertex_array_object
-        self.vbos = (coord_vbo, tex_vbo)
-        return True
+        self.vao = vao
+        self.text_vbo = text_vbo
+        self.coord_vbo = coord_vbo
     
     def load_matrices(self, program, view_mat, proj_mat):
         """ Function doc """
@@ -158,7 +158,8 @@ class VismolFont():
         print(self.text_u, "text_u")
         print(self.text_v, "text_v")
         print(self.vao, "vao")
-        print(self.vbos, "vbos")
+        print(self.text_vbo, "text_vbo")
+        print(self.coord_vbo, "coord_vbo")
     
     def draw_labels(self):
         """ Function doc """
