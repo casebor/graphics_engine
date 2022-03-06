@@ -35,9 +35,9 @@ from libgl.representations import DotsRepresentation
 from libgl.representations import LinesRepresentation
 from libgl.representations import NonBondedRepresentation
 from libgl.representations import PickingDotsRepresentation
+from libgl.representations import ImpostorRepresentation
 # from libgl.representations import SticksRepresentation
 # from libgl.representations import SpheresRepresentation
-# from libgl.representations import ImpostorRepresentation
 # from libgl.representations import WiresRepresentation
 # from libgl.representations import RibbonsRepresentation
 import utils.c_distances as cdist
@@ -120,6 +120,9 @@ class VismolObject:
         elif rep_type == "nonbonded":
             self.representations["nonbonded"] = NonBondedRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=self.non_bonded_atoms)
+        elif rep_type == "impostor":
+            self.representations["impostor"] = ImpostorRepresentation(self, self.vm_session.vm_glcore,
+                                                active=True, indexes=list(self.atoms.keys()))
         # elif rep_type == "sticks":
         #     self.representations["sticks"] = SticksRepresentation(self, self.vm_session.vm_glcore,
         #                                                           active=True, indexes=indexes)
@@ -189,13 +192,13 @@ class VismolObject:
                     self.color_rainbow[i,:] = red, green, blue
                     green -= color_step
     
-    def find_bonded_and_nonbonded_atoms(self, selection=None, frame=0, gridsize=1.33,
-                                         maxbond=2.66, tolerance=1.4):
+    def find_bonded_and_nonbonded_atoms(self, selection=None, frame=0, gridsize=0.8,
+                                         maxbond=2.4, tolerance=1.4):
         """ Function doc """
         if self.index_bonds is not None:
-            logger.critical("It seems that there is already information about \
-                the contacts in this VismolObject, trying to override the data \
-                can produce serious problems :(")
+            logger.critical("It seems that there is already information about "\
+                "the contacts in this VismolObject, trying to override the data "\
+                "can produce serious problems :(")
         initial = time.time()
         atoms_frame_mask = np.zeros(len(self.atoms), dtype=np.bool)
         if self.cov_radii_array is None:
@@ -218,8 +221,8 @@ class VismolObject:
         for atom in selection.values():
             indexes.append(atom.atom_id)
             gridpos_list.append(atom.get_grid_position(gridsize=gridsize, frame=frame))
-        logger.debug("Time used for preparing the atom mask, covalent radii list \
-                     and grid positions: {}".format(time.time() - initial))
+        logger.debug("Time used for preparing the atom mask, covalent radii list "\
+                     "and grid positions: {}".format(time.time() - initial))
         
         initial = time.time()
         self.index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,

@@ -275,6 +275,14 @@ class VismolGTKWidget(Gtk.GLArea):
         """ Function doc """
         self.vm_session.show_or_hide(rep_type="nonbonded", show=False)
     
+    def menu_show_impostor(self, widget):
+        """ Function doc """
+        self.vm_session.show_or_hide(rep_type="impostor", show=True)
+    
+    def menu_hide_impostor(self, widget):
+        """ Function doc """
+        self.vm_session.show_or_hide(rep_type="impostor", show=False)
+    
     def invert_selection(self, widget):
         """ Function doc """
         self.vm_session.selections[self.vm_session.current_selection].invert_selection()
@@ -306,12 +314,14 @@ class VismolGTKWidget(Gtk.GLArea):
                                     {"dots": ["MenuItem", self.menu_show_dots],
                                      "lines": ["MenuItem", self.menu_show_lines],
                                      "nonbonded": ["MenuItem", self.menu_show_nonbonded],
+                                     "impostor": ["MenuItem", self.menu_show_impostor],
                                     }
                                  ],
                          "Hide": ["submenu",
                                     {"dots": ["MenuItem", self.menu_hide_dots],
                                      "lines": ["MenuItem", self.menu_hide_lines],
                                      "nonbonded": ["MenuItem", self.menu_hide_nonbonded],
+                                     "impostor": ["MenuItem", self.menu_show_impostor],
                                     }
                                  ],
                          "separator":["separator", None],

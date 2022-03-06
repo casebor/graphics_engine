@@ -134,10 +134,6 @@ class VismolSession():
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
-            elif rep_type == "ribbon":
-                logger.error("Not implementer for 'ribbon' yet.")
-                raise NotImplementedError("Not implementer for 'ribbon' yet.")
-            
             elif rep_type == "dots":
                 for atom in vm_object.atoms.values():
                     if atom.dots:
@@ -149,8 +145,13 @@ class VismolSession():
                         show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "impostor":
-                logger.error("Not implementer for 'impostor' yet.")
-                raise NotImplementedError("Not implementer for 'impostor' yet.")
+                for atom in vm_object.atoms.values():
+                    if atom.impostor:
+                        show_hide_indexes.append(atom.atom_id)
+            
+            elif rep_type == "ribbon":
+                logger.error("Not implementer for 'ribbon' yet.")
+                raise NotImplementedError("Not implementer for 'ribbon' yet.")
             
             elif rep_type == "spheres":
                 logger.error("Not implementer for 'spheres' yet.")

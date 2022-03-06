@@ -23,6 +23,7 @@
 #  
 
 import os
+import time
 import numpy as np
 from logging import getLogger
 from utils import AUXFiles
@@ -62,10 +63,11 @@ def _load_pdb_file(vismol_session, infile):
     """ Function doc
     """
     vm_object_name = os.path.basename(infile)
-    topo = PDBFiles.get_topology(infile)
+    topo, rawframes = PDBFiles.get_topology(infile)
     vm_object = VismolObject(vismol_session, len(vismol_session.vm_objects_dic), name=vm_object_name)
     vm_object.set_model_matrix(vismol_session.vm_glcore.model_mat)
     unique_id = len(vismol_session.atom_dic_id)
+    initial = time.time()
     atom_id = 0
     for _atom in topo:
         if _atom["chain"] not in vm_object.chains.keys():
@@ -88,7 +90,8 @@ def _load_pdb_file(vismol_session, infile):
         vm_object.atoms[atom_id] = atom
         atom_id += 1
         unique_id += 1
-    vm_object.frames = PDBFiles.get_coords(infile, atom_id, vismol_session.vm_config.n_proc)
+    logger.debug("Time used to build the tree: {:>8.5f} secs".format(time.time() - initial))
+    vm_object.frames = PDBFiles.get_coords_from_raw_frames(rawframes, atom_id, vismol_session.vm_config.n_proc)
     vm_object.mass_center = np.mean(vm_object.frames[0], axis=0)
     vm_object.find_bonded_and_nonbonded_atoms()
     return vm_object

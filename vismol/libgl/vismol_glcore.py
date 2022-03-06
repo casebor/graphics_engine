@@ -934,12 +934,13 @@ class VismolGLCore:
     
     def _compile_shader_impostor(self):
         """ Function doc """
-        im_type = 2
+        im_type = self.vm_config.gl_parameters["impostor_type"]
         self.shader_programs["impostor"] = self.load_shaders(shaders_impostor.shader_type[im_type]["vertex_shader"],
                                                      shaders_impostor.shader_type[im_type]["fragment_shader"],
                                                      shaders_impostor.shader_type[im_type]["geometry_shader"])
-        self.shader_programs["impostor_sel"] = self.load_shaders(shaders_impostor.shader_type[0]["sel_vertex_shader"],
-                                                        shaders_impostor.shader_type[0]["sel_fragment_shader"])
+        self.shader_programs["impostor_sel"] = self.load_shaders(shaders_impostor.shader_type[im_type]["sel_vertex_shader"],
+                                                        shaders_impostor.shader_type[im_type]["sel_fragment_shader"],
+                                                        shaders_impostor.shader_type[im_type]["sel_geometry_shader"])
     
     def _compile_shader_surface(self):
         """ Function doc """

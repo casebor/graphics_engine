@@ -132,11 +132,11 @@ cpdef list get_connections_within_grid_element(list list_of_atoms, coords, cov_r
 
     bonds_pair_of_indexes = []
     
-    cdef double r_ij
-    cdef int i
-    cdef int atom_idx_i
-    cdef int atom_idx_j
-    cdef double cov_rad_ij_sqrt
+    cpdef double r_ij
+    cpdef int i
+    cpdef int atom_idx_i
+    cpdef int atom_idx_j
+    cpdef double cov_rad_ij_sqrt
 
     
     for i, atom_idx_i in enumerate(list_of_atoms[:-1]):
@@ -168,12 +168,12 @@ cpdef list get_connections_between_grid_elements(list atomic_grid1,
                                                        double  tolerance, 
                                                        gridsize):
     
-    cdef double r_ij
-    cdef double cov_rad_ij_sqrt
-    cdef int atom_idx_i
-    cdef int atom_idx_j
+    cpdef double r_ij
+    cpdef double cov_rad_ij_sqrt
+    cpdef int atom_idx_i
+    cpdef int atom_idx_j
 
-    cdef list bonds_pair_of_indexes
+    cpdef list bonds_pair_of_indexes
     bonds_pair_of_indexes = []
     
     
@@ -210,7 +210,7 @@ cpdef list get_connections_between_grid_elements(list atomic_grid1,
 
 cpdef dict build_the_atomic_grid ( list indexes     ,
                                          list gridpos_list):
-    cdef int atom
+    cpdef int atom
 
     atomic_grid = {}
     
@@ -229,8 +229,8 @@ cpdef list get_atomic_bonds_from_grid(list indexes, coords, cov_rad, list gridpo
                                       double gridsize, double maxbond):
     
     
-    cdef double tolerance
-    #cdef double maxbond
+    cpdef double tolerance
+    #cpdef double maxbond
     #maxbond   = 3.0
     tolerance = 1.4
     

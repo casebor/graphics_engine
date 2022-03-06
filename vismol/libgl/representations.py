@@ -118,6 +118,26 @@ class Representation:
         GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
         return col_vbo
     
+    def _make_gl_impostor_buffer(self, impostors_radii, program):
+        """ Function doc """
+        size_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, size_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, impostors_radii.nbytes, impostors_radii, GL.GL_STATIC_DRAW)
+        att_size = GL.glGetAttribLocation(program, "vert_dot_size")
+        GL.glEnableVertexAttribArray(att_size)
+        GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, impostors_radii.itemsize, ctypes.c_void_p(0))
+        
+        self.ratio = self.vm_glcore.width / self.vm_glcore.height
+        ratio_vbo = 1
+        # ratio = np.repeat(self.ratio, impostors_radii.shape[0])
+        # ratio_vbo = GL.glGenBuffers(1)
+        # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, ratio_vbo)
+        # GL.glBufferData(GL.GL_ARRAY_BUFFER, ratio.nbytes, ratio, GL.GL_STATIC_DRAW)
+        # att_ratio = GL.glGetAttribLocation(program, "hw_ratio")
+        # GL.glEnableVertexAttribArray(att_ratio)
+        # GL.glVertexAttribPointer(att_ratio, 1, GL.GL_FLOAT, GL.GL_FALSE, ratio.itemsize, ctypes.c_void_p(0))
+        return size_vbo, ratio_vbo
+    
     def _load_coord_vbo(self, coord_vbo=False, sel_coord_vbo=False):
         """ This function assigns the coordinates to 
         be drawn by the function  draw_representation"""
@@ -159,6 +179,20 @@ class Representation:
         self.indexes = np.array(input_indexes, dtype=np.uint32)
         self.elements = np.uint32(self.indexes.shape[0])
     
+    # def _load_impostor_ratio_vbo(self, coord_vbo=False, sel_coord_vbo=False):
+    #     """ This function assigns the coordinates to 
+    #         be drawn by the function  draw_representation"""
+    #     self.ratio = self.vm_glcore.width / self.vm_glcore.height
+    #     ratio = np.repeat(self.ratio, self.vm_glcore._safe_frame_coords(self.vm_object).shape[0])
+        
+    #     if coord_vbo:
+    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.ratio_vbo)
+    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, ratio.nbytes, ratio, GL.GL_STATIC_DRAW)
+        
+    #     if sel_coord_vbo:
+    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_ratio_vbo)
+    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, ratio.nbytes, ratio, GL.GL_STATIC_DRAW)
+        
     # def _make_gl_normal_buffer(self, normals, program):
     #     """ Function doc """
     #     normal_vbo = GL.glGenBuffers(1)
@@ -169,17 +203,6 @@ class Representation:
     #         GL.glEnableVertexAttribArray(att_normals)
     #         GL.glVertexAttribPointer(att_normals, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*normals.itemsize, ctypes.c_void_p(0))
     #     return normal_vbo
-    
-    # def _make_gl_size_buffer(self, dot_sizes, program):
-    #     """ Function doc """
-    #     size_vbo = GL.glGenBuffers(1)
-    #     self.vm_session.vm_vbos.append(size_vbo)
-    #     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, size_vbo)
-    #     GL.glBufferData(GL.GL_ARRAY_BUFFER, dot_sizes.nbytes, dot_sizes, GL.GL_STATIC_DRAW)
-    #     att_size = GL.glGetAttribLocation(program, "vert_dot_size")
-    #     GL.glEnableVertexAttribArray(att_size)
-    #     GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, dot_sizes.itemsize, ctypes.c_void_p(0))
-    #     return size_vbo
     
     # def _set_colors_to_buffer(self, col_vbo=True):
     #     """ Function doc """
@@ -210,6 +233,56 @@ class Representation:
     #     att_colors = GL.glGetAttribLocation(self.shader_program, "vert_color")
     #     GL.glEnableVertexAttribArray(att_colors)
     #     GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+
+
+class PickingDotsRepresentation(Representation):
+    """ Class doc """
+    
+    def __init__(self, vismol_object, vismol_glcore, indexes=None, active=True):
+        """ Class initialiser """
+        super(PickingDotsRepresentation, self).__init__(vismol_object, vismol_glcore, "picking_dots", active, indexes)
+    
+    def _check_vao_and_vbos(self):
+        self.shader_program = self.vm_glcore.core_shader_programs[self.name]
+        if self.vao is None:
+            self._make_gl_representation_vao_and_vbos()
+    
+    def _make_gl_representation_vao_and_vbos(self):
+        """ Function doc """
+        logger.debug("building '{}' representation VAO and VBOs".format(self.name))
+        self.vao = self._make_gl_vao()
+        self.ind_vbo = self._make_gl_index_buffer(self.indexes)
+        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.shader_program)
+        colors = self.vm_session.vm_config.gl_parameters["picking_dots_color"] * self.vm_object.frames.shape[1]
+        colors = np.array(colors, dtype=np.float32).reshape([self.vm_object.frames.shape[1], 3])
+        self.col_vbo = self._make_gl_color_buffer(colors, self.shader_program)
+    
+    def draw_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        _size = self.vm_session.vm_config.gl_parameters["dot_sel_size"]
+        
+        GL.glPointSize(_size * self.vm_glcore.height / (abs(self.vm_glcore.dist_cam_zrp)) / 2)
+        GL.glUseProgram(self.shader_program)
+        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        GL.glBindVertexArray(self.vao)
+        
+        if self.was_rep_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_modified = False
+        
+        self._load_ind_vbo(coord_vbo=True)
+        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        GL.glPointSize(1)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def draw_background_sel_representation(self):
+        pass
 
 
 class DotsRepresentation(Representation):
@@ -377,17 +450,12 @@ class NonBondedRepresentation(Representation):
         GL.glUseProgram(0)
 
 
-class PickingDotsRepresentation(Representation):
+class ImpostorRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, vismol_object, vismol_glcore, indexes=None, active=True):
+    def __init__ (self, vismol_object, vismol_glcore, indexes, active=True):
         """ Class initialiser """
-        super(PickingDotsRepresentation, self).__init__(vismol_object, vismol_glcore, "picking_dots", active, indexes)
-    
-    def _check_vao_and_vbos(self):
-        self.shader_program = self.vm_glcore.core_shader_programs[self.name]
-        if self.vao is None:
-            self._make_gl_representation_vao_and_vbos()
+        super(ImpostorRepresentation, self).__init__(vismol_object, vismol_glcore, "impostor", active, indexes)
     
     def _make_gl_representation_vao_and_vbos(self):
         """ Function doc """
@@ -395,20 +463,44 @@ class PickingDotsRepresentation(Representation):
         self.vao = self._make_gl_vao()
         self.ind_vbo = self._make_gl_index_buffer(self.indexes)
         self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.shader_program)
-        colors = self.vm_session.vm_config.gl_parameters["picking_dots_color"] * self.vm_object.frames.shape[1]
-        colors = np.array(colors, dtype=np.float32).reshape([self.vm_object.frames.shape[1], 3])
-        self.col_vbo = self._make_gl_color_buffer(colors, self.shader_program)
+        self.col_vbo = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
+        self.size_vbo, self.ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
     
+    def _make_gl_sel_representation_vao_and_vbos(self):
+        """ Function doc """
+        logger.debug("building '{}' background selection VAO and VBOs".format(self.name))
+        self.sel_vao = self._make_gl_vao()
+        self.sel_ind_vbo = self._make_gl_index_buffer(self.indexes)
+        self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.sel_shader_program)
+        self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
+        self.sel_size_vbo, self.sel_ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
+    
+    # def _modified_window_size(self):
+    #     ratio = self.vm_glcore.width / self.vm_glcore.height
+    #     if self.ratio != ratio:
+    #         return True
+    #     return False
+    
+    def _load_camera_pos(self, program):
+        xyz_coords = self.vm_glcore.glcamera.get_modelview_position(self.vm_object.model_mat)
+        u_campos = GL.glGetUniformLocation(program, "u_campos")
+        GL.glUniform3fv(u_campos, 1, xyz_coords)
+        
     def draw_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()
-        _size = self.vm_session.vm_config.gl_parameters["dot_sel_size"]
-        
-        GL.glPointSize(_size * self.vm_glcore.height / (abs(self.vm_glcore.dist_cam_zrp)) / 2)
+        # if self._modified_window_size():
+        #     self._load_impostor_ratio_vbo(coord_vbo=True)
+        self._enable_anti_alias_to_lines()
         GL.glUseProgram(self.shader_program)
         GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        self.vm_glcore.load_fog(self.shader_program)
+        self.vm_glcore.load_lights(self.shader_program)
+        self._load_camera_pos(self.shader_program)
         GL.glBindVertexArray(self.vao)
+        # pm = self.vm_glcore.glcamera.projection_matrix
+        # print(pm[0,0] * pm[1,1], "fov")
         
         if self.was_rep_modified:
             self._load_coord_vbo(coord_vbo=True)
@@ -418,13 +510,35 @@ class PickingDotsRepresentation(Representation):
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
-        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        self._disable_anti_alias_to_lines()
         GL.glPointSize(1)
         GL.glUseProgram(0)
-        GL.glDisable(GL.GL_DEPTH_TEST)
     
     def draw_background_sel_representation(self):
-        pass
+        """ Function doc """
+        self._check_vao_and_vbos()
+        # if self._modified_window_size():
+        #     self._load_impostor_ratio_vbo(sel_coord_vbo=True)
+        GL.glUseProgram(self.sel_shader_program)
+        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
+        # self.vm_glcore.load_lights(self.shader_program)
+        self._load_camera_pos(self.sel_shader_program)
+        GL.glBindVertexArray(self.sel_vao)
+        
+        if self.was_sel_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self.was_sel_modified = False
+        
+        self._load_ind_vbo(sel_coord_vbo=True)
+        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glPointSize(1)
+        GL.glUseProgram(0)
+
+
 
 
 '''

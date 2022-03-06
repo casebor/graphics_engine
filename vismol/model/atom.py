@@ -81,6 +81,7 @@ class Atom:
         self.lines          = True
         self.dots           = False
         self.nonbonded      = False
+        self.impostor       = False
         self.ribbons        = False
         self.ball_and_stick = False
         self.sticks         = False
