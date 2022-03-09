@@ -377,7 +377,7 @@ class LinesRepresentation(Representation):
         """ Function doc """
         self._check_vao_and_vbos()
         self._disable_anti_alias_to_lines()
-        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"] 
+        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"]
         GL.glUseProgram(self.sel_shader_program)
         GL.glLineWidth(line_width) # line_width_factor -> turn the lines thicker
         GL.glEnable(GL.GL_DEPTH_TEST)
@@ -485,7 +485,7 @@ class ImpostorRepresentation(Representation):
         xyz_coords = self.vm_glcore.glcamera.get_modelview_position(self.vm_object.model_mat)
         u_campos = GL.glGetUniformLocation(program, "u_campos")
         GL.glUniform3fv(u_campos, 1, xyz_coords)
-        
+    
     def draw_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()
@@ -538,6 +538,64 @@ class ImpostorRepresentation(Representation):
         GL.glPointSize(1)
         GL.glUseProgram(0)
 
+
+class SticksRepresentation(Representation):
+    """ Class doc """
+    
+    def __init__(self, vismol_object, vismol_glcore,indexes, active=True):
+        """ Class initialiser """
+        super(SticksRepresentation, self).__init__(vismol_object, vismol_glcore, "sticks", active, indexes)
+    
+    def _load_camera_pos(self, program):
+        xyz_coords = self.vm_glcore.glcamera.get_modelview_position(self.vm_object.model_mat)
+        u_campos = GL.glGetUniformLocation(program, "u_campos")
+        GL.glUniform3fv(u_campos, 1, xyz_coords)
+    
+    def draw_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos ()
+        self._enable_anti_alias_to_lines()
+        GL.glUseProgram(self.shader_program)
+        # GL.glLineWidth(40/abs(self.vm_glcore.dist_cam_zrp))
+        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        self.vm_glcore.load_fog(self.shader_program)
+        self.vm_glcore.load_lights(self.shader_program)
+        self._load_camera_pos(self.shader_program)
+        GL.glBindVertexArray(self.vao)
+        
+        if self.was_rep_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_modified = False
+        
+        self._load_ind_vbo(coord_vbo=True)
+        GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        self._disable_anti_alias_to_lines()
+        GL.glUseProgram(0)
+        GL.glLineWidth(1)
+    
+    def draw_background_sel_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        self._disable_anti_alias_to_lines()
+        GL.glUseProgram(self.sel_shader_program)
+        # GL.glLineWidth(20)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
+        GL.glBindVertexArray(self.sel_vao)
+        
+        if self.was_sel_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self.was_sel_modified = False
+        
+        self._load_ind_vbo(sel_coord_vbo=True)
+        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
 
 
 
@@ -614,64 +672,6 @@ class DynamicBonds(Representation):
         GL.glLineWidth(1)
         GL.glUseProgram(0)
 
-
-class SticksRepresentation(Representation):
-    """ Class doc """
-    
-    def __init__(self, vismol_object, vismol_glcore, name="sticks", indexes=None, active=True):
-        """ Class initialiser """
-        super(SticksRepresentation, self).__init__(vismol_object, vismol_glcore, name, active, indexes)
-    
-    def draw_representation(self):
-        """ Function doc """
-        self._check_vao_and_vbos ()
-        self._enable_anti_alias_to_lines()
-        GL.glUseProgram(self.shader_program)
-        GL.glLineWidth(40/abs(self.vm_glcore.dist_cam_zrp))
-        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
-        self.vm_glcore.load_fog(self.shader_program)
-        self.vm_glcore.load_lights(self.shader_program)
-        GL.glBindVertexArray(self.vao)
-        
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            self._set_coordinates_to_buffer(coord_vbo=True, sel_coord_vbo=False)
-            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        self._disable_anti_alias_to_lines()
-        GL.glUseProgram(0)
-        GL.glLineWidth(1)
-    
-    def draw_background_sel_representation(self):
-        """ Function doc """
-        self._check_vao_and_vbos()
-        self._disable_anti_alias_to_lines()
-        GL.glUseProgram(self.sel_shader_program)
-        GL.glLineWidth(20)
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
-        GL.glBindVertexArray(self.sel_vao)
-        
-        if self.vm_glcore.modified_view:
-            pass
-        else:
-            # This function checks if the number of the called frame will not exceed 
-            # the limit of frames that each object has. Allowing two objects with 
-            # different trajectory sizes to be manipulated at the same time within the 
-            # glArea
-            self._set_coordinates_to_buffer(coord_vbo=False, sel_coord_vbo=True)
-            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        GL.glDisable(GL.GL_DEPTH_TEST)
-        GL.glLineWidth(1)
-        GL.glUseProgram(0)
 
 
 class RibbonsRepresentation(Representation):

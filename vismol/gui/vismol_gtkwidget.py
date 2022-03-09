@@ -252,39 +252,36 @@ class VismolGTKWidget(Gtk.GLArea):
         self.vm_session.viewing_selection_mode(sel_type="chain")
     
     def menu_show_dots(self, widget):
-        """ Function doc """
         self.vm_session.show_or_hide(rep_type="dots", show=True)
     
     def menu_hide_dots(self, widget):
-        """ Function doc """
         self.vm_session.show_or_hide(rep_type="dots", show=False)
     
     def menu_show_lines(self, widget):
-        """ Function doc """
         self.vm_session.show_or_hide(rep_type="lines", show=True)
     
     def menu_hide_lines(self, widget):
-        """ Function doc """
         self.vm_session.show_or_hide(rep_type="lines", show=False)
     
     def menu_show_nonbonded(self, widget):
-        """ Function doc """
         self.vm_session.show_or_hide(rep_type="nonbonded", show=True)
     
     def menu_hide_nonbonded(self, widget):
-        """ Function doc """
         self.vm_session.show_or_hide(rep_type="nonbonded", show=False)
     
     def menu_show_impostor(self, widget):
-        """ Function doc """
         self.vm_session.show_or_hide(rep_type="impostor", show=True)
     
     def menu_hide_impostor(self, widget):
-        """ Function doc """
         self.vm_session.show_or_hide(rep_type="impostor", show=False)
     
+    def menu_show_sticks(self, widget):
+        self.vm_session.show_or_hide(rep_type="sticks", show=True)
+    
+    def menu_hide_sticks(self, widget):
+        self.vm_session.show_or_hide(rep_type="sticks", show=False)
+    
     def invert_selection(self, widget):
-        """ Function doc """
         self.vm_session.selections[self.vm_session.current_selection].invert_selection()
     
     def insert_glmenu(self, bg_menu=None, sele_menu=None, obj_menu=None, pick_menu=None):
@@ -314,6 +311,7 @@ class VismolGTKWidget(Gtk.GLArea):
                                     {"dots": ["MenuItem", self.menu_show_dots],
                                      "lines": ["MenuItem", self.menu_show_lines],
                                      "nonbonded": ["MenuItem", self.menu_show_nonbonded],
+                                     "sticks": ["MenuItem", self.menu_show_sticks],
                                      "impostor": ["MenuItem", self.menu_show_impostor],
                                     }
                                  ],
@@ -321,7 +319,8 @@ class VismolGTKWidget(Gtk.GLArea):
                                     {"dots": ["MenuItem", self.menu_hide_dots],
                                      "lines": ["MenuItem", self.menu_hide_lines],
                                      "nonbonded": ["MenuItem", self.menu_hide_nonbonded],
-                                     "impostor": ["MenuItem", self.menu_show_impostor],
+                                     "sticks": ["MenuItem", self.menu_hide_sticks],
+                                     "impostor": ["MenuItem", self.menu_hide_impostor],
                                     }
                                  ],
                          "separator":["separator", None],

@@ -1068,42 +1068,39 @@ void main(){
 
 
 
-
 shader_type ={
-			0: { 'vertex_shader'      : vertex_shader_lines  ,
-			     'geometry_shader'    : geometry_shader_lines,
-			     'fragment_shader'    : fragment_shader_lines,
-				 'sel_vertex_shader'  : sel_vertex_shader_lines  ,
-                 'sel_geometry_shader': sel_geometry_shader_lines,
-                 'sel_fragment_shader': sel_fragment_shader_lines
+			0: { "vertex_shader"      : vertex_shader_lines  ,
+			     "geometry_shader"    : geometry_shader_lines,
+			     "fragment_shader"    : fragment_shader_lines,
+				 "sel_vertex_shader"  : sel_vertex_shader_lines  ,
+                 "sel_geometry_shader": sel_geometry_shader_lines,
+                 "sel_fragment_shader": sel_fragment_shader_lines
 
 			   },
 			
 			
-			1: {'vertex_shader'      : vertex_shader_nlines  ,
-			    'geometry_shader'    : geometry_shader_nlines,
-			    'fragment_shader'    : fragment_shader_nlines,
-			    'sel_vertex_shader'  : sel_vertex_shader_lines  ,
-			    'sel_geometry_shader': sel_geometry_shader_lines,
-			    'sel_fragment_shader': sel_fragment_shader_lines
+			1: {"vertex_shader"      : vertex_shader_nlines  ,
+			    "geometry_shader"    : geometry_shader_nlines,
+			    "fragment_shader"    : fragment_shader_nlines,
+			    "sel_vertex_shader"  : sel_vertex_shader_lines  ,
+			    "sel_geometry_shader": sel_geometry_shader_lines,
+			    "sel_fragment_shader": sel_fragment_shader_lines
 				},
 			
-            2: {'vertex_shader'      : vertex_shader_sticks  ,
-			    'geometry_shader'    : geometry_shader_sticks,
-			    'fragment_shader'    : fragment_shader_sticks,
-			    'sel_vertex_shader'  : sel_vertex_shader_lines  ,
-			    'sel_geometry_shader': sel_geometry_shader_lines,
-			    'sel_fragment_shader': sel_fragment_shader_lines
+            2: {"vertex_shader"      : vertex_shader_sticks  ,
+			    "geometry_shader"    : geometry_shader_sticks,
+			    "fragment_shader"    : fragment_shader_sticks,
+			    "sel_vertex_shader"  : sel_vertex_shader_lines  ,
+			    "sel_geometry_shader": sel_geometry_shader_lines,
+			    "sel_fragment_shader": sel_fragment_shader_lines
 				},
 
-			3: { 'vertex_shader'      : vertex_shader_dotted_lines  ,
-			     'geometry_shader'    : geometry_shader_dotted_lines,
-			     'fragment_shader'    : fragment_shader_dotted_lines,
-				 'sel_vertex_shader'  : sel_vertex_shader_lines  ,
-                 'sel_geometry_shader': sel_geometry_shader_lines,
-                 'sel_fragment_shader': sel_fragment_shader_lines
+			3: { "vertex_shader"      : vertex_shader_dotted_lines  ,
+			     "geometry_shader"    : geometry_shader_dotted_lines,
+			     "fragment_shader"    : fragment_shader_dotted_lines,
+				 "sel_vertex_shader"  : sel_vertex_shader_lines  ,
+                 "sel_geometry_shader": sel_geometry_shader_lines,
+                 "sel_fragment_shader": sel_fragment_shader_lines
 
 			   },
-
-
 }

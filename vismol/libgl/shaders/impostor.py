@@ -33,7 +33,7 @@ void main (void){
     v_light_direction = normalize(vec3(-2.5,-2.5,3.0));
     gl_Position = proj_mat * frag_coord;
     vec4 p = proj_mat * vec4(vert_dot_size, vert_dot_size, frag_coord.z, frag_coord.w);
-    f_size = 512.0 * hw_ratio * vert_dot_size / p.w;
+    f_size = 256.0 * hw_ratio * vert_dot_size / p.w;
     gl_PointSize = f_size;
 }
 """

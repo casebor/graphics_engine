@@ -36,7 +36,7 @@ from libgl.representations import LinesRepresentation
 from libgl.representations import NonBondedRepresentation
 from libgl.representations import PickingDotsRepresentation
 from libgl.representations import ImpostorRepresentation
-# from libgl.representations import SticksRepresentation
+from libgl.representations import SticksRepresentation
 # from libgl.representations import SpheresRepresentation
 # from libgl.representations import WiresRepresentation
 # from libgl.representations import RibbonsRepresentation
@@ -123,9 +123,9 @@ class VismolObject:
         elif rep_type == "impostor":
             self.representations["impostor"] = ImpostorRepresentation(self, self.vm_session.vm_glcore,
                                                 active=True, indexes=list(self.atoms.keys()))
-        # elif rep_type == "sticks":
-        #     self.representations["sticks"] = SticksRepresentation(self, self.vm_session.vm_glcore,
-        #                                                           active=True, indexes=indexes)
+        elif rep_type == "sticks":
+            self.representations["sticks"] = SticksRepresentation(self, self.vm_session.vm_glcore,
+                                                                  active=True, indexes=self.index_bonds)
         # elif rep_type == "ribbons":
         #     self.representations["ribbons"] = RibbonsRepresentation(self, self.vm_session.vm_glcore,
         #                                                             active=True, indexes=indexes)
