@@ -51,7 +51,7 @@ class VismolConfig:
                               "impostor_type": 0,
                               "sticks_radius": 3.5,
                               "sticks_color": 0,
-                              "sticks_type": 1,
+                              "sticks_type": 0,
                               "antialias": True,
                               "scroll_step": 0.9,
                               "field_of_view": 10,

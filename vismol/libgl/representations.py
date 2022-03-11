@@ -303,6 +303,7 @@ class DotsRepresentation(Representation):
         GL.glPointSize(_size * _height / (abs(self.vm_glcore.dist_cam_zrp)) / 2)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         self.vm_glcore.load_fog(self.shader_program)
+        self.vm_glcore.load_lights(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
         if self.was_rep_modified:
