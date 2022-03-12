@@ -22,6 +22,7 @@
 #  
 #  
 
+import time
 import numpy as np
 from utils import matrix_operations as mop
 from core.vismol_object import VismolObject
@@ -54,18 +55,15 @@ class VismolViewingSelection:
     
     def _build_selected_atoms_coords_and_selected_objects_from_selected_atoms(self):
         """ Function doc """
-        coords = np.empty(3, dtype=np.float32)
+        coords = []
         for vm_object in self.vm_session.vm_objects_dic.values():
-            atom_mask = np.zeros(len(vm_object.atoms), dtype=np.bool)
             if self.vm_session.frame >= vm_object.frames.shape[0]:
                 frame = vm_object.frames.shape[0] - 1
             else:
                 frame = self.vm_session.frame
             for atom in self.selected_atoms:
-                if atom in vm_object.atoms.values():
-                    atom_mask[atom.atom_id] = True
-            coords = np.vstack((coords, vm_object.frames[frame][atom_mask]))
-        self.selected_coords = coords
+                coords.append(vm_object.frames[frame][atom.atom_id])
+        self.selected_coords = np.array(coords, dtype=np.float32)
         self.selected_objects = set()
         self.selected_atom_ids = set()
         for atom in self.selected_atoms:
@@ -136,7 +134,11 @@ class VismolViewingSelection:
         
         """
         self._clear_selection_buffer()
+        visited = set()
         for selected_atom in selected_atoms:
+            if selected_atom.chain in visited:
+                continue
+            visited.add(selected_atom.chain)
             if selected_atom in self.selected_atoms:
                 if disable:
                     for residue in selected_atom.chain.residues.values():
@@ -161,16 +163,21 @@ class VismolViewingSelection:
             selection by area (selection box)
         """
         self._clear_selection_buffer()
-        if selected_atom in self.selected_atoms:
-            if disable:
+        visited = set()
+        for selected_atom in selected_atoms:
+            if selected_atom.vm_object in visited:
+                continue
+            visited.add(selected_atom.vm_object)
+            if selected_atom in self.selected_atoms:
+                if disable:
+                    for atom in selected_atom.vm_object.atoms.values():
+                        if atom in self.selected_atoms:
+                            self.selected_atoms.remove(atom)
+                            atom.selected = False
+            else:
                 for atom in selected_atom.vm_object.atoms.values():
-                    if atom in self.selected_atoms:
-                        self.selected_atoms.remove(atom)
-                        atom.selected = False
-        else:
-            for atom in selected_atom.vm_object.atoms.values():
-                self.selected_atoms.add(atom)
-                atom.selected = True
+                    self.selected_atoms.add(atom)
+                    atom.selected = True
     
     def selecting_by_indexes(self, vismol_object, indexes, clear=False):
         """ Function doc """
