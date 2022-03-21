@@ -270,9 +270,9 @@ class PickingDotsRepresentation(Representation):
         
         if self.was_rep_modified:
             self._load_coord_vbo(coord_vbo=True)
+            self._load_ind_vbo(coord_vbo=True)
             self.was_rep_modified = False
         
-        self._load_ind_vbo(coord_vbo=True)
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -308,9 +308,9 @@ class DotsRepresentation(Representation):
         
         if self.was_rep_modified:
             self._load_coord_vbo(coord_vbo=True)
+            self._load_ind_vbo(coord_vbo=True)
             self.was_rep_modified = False
         
-        self._load_ind_vbo(coord_vbo=True)
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -332,9 +332,9 @@ class DotsRepresentation(Representation):
         
         if self.was_sel_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
+            self._load_ind_vbo(sel_coord_vbo=True)
             self.was_sel_modified = False
         
-        self._load_ind_vbo(sel_coord_vbo=True)
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -364,9 +364,9 @@ class LinesRepresentation(Representation):
         
         if self.was_rep_modified:
             self._load_coord_vbo(coord_vbo=True)
+            self._load_ind_vbo(coord_vbo=True)
             self.was_rep_modified = False
         
-        self._load_ind_vbo(coord_vbo=True)
         GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -387,9 +387,9 @@ class LinesRepresentation(Representation):
         
         if self.was_sel_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
+            self._load_ind_vbo(sel_coord_vbo=True)
             self.was_sel_modified = False
         
-        self._load_ind_vbo(sel_coord_vbo=True)
         GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -418,9 +418,9 @@ class NonBondedRepresentation(Representation):
         
         if self.was_rep_modified:
             self._load_coord_vbo(coord_vbo=True)
+            self._load_ind_vbo(coord_vbo=True)
             self.was_rep_modified = False
         
-        self._load_ind_vbo(coord_vbo=True)
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -440,9 +440,9 @@ class NonBondedRepresentation(Representation):
         
         if self.was_sel_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
+            self._load_ind_vbo(sel_coord_vbo=True)
             self.was_sel_modified = False
         
-        self._load_ind_vbo(sel_coord_vbo=True)
         GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -505,9 +505,9 @@ class ImpostorRepresentation(Representation):
         
         if self.was_rep_modified:
             self._load_coord_vbo(coord_vbo=True)
+            self._load_ind_vbo(coord_vbo=True)
             self.was_rep_modified = False
         
-        self._load_ind_vbo(coord_vbo=True)
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -529,9 +529,9 @@ class ImpostorRepresentation(Representation):
         
         if self.was_sel_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
+            self._load_ind_vbo(sel_coord_vbo=True)
             self.was_sel_modified = False
         
-        self._load_ind_vbo(sel_coord_vbo=True)
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -566,9 +566,9 @@ class SticksRepresentation(Representation):
         
         if self.was_rep_modified:
             self._load_coord_vbo(coord_vbo=True)
+            self._load_ind_vbo(coord_vbo=True)
             self.was_rep_modified = False
         
-        self._load_ind_vbo(coord_vbo=True)
         GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
@@ -588,9 +588,9 @@ class SticksRepresentation(Representation):
         
         if self.was_sel_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
+            self._load_ind_vbo(sel_coord_vbo=True)
             self.was_sel_modified = False
         
-        self._load_ind_vbo(sel_coord_vbo=True)
         GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
