@@ -785,30 +785,36 @@ float caps_intersect( in vec3 ro, in vec3 rd, in vec3 pa, in vec3 pb, in float r
     return -1.0;
 }
 
+vec4 calculate_color(vec3 fnrm, vec3 fcrd, vec3 fcol){
+    vec3 normal = normalize(fnrm);
+    vec3 vert_to_light = normalize(my_light.position);
+    vec3 vert_to_cam = normalize(fcrd);
+    // Ambient Component
+    vec3 ambient = my_light.ambient_coef * fcol * my_light.intensity;
+    // Diffuse component
+    float diffuse_coef = max(0.0, dot(normal, vert_to_light));
+    vec3 diffuse = diffuse_coef * fcol * my_light.intensity;
+    // Specular component
+    float specular_coef = 0.0;
+    if (diffuse_coef > 0.0)
+        specular_coef = pow(max(0.0, dot(vert_to_cam, reflect(vert_to_light, normal))), my_light.shininess);
+    vec3 specular = specular_coef * my_light.intensity;
+    specular = specular * (vec3(1) - diffuse);
+    vec4 out_color = vec4(ambient + diffuse + specular, 1.0);
+    return out_color;
+}
+
 void main() {
     vec3 ray_orig = frag_cam;
     vec3 ray_dir = normalize(frag_coord - frag_cam);
     float dist_to_caps = caps_intersect(ray_orig, ray_dir, frag_pA, frag_pB, frag_radius);
     if (dist_to_caps < 0.0) discard;
-    //final_color = vec4(dist_to_caps,0,0, length(frag_color));
     
     vec3 coord_on_caps = frag_cam + ray_dir * dist_to_caps;
     vec3 normal = normalize(caps_normal(frag_coord, frag_pA, frag_pB, frag_radius));
-    vec3 vert_to_light = normalize(my_light.position - coord_on_caps);
     
-    // Ambient Component
-    vec3 ambient = my_light.ambient_coef * frag_color * my_light.intensity;
-    
-    // Diffuse component
-    float diffuse_coef = max(0.0, dot(normal, vert_to_light));
-    vec3 diffuse = diffuse_coef * frag_color * my_light.intensity;
-    //final_color = vec4(ambient + diffuse, 1.0);
-    
-    //vec4 depth = proj_mat * vec4(frag_center + normal * frag_radius, 1.0);
-    //gl_FragDepthEXT = depth.z/depth.w;
-    //vec4 depth = proj_mat * vec4(coord_on_caps, 1.0);
+    final_color = calculate_color(normal, coord_on_caps, frag_color);
     //gl_FragDepth = depth.z/depth.w;
-    final_color = vec4(ambient + diffuse, 1.0);
 }
 """
 
