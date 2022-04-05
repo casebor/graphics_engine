@@ -154,14 +154,12 @@ class VismolSession():
                     if atom.spheres:
                         show_hide_indexes.append(atom.atom_id)
             
-            
             elif rep_type == "ribbon":
                 logger.error("Not implementer for 'ribbon' yet.")
                 raise NotImplementedError("Not implementer for 'ribbon' yet.")
             elif rep_type == "surface":
                 logger.error("Not implementer for 'surface' yet.")
                 raise NotImplementedError("Not implementer for 'surface' yet.")
-            
             elif rep_type == "cartoon":
                 logger.error("Not implementer for 'cartoon' yet.")
                 raise NotImplementedError("Not implementer for 'cartoon' yet.")

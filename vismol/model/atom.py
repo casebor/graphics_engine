@@ -69,6 +69,7 @@ class Atom:
         else:
             self.ball_rad = ball_rad
         
+        self.color_id = None
         self.occupancy = occupancy
         self.bfactor = bfactor
         self.charge = charge

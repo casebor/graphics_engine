@@ -108,7 +108,7 @@ class Representation:
         GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
         return coord_vbo
     
-    def _make_gl_color_buffer(self, colors, program):
+    def _make_gl_color_buffer(self, colors, program, instances=False):
         """ Function doc """
         col_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
@@ -116,7 +116,32 @@ class Representation:
         att_colors = GL.glGetAttribLocation(program, "vert_color")
         GL.glEnableVertexAttribArray(att_colors)
         GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+        if instances:
+            GL.glVertexAttribDivisor(att_colors, 1)
         return col_vbo
+    
+    def _make_gl_radius_buffer(self, radii, program, instances=False):
+        """ Function doc """
+        rad_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, rad_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, radii.nbytes, radii, GL.GL_STATIC_DRAW)
+        att_rads = GL.glGetAttribLocation(program, "vert_radius")
+        GL.glEnableVertexAttribArray(att_rads)
+        GL.glVertexAttribPointer(att_rads, 1, GL.GL_FLOAT, GL.GL_FALSE, radii.itemsize, ctypes.c_void_p(0))
+        if instances:
+            GL.glVertexAttribDivisor(att_rads, 1)
+        return rad_vbo
+    
+    def _make_gl_instance_buffer(self, instances, program):
+        """ Function doc """
+        insta_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, insta_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, instances.nbytes, instances, GL.GL_STATIC_DRAW)
+        gl_insta = GL.glGetAttribLocation(program, "vert_instance")
+        GL.glEnableVertexAttribArray(gl_insta)
+        GL.glVertexAttribPointer(gl_insta, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+        GL.glVertexAttribDivisor(gl_insta, 1)
+        return insta_vbo
     
     def _make_gl_impostor_buffer(self, impostors_radii, program):
         """ Function doc """
@@ -501,6 +526,8 @@ class SticksRepresentation(Representation):
         """ Function doc """
         self._check_vao_and_vbos ()
         self._enable_anti_alias_to_lines()
+        GL.glEnable(GL.GL_CULL_FACE)
+        GL.glCullFace(GL.GL_BACK)
         GL.glUseProgram(self.shader_program)
         # GL.glLineWidth(40/abs(self.vm_glcore.dist_cam_zrp))
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
@@ -518,6 +545,7 @@ class SticksRepresentation(Representation):
         
         GL.glBindVertexArray(0)
         self._disable_anti_alias_to_lines()
+        GL.glDisable(GL.GL_CULL_FACE)
         GL.glUseProgram(0)
         GL.glLineWidth(1)
     
@@ -557,48 +585,15 @@ class SpheresRepresentation(Representation):
         self.sphere_indexes = sphd.sphere_triangles[self.level]
         self.instances_elemns = self.sphere_indexes.shape[0]
     
-    def _make_gl_color_buffer(self, colors, program):
-        """ Function doc """
-        col_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
-        att_colors = GL.glGetAttribLocation(program, "vert_color")
-        GL.glEnableVertexAttribArray(att_colors)
-        GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
-        GL.glVertexAttribDivisor(att_colors, 1)
-        return col_vbo
-    
-    def _make_gl_radius_buffer(self, radii, program):
-        """ Function doc """
-        rad_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, rad_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, radii.nbytes, radii, GL.GL_STATIC_DRAW)
-        att_rads = GL.glGetAttribLocation(program, "vert_radius")
-        GL.glEnableVertexAttribArray(att_rads)
-        GL.glVertexAttribPointer(att_rads, 1, GL.GL_FLOAT, GL.GL_FALSE, radii.itemsize, ctypes.c_void_p(0))
-        GL.glVertexAttribDivisor(att_rads, 1)
-        return rad_vbo
-    
-    def _make_gl_instance_buffer(self, instances, program):
-        """ Function doc """
-        insta_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, insta_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, instances.nbytes, instances, GL.GL_STATIC_DRAW)
-        gl_insta = GL.glGetAttribLocation(program, "vert_instance")
-        GL.glEnableVertexAttribArray(gl_insta)
-        GL.glVertexAttribPointer(gl_insta, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
-        GL.glVertexAttribDivisor(gl_insta, 1)
-        return insta_vbo
-    
     def _make_gl_representation_vao_and_vbos(self):
         """ Function doc """
         logger.debug("building '{}' representation VAO and VBOs".format(self.name))
         self.vao = self._make_gl_vao()
         self.ind_vbo = self._make_gl_index_buffer(self.sphere_indexes)
         self.coord_vbo = self._make_gl_coord_buffer(self.sphere_vertices, self.shader_program)
-        self.col_vbo = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
-        self.rad_vbo = self._make_gl_radius_buffer(self.vm_object.cov_radii_array, self.shader_program)
-        self.insta_vbo = self._make_gl_instance_buffer(self.vm_object.frames[0], self.shader_program)
+        self.col_vbo = self._make_gl_color_buffer(np.zeros(3, dtype=np.float32), self.shader_program, instances=True)
+        self.rad_vbo = self._make_gl_radius_buffer(np.zeros(1, dtype=np.float32), self.shader_program, instances=True)
+        self.insta_vbo = self._make_gl_instance_buffer(np.zeros(3, dtype=np.float32), self.shader_program)
     
     def _make_gl_sel_representation_vao_and_vbos(self):
         """ Function doc """
@@ -606,9 +601,33 @@ class SpheresRepresentation(Representation):
         self.sel_vao = self._make_gl_vao()
         self.sel_ind_vbo = self._make_gl_index_buffer(self.sphere_indexes)
         self.sel_coord_vbo = self._make_gl_coord_buffer(self.sphere_vertices, self.sel_shader_program)
-        self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
-        self.sel_rad_vbo = self._make_gl_radius_buffer(self.vm_object.cov_radii_array, self.shader_program)
-        self.sel_insta_vbo = self._make_gl_instance_buffer(self.vm_object.frames[0], self.shader_program)
+        self.sel_col_vbo = self._make_gl_color_buffer(np.zeros(3, dtype=np.float32), self.sel_shader_program, instances=True)
+        self.sel_rad_vbo = self._make_gl_radius_buffer(np.zeros(1, dtype=np.float32), self.shader_program, instances=True)
+        self.sel_insta_vbo = self._make_gl_instance_buffer(np.zeros(3, dtype=np.float32), self.shader_program)
+    
+    def _coords_colors_rads(self):
+        coords, colors, rads = [], [], []
+        frame = self.vm_glcore._safe_frame_coords(self.vm_object)
+        for i in self.indexes:
+            coords.append(frame[i])
+            colors.append(self.vm_object.atoms[i].color)
+            rads.append(self.vm_object.atoms[i].ball_rad)
+        coords = np.array(coords, dtype=np.float32)
+        colors = np.array(colors, dtype=np.float32)
+        rads = np.array(rads, dtype=np.float32)
+        return coords, colors, rads
+    
+    def _sel_coords_colors_rads(self):
+        coords, colors, rads = [], [], []
+        frame = self.vm_glcore._safe_frame_coords(self.vm_object)
+        for i in self.indexes:
+            coords.append(frame[i])
+            colors.append(self.vm_object.atoms[i].color_id)
+            rads.append(self.vm_object.atoms[i].ball_rad)
+        coords = np.array(coords, dtype=np.float32)
+        colors = np.array(colors, dtype=np.float32)
+        rads = np.array(rads, dtype=np.float32)
+        return coords, colors, rads
     
     def draw_representation(self):
         """ Function doc """
@@ -622,14 +641,16 @@ class SpheresRepresentation(Representation):
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.was_sel_modified:
-            # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
-            # GL.glBufferData(GL.GL_ARRAY_BUFFER, self.insta_crd.nbytes, self.insta_crd, GL.GL_STATIC_DRAW)
-            # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.instances_vbos[2])
-            # GL.glBufferData(GL.GL_ARRAY_BUFFER, self.insta_rads.nbytes, self.insta_rads, GL.GL_STATIC_DRAW)
-            # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
-            # GL.glBufferData(GL.GL_ARRAY_BUFFER, self.insta_col.nbytes, self.insta_col, GL.GL_STATIC_DRAW)
-            pass
+        if self.was_rep_modified:
+            coords, colors, rads = self._coords_colors_rads()
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.insta_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.nbytes, coords, GL.GL_STATIC_DRAW)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.rad_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, rads.nbytes, rads, GL.GL_STATIC_DRAW)
+            self.elements = np.uint32(coords.shape[0])
+            self.was_rep_modified = False
         
         GL.glDrawElementsInstanced(GL.GL_TRIANGLES, self.instances_elemns, GL.GL_UNSIGNED_INT, None, self.elements)
         
@@ -647,8 +668,14 @@ class SpheresRepresentation(Representation):
         GL.glBindVertexArray(self.sel_vao)
         
         if self.was_sel_modified:
-            self._load_coord_vbo(sel_coord_vbo=True)
-            self._load_ind_vbo(sel_coord_vbo=True)
+            coords, colors, rads = self._sel_coords_colors_rads()
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_insta_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.nbytes, coords, GL.GL_STATIC_DRAW)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_col_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_rad_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, rads.nbytes, rads, GL.GL_STATIC_DRAW)
+            self.elements = np.uint32(coords.shape[0])
             self.was_sel_modified = False
         
         GL.glDrawElementsInstanced(GL.GL_TRIANGLES, self.instances_elemns, GL.GL_UNSIGNED_INT, None, self.elements)

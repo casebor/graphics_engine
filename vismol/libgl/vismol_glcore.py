@@ -910,8 +910,8 @@ class VismolGLCore:
         """ Function doc """
         self.shader_programs["spheres"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
                                                     shaders_spheres.fragment_shader_spheres)
-        self.shader_programs["spheres_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                        shaders_spheres.fragment_shader_spheres)
+        self.shader_programs["spheres_sel"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
+                                                        shaders_spheres.sel_fragment_shader_spheres)
     
     
     

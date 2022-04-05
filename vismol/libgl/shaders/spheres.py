@@ -46,6 +46,10 @@ struct Light {
 
 uniform Light my_light;
 
+uniform vec4 fog_color;
+uniform float fog_start;
+uniform float fog_end;
+
 in vec3 frag_coord;
 in vec3 frag_color;
 in vec3 frag_norm;
@@ -72,7 +76,50 @@ vec4 calculate_color(vec3 fnrm, vec3 fcrd, vec3 fcol){
 }
 
 void main(){
-    final_color = calculate_color(frag_norm, frag_coord, frag_color);
+    vec4 out_color = calculate_color(frag_norm, frag_coord, frag_color);
+    
+    float dist = abs(frag_coord.z);
+    if(dist>=fog_start){
+        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+        final_color = mix(fog_color, out_color, fog_factor);
+    }
+    else{
+       final_color = out_color;
+    }
+}
+"""
+
+
+sel_vertex_shader_spheres = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 proj_mat;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+in vec3 vert_instance;
+in float vert_radius;
+
+out vec3 frag_color;
+
+void main(){
+    frag_color = vert_color;
+    vec3 offset_coord = vert_coord * vert_radius + vert_instance;
+    gl_Position = proj_mat * view_mat * model_mat * vec4(offset_coord, 1.0);
+}
+"""
+
+sel_fragment_shader_spheres = """
+#version 330
+
+in vec3 frag_color;
+
+out vec4 final_color;
+
+void main(){
+    final_color = vec4(frag_color, 1.0);
 }
 """
 
