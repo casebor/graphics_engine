@@ -25,8 +25,8 @@
 import ctypes
 import numpy as np
 import utils.matrix_operations as mop
-
 from OpenGL import GL
+
 
 class GLAxis:
     """ This class contains all necessary components for the creation of a
@@ -46,104 +46,63 @@ class GLAxis:
             window, you can change this location by multiplying the coordinates
             by a translation matrix, or using another set of coordinates.
         """
-        self.axis_vertices = {"x_axis" : np.array(
-        [-0.85000000, -0.87500000,  0.00000000,
-         -0.85000000, -0.88232233, -0.01767767,
-         -0.85000000, -0.90000000, -0.02500000,
-         -0.85000000, -0.91767767, -0.01767767,
-         -0.85000000, -0.92500000,  0.00000000,
-         -0.85000000, -0.91767767,  0.01767767,
-         -0.85000000, -0.90000000,  0.02500000,
-         -0.85000000, -0.88232233,  0.01767767,
-         -0.81250000, -0.90000000,  0.00000000,
-         -0.85000000, -0.90000000,  0.00000000], dtype=np.float32),
-        "y_axis" : np.array(
-        [-0.90000000, -0.85000000, -0.02500000,
-         -0.88232233, -0.85000000, -0.01767767,
-         -0.87500000, -0.85000000,  0.00000000,
-         -0.88232233, -0.85000000,  0.01767767,
-         -0.90000000, -0.85000000,  0.02500000,
-         -0.91767767, -0.85000000,  0.01767767,
-         -0.92500000, -0.85000000,  0.00000000,
-         -0.91767767, -0.85000000, -0.01767767,
-         -0.90000000, -0.81250000,  0.00000000,
-         -0.90000000, -0.85000000,  0.00000000], dtype=np.float32),
-        "z_axis" : np.array(
-        [-0.90000000, -0.87500000, -0.05000000,
-         -0.88232233, -0.88232233, -0.05000000,
-         -0.87500000, -0.90000000, -0.05000000,
-         -0.88232233, -0.91767767, -0.05000000,
-         -0.90000000, -0.92500000, -0.05000000,
-         -0.91767767, -0.91767767, -0.05000000,
-         -0.92500000, -0.90000000, -0.05000000,
-         -0.91767767, -0.88232233, -0.05000000,
-         -0.90000000, -0.90000000, -0.08750000,
-         -0.90000000, -0.90000000, -0.05000000], dtype=np.float32)}
-        self.axis_normals = {"x_axis" : np.array(
-        [-0.60000062,  0.79999954,  0.00000000,
-         -0.60000032,  0.56568521, -0.56568539,
-         -0.60000026,  0.00000000, -0.79999983,
-         -0.60000032, -0.56568521, -0.56568539,
-         -0.59999973, -0.80000031,  0.00000000,
-         -0.60000032, -0.56568521,  0.56568539,
-         -0.60000026,  0.00000000,  0.79999983,
-         -0.60000032,  0.56568521,  0.56568539,
-          1.00000000,  0.00000000,  0.00000000,
-         -1.00000000,  0.00000000,  0.00000000], dtype=np.float32),
-        "y_axis" : np.array(
-        [ 0.00000000, -0.60000026, -0.79999983,
-          0.56568521, -0.60000032, -0.56568539,
-          0.79999954, -0.60000062,  0.00000000,
-          0.56568521, -0.60000032,  0.56568539,
-          0.00000000, -0.60000026,  0.79999983,
-         -0.56568521, -0.60000032,  0.56568539,
-         -0.80000031, -0.59999973,  0.00000000,
-         -0.56568521, -0.60000032, -0.56568539,
-          0.00000000,  1.00000000,  0.00000000,
-          0.00000000, -1.00000000,  0.00000000], dtype=np.float32),
-        "z_axis" : np.array(
-        [ 0.00000000,  0.79999977,  0.60000038,
-          0.56568539,  0.56568539,  0.60000008,
-          0.79999977,  0.00000000,  0.60000038,
-          0.56568539, -0.56568539,  0.60000008,
-          0.00000000, -0.80000049,  0.59999949,
-         -0.56568539, -0.56568539,  0.60000008,
-         -0.80000049,  0.00000000,  0.59999949,
-         -0.56568539,  0.56568539,  0.60000008,
-          0.00000000,  0.00000000, -1.00000000,
-          0.00000000,  0.00000000,  1.00000000], dtype=np.float32)}
-        self.lines_vertices = np.array(
-            [-0.90000000, -0.90000000,  0.00000000,
-             -0.82500000, -0.90000000,  0.00000000,
-             -0.90000000, -0.90000000,  0.00000000,
-             -0.90000000, -0.82500000,  0.00000000,
-             -0.90000000, -0.90000000,  0.00000000,
-             -0.90000000, -0.90000000, -0.07500000], dtype=np.float32)
-        self.lines_colors = np.array(
-            [1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-             0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-             0.0, 0.0, 1.0, 0.0, 0.0, 1.0], dtype=np.float32)
-        self.axis_indices = np.array([0, 1, 8, 1, 2, 8, 2, 3, 8, 3, 4, 8,
-                                      4, 5, 8, 5, 6, 8, 6, 7, 8, 7, 0, 8,
-                                      0, 1, 9, 1, 2, 9, 2, 3, 9, 3, 4, 9,
-                                      4, 5, 9, 5, 6, 9, 6, 7, 9, 7, 0, 9], dtype=np.uint32)
+        # These coordinates are for a cone with the base at the origen ant pointining
+        # towards the positive X axis. To use the data for the other axis, rotate
+        # the points :P
+        a, b, c = 0.0, 0.707107, 1.0
+        self.axis_cone = np.array([[ a, a,-c],[ c, a, a],[ a,-b,-b],
+                                   [ a,-b,-b],[ c, a, a],[ a,-c, a],
+                                   [ a,-c, a],[ c, a, a],[ a,-b, b],
+                                   [ a,-b, b],[ c, a, a],[-a, a, c],
+                                   [-a, a, c],[ c, a, a],[-a, b, b],
+                                   [-a, b, b],[ c, a, a],[-a, c,-a],
+                                   [-a, c,-a],[ c, a, a],[-a, b,-b],
+                                   [-a, b,-b],[ c, a, a],[ a, a,-c],
+
+                                   [ a, a,-c],[ a,-b,-b],[ a,-c, a],
+                                   [ a,-c, a],[ a,-b, b],[-a, a, c],
+                                   [-a, a, c],[-a, b, b],[-a, c,-a],
+                                   [-a, c,-a],[-a, b,-b],[ a, a,-c],
+                                   [ a, a,-c],[ a,-c, a],[-a, a, c],
+                                   [-a, a, c],[-a, c,-a],[ a, a,-c]], dtype=np.float32)
+        p, q, r, s = 0.0, 0.2811, 0.6786, 1.0
+        self.axis_norms = np.array([[ r,-q,-r],[ r,-q,-r],[ r,-q,-r],
+                                    [ r,-r,-q],[ r,-r,-q],[ r,-r,-q],
+                                    [ r,-r, q],[ r,-r, q],[ r,-r, q],
+                                    [ r,-q, r],[ r,-q, r],[ r,-q, r],
+                                    [ r, q, r],[ r, q, r],[ r, q, r],
+                                    [ r, r, q],[ r, r, q],[ r, r, q],
+                                    [ r, r,-q],[ r, r,-q],[ r, r,-q],
+                                    [ r, q,-r],[ r, q,-r],[ r, q,-r],
+                                    [-s,-p, p],[-s,-p, p],[-s,-p, p],
+                                    [-s,-p, p],[-s,-p, p],[-s,-p, p],
+                                    [-s,-p, p],[-s,-p, p],[-s,-p, p],
+                                    [-s,-p, p],[-s,-p, p],[-s,-p, p],
+                                    [-s,-p, p],[-s,-p, p],[-s,-p, p],
+                                    [-s,-p, p],[-s,-p, p],[-s,-p, p]], dtype=np.float32)
+        self.lines_vertices = np.array([[-0.900,-0.900, 0.000],[-0.825,-0.900, 0.000],
+                                        [-0.900,-0.900, 0.000],[-0.900,-0.825, 0.000],
+                                        [-0.900,-0.900, 0.000],[-0.900,-0.900,-0.075]], dtype=np.float32)
+        self.axis_indices = np.arange(42, dtype=np.uint32)
         self.axis_colors = {"x_axis" : [1.0, 0.0, 0.0],
                             "y_axis" : [0.0, 1.0, 0.0],
                             "z_axis" : [0.0, 0.0, 1.0]}
         self.model_mat = np.identity(4, dtype=np.float32)
+        self.model_mat[3,:3] = cam_pos
         self.gizmo_axis_program = None
         self.gl_lines_program = None
         self.x_vao = None
         self.y_vao = None
         self.z_vao = None
         self.lines_vao = None
-        self.zrp = np.array([-0.9, -0.9, 0.0],dtype=np.float32)
+        self.zrp = np.array([-0.9,-0.9, 0.0],dtype=np.float32)
         self.camera_position = np.array(cam_pos, dtype=np.float32)
-        self.light_position = np.array([0.0, -2.0, 0.0],dtype=np.float32)
-        self.light_color = np.array([1.0, 0.0, 0.0, 1.0],dtype=np.float32)
+        self.light_position = np.array([-0.5, 0.0,-1.0],dtype=np.float32)
+        self.light_color = np.array([0.0, 0.0, 0.0, 1.0],dtype=np.float32)
+        self.light_intensity = np.array([0.6, 0.6, 0.6],dtype=np.float32)
         self.light_ambient_coef = 0.2
-        self.light_specular_coef = 0.7
-        self.light_shininess = 32.0
+        self.light_specular_coef = 1.0
+        self.light_shininess = 3.0
         self.vertex_shader_axis = """
 #version 330
 
@@ -153,11 +112,12 @@ in vec3 vert_coord;
 in vec3 vert_color;
 in vec3 vert_norm;
 
+out vec3 frag_coord;
 out vec3 frag_color;
 out vec3 frag_norm;
 
 void main(){
-    vec3 frag_coord = vec3(model_mat * vec4(vert_coord, 1.0));
+    frag_coord = vec3(model_mat * vec4(vert_coord, 1.0));
     frag_norm = mat3(transpose(inverse(model_mat))) * vert_norm;
     frag_color = vert_color;
     gl_Position = vec4(frag_coord, 1.0);
@@ -167,33 +127,43 @@ void main(){
 #version 330
 
 struct Light {
-   vec3 position;
-   vec3 color;
-   float ambient_coef;
-   float specular_coef;
-   float shininess;
+    vec3 position;
+    vec3 color;
+    vec3 intensity;
+    vec3 specular_color;
+    float ambient_coef;
+    float shininess;
 };
 
 uniform Light my_light;
-uniform vec3 cam_pos;
 
+in vec3 frag_coord;
 in vec3 frag_color;
 in vec3 frag_norm;
 
 out vec4 final_color;
 
-void main(){
-    vec3 N = normalize(frag_norm);
-    vec3 L = normalize(my_light.position);
-    vec3 E = vec3(0, 0, 1);
-    vec3 H = normalize(L + E);
-    
-    float df = max(0.0, dot(N, L));
-    float sf = max(0.0, dot(N, H));
-    sf = pow(sf, my_light.shininess);
+vec4 calculate_color(vec3 fnrm, vec3 fcrd, vec3 fcol){
+    vec3 normal = normalize(fnrm);
+    vec3 vert_to_light = normalize(my_light.position);
+    vec3 vert_to_cam = normalize(fcrd);
+    // Ambient Component
+    vec3 ambient = my_light.ambient_coef * fcol * my_light.intensity;
+    // Diffuse component
+    float diffuse_coef = max(0.0, dot(normal, vert_to_light));
+    vec3 diffuse = diffuse_coef * fcol * my_light.intensity;
+    // Specular component
+    float specular_coef = 0.0;
+    if (diffuse_coef > 0.0)
+        specular_coef = pow(max(0.0, dot(vert_to_cam, reflect(vert_to_light, normal))), my_light.shininess);
+    vec3 specular = specular_coef * my_light.intensity;
+    specular = specular * (vec3(1) - diffuse);
+    vec4 out_color = vec4(ambient + diffuse + specular, 1.0);
+    return out_color;
+}
 
-    vec3 color = frag_color * 0.2 + df * frag_color + sf * vec3(.5);
-    final_color = vec4(color, 1.0);
+void main() {
+    final_color = calculate_color(frag_norm, frag_coord, frag_color);
 }
 """
         self.vertex_shader_lines = """
@@ -288,6 +258,25 @@ void main()
             raise RuntimeError(GL.glGetShaderInfoLog(f_shader))
         return True
     
+    def _get_rotmat3f(self, angle, dir_vec):
+        assert(np.linalg.norm(dir_vec)>0.0)
+        x = dir_vec[0]
+        y = dir_vec[1]
+        z = dir_vec[2]
+        c = np.cos(angle)
+        s = np.sin(angle)
+        rot_matrix = np.identity(3, dtype=np.float32)
+        rot_matrix[0,0] = x*x*(1-c)+c
+        rot_matrix[1,0] = y*x*(1-c)+z*s
+        rot_matrix[2,0] = x*z*(1-c)-y*s
+        rot_matrix[0,1] = x*y*(1-c)-z*s
+        rot_matrix[1,1] = y*y*(1-c)+c
+        rot_matrix[2,1] = y*z*(1-c)+x*s
+        rot_matrix[0,2] = x*z*(1-c)+y*s
+        rot_matrix[1,2] = y*z*(1-c)-x*s
+        rot_matrix[2,2] = z*z*(1-c)+c
+        return rot_matrix
+    
     def _get_vao(self, axis):
         """ Creates the Vertex Array Object, Vertex Buffer Objects and fill the
             shaders with the data of the corresponding axis. The buffers are not
@@ -301,36 +290,50 @@ void main()
             Returns:
                 The Vertex Array Object of the corresponding axis.
         """
-        colors = self.axis_colors[axis] * int(len(self.axis_vertices[axis]))
-        colors = np.array(colors, dtype=np.float32)
+        if axis == "y_axis":
+            rot_mat = self._get_rotmat3f(np.pi/2.0, [0,0,1])
+            offset = np.array([0.0, 0.075, 0.0], dtype=np.float32)
+        elif axis == "z_axis":
+            rot_mat = self._get_rotmat3f(np.pi/2.0, [0,1,0])
+            offset = np.array([0.0, 0.0,-0.075], dtype=np.float32)
+        elif axis == "x_axis":
+            rot_mat = np.identity(3, dtype=np.float32)
+            offset = np.array([0.075, 0.0, 0.0], dtype=np.float32)
+        scale = 0.03
+        coords = np.empty([42,3], dtype=np.float32)
+        normals = np.empty([42,3], dtype=np.float32)
+        for i in range(self.axis_cone.shape[0]):
+            coords[i] = np.matmul(rot_mat, self.axis_cone[i]) * scale + self.zrp + offset
+            normals [i] = np.matmul(rot_mat, self.axis_norms[i])
+        colors = np.tile(self.axis_colors[axis], 42).reshape(42, 3).astype(np.float32)
         
         vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(vao)
         
         ind_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.axis_indices.itemsize*int(len(self.axis_indices)), self.axis_indices, GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.axis_indices.nbytes, self.axis_indices, GL.GL_STATIC_DRAW)
         
         vert_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.axis_vertices[axis].itemsize*int(len(self.axis_vertices[axis])), self.axis_vertices[axis], GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.nbytes, coords, GL.GL_STATIC_DRAW)
         att_position = GL.glGetAttribLocation(self.gizmo_axis_program, "vert_coord")
         GL.glEnableVertexAttribArray(att_position)
-        GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.axis_vertices[axis].itemsize, ctypes.c_void_p(0))
+        GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
         
         col_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
         att_colors = GL.glGetAttribLocation(self.gizmo_axis_program, "vert_color")
         GL.glEnableVertexAttribArray(att_colors)
         GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
         
         norm_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, norm_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.axis_normals[axis].itemsize*len(self.axis_normals[axis]), self.axis_normals[axis], GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.nbytes, normals, GL.GL_STATIC_DRAW)
         att_norm = GL.glGetAttribLocation(self.gizmo_axis_program, "vert_norm")
         GL.glEnableVertexAttribArray(att_norm)
-        GL.glVertexAttribPointer(att_norm, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.axis_normals[axis].itemsize, ctypes.c_void_p(0))
+        GL.glVertexAttribPointer(att_norm, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*normals.itemsize, ctypes.c_void_p(0))
         
         GL.glBindVertexArray(0)
         GL.glDisableVertexAttribArray(att_position)
@@ -349,12 +352,16 @@ void main()
             Returns:
                 The Vertex Array Object of the corresponding axis.
         """
+        line_colors = np.empty(18, dtype=np.float32)
+        line_colors[:6] = np.tile(self.axis_colors["x_axis"], 2)
+        line_colors[6:12] = np.tile(self.axis_colors["y_axis"], 2)
+        line_colors[12:] = np.tile(self.axis_colors["z_axis"], 2)
         vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(vao)
         
         vert_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.lines_vertices.itemsize*int(len(self.lines_vertices)), self.lines_vertices, GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.lines_vertices.nbytes, self.lines_vertices, GL.GL_STATIC_DRAW)
         
         att_position = GL.glGetAttribLocation(self.gl_lines_program, "vert_coord")
         GL.glEnableVertexAttribArray(att_position)
@@ -362,11 +369,11 @@ void main()
         
         col_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.lines_colors.itemsize*int(len(self.lines_colors)), self.lines_colors, GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, line_colors.nbytes, line_colors, GL.GL_STATIC_DRAW)
         
         att_colors = GL.glGetAttribLocation(self.gl_lines_program, "vert_color")
         GL.glEnableVertexAttribArray(att_colors)
-        GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.lines_colors.itemsize, ctypes.c_void_p(0))
+        GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*line_colors.itemsize, ctypes.c_void_p(0))
         
         GL.glBindVertexArray(0)
         GL.glDisableVertexAttribArray(att_position)
@@ -381,8 +388,6 @@ void main()
         """
         model = GL.glGetUniformLocation(self.gizmo_axis_program, "model_mat")
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
-        cam_pos = GL.glGetUniformLocation(self.gizmo_axis_program, "cam_pos")
-        GL.glUniform3fv(cam_pos, 1, self.camera_position)
         light_pos = GL.glGetUniformLocation(self.gizmo_axis_program, "my_light.position")
         GL.glUniform3fv(light_pos, 1, self.light_position)
         light_col = GL.glGetUniformLocation(self.gizmo_axis_program, "my_light.color")
@@ -393,6 +398,8 @@ void main()
         GL.glUniform1fv(spec_coef, 1, self.light_specular_coef)
         shiny = GL.glGetUniformLocation(self.gizmo_axis_program, "my_light.shininess")
         GL.glUniform1fv(shiny, 1, self.light_shininess)
+        intensity = GL.glGetUniformLocation(self.gizmo_axis_program, "my_light.intensity")
+        GL.glUniform3fv(intensity, 1, self.light_intensity)
         return True
     
     def load_lines_params(self):
@@ -410,7 +417,7 @@ void main()
             
             Input parameters:
             flag -- a boolean to determine if the cones or the lines are going
-                    to be drawed up. True for draw the cones, False to draw
+                    to be drawed up. True for draw the cones, False to draw only
                     the lines.
             
             IMPORTANT!!!
@@ -435,7 +442,7 @@ void main()
             GL.glUseProgram(0)
         else:
             GL.glUseProgram(self.gl_lines_program)
-            GL.glLineWidth(3)
+            GL.glLineWidth(5)
             self.load_lines_params()
             GL.glBindVertexArray(self.lines_vao)
             GL.glDrawArrays(GL.GL_LINES, 0, len(self.lines_vertices))
@@ -444,4 +451,3 @@ void main()
             GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
         return True
-    

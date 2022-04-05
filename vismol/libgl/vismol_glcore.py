@@ -906,6 +906,13 @@ class VismolGLCore:
                                                        shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
     
+    def _compile_shader_spheres(self):
+        """ Function doc """
+        self.shader_programs["spheres"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+                                                    shaders_spheres.fragment_shader_spheres)
+        self.shader_programs["spheres_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+                                                        shaders_spheres.fragment_shader_spheres)
+    
     
     
     
@@ -929,13 +936,6 @@ class VismolGLCore:
         self.shader_programs["ribbon_sel"] = self.load_shaders(shaders_lines.shader_type[line_type]["sel_vertex_shader"],
                                                         shaders_lines.shader_type[line_type]["sel_fragment_shader"],
                                                         shaders_lines.shader_type[line_type]["sel_geometry_shader"])
-    
-    def _compile_shader_spheres(self):
-        """ Function doc """
-        self.shader_programs["spheres"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                    shaders_spheres.fragment_shader_spheres)
-        self.shader_programs["spheres_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                        shaders_spheres.fragment_shader_spheres)
     
     def _compile_shader_impostor(self):
         """ Function doc """

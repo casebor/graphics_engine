@@ -37,7 +37,7 @@ from libgl.representations import NonBondedRepresentation
 from libgl.representations import PickingDotsRepresentation
 from libgl.representations import ImpostorRepresentation
 from libgl.representations import SticksRepresentation
-# from libgl.representations import SpheresRepresentation
+from libgl.representations import SpheresRepresentation
 # from libgl.representations import WiresRepresentation
 # from libgl.representations import RibbonsRepresentation
 import utils.c_distances as cdist
@@ -126,11 +126,11 @@ class VismolObject:
         elif rep_type == "sticks":
             self.representations["sticks"] = SticksRepresentation(self, self.vm_session.vm_glcore,
                                                                   active=True, indexes=self.index_bonds)
+        elif rep_type == "spheres":
+            self.representations["spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
+                                                    active=True, indexes=list(self.atoms.keys()))
         # elif rep_type == "ribbons":
         #     self.representations["ribbons"] = RibbonsRepresentation(self, self.vm_session.vm_glcore,
-        #                                                             active=True, indexes=indexes)
-        # elif rep_type == "spheres":
-        #     self.representations["spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
         #                                                             active=True, indexes=indexes)
         #     self.representations["spheres"]._create_sphere_data()
         # elif rep_type == "dotted_lines":

@@ -178,61 +178,6 @@ class Representation:
         """ Function doc """
         self.indexes = np.array(input_indexes, dtype=np.uint32)
         self.elements = np.uint32(self.indexes.shape[0])
-    
-    # def _load_impostor_ratio_vbo(self, coord_vbo=False, sel_coord_vbo=False):
-    #     """ This function assigns the coordinates to 
-    #         be drawn by the function  draw_representation"""
-    #     self.ratio = self.vm_glcore.width / self.vm_glcore.height
-    #     ratio = np.repeat(self.ratio, self.vm_glcore._safe_frame_coords(self.vm_object).shape[0])
-        
-    #     if coord_vbo:
-    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.ratio_vbo)
-    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, ratio.nbytes, ratio, GL.GL_STATIC_DRAW)
-        
-    #     if sel_coord_vbo:
-    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_ratio_vbo)
-    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, ratio.nbytes, ratio, GL.GL_STATIC_DRAW)
-        
-    # def _make_gl_normal_buffer(self, normals, program):
-    #     """ Function doc """
-    #     normal_vbo = GL.glGenBuffers(1)
-    #     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, normal_vbo)
-    #     GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.nbytes, normals, GL.GL_STATIC_DRAW)
-    #     att_normals = GL.glGetAttribLocation(program, "vert_normal")
-    #     if att_normals > 0:
-    #         GL.glEnableVertexAttribArray(att_normals)
-    #         GL.glVertexAttribPointer(att_normals, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*normals.itemsize, ctypes.c_void_p(0))
-    #     return normal_vbo
-    
-    # def _set_colors_to_buffer(self, col_vbo=True):
-    #     """ Function doc """
-    #     colors = self.vm_object.colors
-    #     if col_vbo:
-    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
-    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
-    
-    # def _set_coordinates_to_buffer(self, coord_vbo=False, sel_coord_vbo=False):
-    #     """ This function assigns the coordinates to 
-    #     be drawn by the function  draw_representation"""
-    #     frame = self.vm_glcore._safe_frame_coords(self.vm_object)
-    #     if coord_vbo:
-    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
-    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
-        
-    #     if sel_coord_vbo:
-    #         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_coord_vbo)
-    #         GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
-    
-    # def change_vbo_colors(self, colors=None):
-    #     """ Function doc """
-    #     if colors is None:
-    #         colors = []
-    #     colors = np.array(colors, dtype=np.float32)
-    #     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
-    #     GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
-    #     att_colors = GL.glGetAttribLocation(self.shader_program, "vert_color")
-    #     GL.glEnableVertexAttribArray(att_colors)
-    #     GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
 
 
 class PickingDotsRepresentation(Representation):
@@ -270,8 +215,8 @@ class PickingDotsRepresentation(Representation):
         
         if self.was_rep_modified:
             self._load_coord_vbo(coord_vbo=True)
-            self._load_ind_vbo(coord_vbo=True)
             self.was_rep_modified = False
+        self._load_ind_vbo(coord_vbo=True)
         
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
@@ -543,7 +488,7 @@ class ImpostorRepresentation(Representation):
 class SticksRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, vismol_object, vismol_glcore,indexes, active=True):
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
         """ Class initialiser """
         super(SticksRepresentation, self).__init__(vismol_object, vismol_glcore, "sticks", active, indexes)
     
@@ -598,6 +543,119 @@ class SticksRepresentation(Representation):
         GL.glLineWidth(1)
         GL.glUseProgram(0)
 
+
+class SpheresRepresentation(Representation):
+    """ Class doc """
+    
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
+        """ Class initialiser """
+        super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, "spheres", active, indexes)
+        import utils.sphere_data as sphd
+        self.level = self.vm_session.vm_config.gl_parameters["sphere_quality"]
+        self.scale = self.vm_session.vm_config.gl_parameters["sphere_scale"]
+        self.sphere_vertices = sphd.sphere_vertices[self.level] * self.scale
+        self.sphere_indexes = sphd.sphere_triangles[self.level]
+        self.instances_elemns = self.sphere_indexes.shape[0]
+    
+    def _make_gl_color_buffer(self, colors, program):
+        """ Function doc """
+        col_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
+        att_colors = GL.glGetAttribLocation(program, "vert_color")
+        GL.glEnableVertexAttribArray(att_colors)
+        GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+        GL.glVertexAttribDivisor(att_colors, 1)
+        return col_vbo
+    
+    def _make_gl_radius_buffer(self, radii, program):
+        """ Function doc """
+        rad_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, rad_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, radii.nbytes, radii, GL.GL_STATIC_DRAW)
+        att_rads = GL.glGetAttribLocation(program, "vert_radius")
+        GL.glEnableVertexAttribArray(att_rads)
+        GL.glVertexAttribPointer(att_rads, 1, GL.GL_FLOAT, GL.GL_FALSE, radii.itemsize, ctypes.c_void_p(0))
+        GL.glVertexAttribDivisor(att_rads, 1)
+        return rad_vbo
+    
+    def _make_gl_instance_buffer(self, instances, program):
+        """ Function doc """
+        insta_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, insta_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, instances.nbytes, instances, GL.GL_STATIC_DRAW)
+        gl_insta = GL.glGetAttribLocation(program, "vert_instance")
+        GL.glEnableVertexAttribArray(gl_insta)
+        GL.glVertexAttribPointer(gl_insta, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+        GL.glVertexAttribDivisor(gl_insta, 1)
+        return insta_vbo
+    
+    def _make_gl_representation_vao_and_vbos(self):
+        """ Function doc """
+        logger.debug("building '{}' representation VAO and VBOs".format(self.name))
+        self.vao = self._make_gl_vao()
+        self.ind_vbo = self._make_gl_index_buffer(self.sphere_indexes)
+        self.coord_vbo = self._make_gl_coord_buffer(self.sphere_vertices, self.shader_program)
+        self.col_vbo = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
+        self.rad_vbo = self._make_gl_radius_buffer(self.vm_object.cov_radii_array, self.shader_program)
+        self.insta_vbo = self._make_gl_instance_buffer(self.vm_object.frames[0], self.shader_program)
+    
+    def _make_gl_sel_representation_vao_and_vbos(self):
+        """ Function doc """
+        logger.debug("building '{}' background selection VAO and VBOs".format(self.name))
+        self.sel_vao = self._make_gl_vao()
+        self.sel_ind_vbo = self._make_gl_index_buffer(self.sphere_indexes)
+        self.sel_coord_vbo = self._make_gl_coord_buffer(self.sphere_vertices, self.sel_shader_program)
+        self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
+        self.sel_rad_vbo = self._make_gl_radius_buffer(self.vm_object.cov_radii_array, self.shader_program)
+        self.sel_insta_vbo = self._make_gl_instance_buffer(self.vm_object.frames[0], self.shader_program)
+    
+    def draw_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_CULL_FACE)
+        GL.glCullFace(GL.GL_BACK)
+        GL.glUseProgram(self.shader_program)
+        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        self.vm_glcore.load_lights(self.shader_program)
+        self.vm_glcore.load_fog(self.shader_program)
+        GL.glBindVertexArray(self.vao)
+        
+        if self.was_sel_modified:
+            # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
+            # GL.glBufferData(GL.GL_ARRAY_BUFFER, self.insta_crd.nbytes, self.insta_crd, GL.GL_STATIC_DRAW)
+            # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.instances_vbos[2])
+            # GL.glBufferData(GL.GL_ARRAY_BUFFER, self.insta_rads.nbytes, self.insta_rads, GL.GL_STATIC_DRAW)
+            # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
+            # GL.glBufferData(GL.GL_ARRAY_BUFFER, self.insta_col.nbytes, self.insta_col, GL.GL_STATIC_DRAW)
+            pass
+        
+        GL.glDrawElementsInstanced(GL.GL_TRIANGLES, self.instances_elemns, GL.GL_UNSIGNED_INT, None, self.elements)
+        
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_CULL_FACE)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def draw_background_sel_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.sel_shader_program)
+        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
+        GL.glBindVertexArray(self.sel_vao)
+        
+        if self.was_sel_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self._load_ind_vbo(sel_coord_vbo=True)
+            self.was_sel_modified = False
+        
+        GL.glDrawElementsInstanced(GL.GL_TRIANGLES, self.instances_elemns, GL.GL_UNSIGNED_INT, None, self.elements)
+        
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(0)
 
 
 '''
@@ -748,172 +806,6 @@ class RibbonsRepresentation(Representation):
         GL.glLineWidth(1)
         GL.glUseProgram(0)
 
-
-class SpheresRepresentation(Representation):
-    """ Class doc """
-    
-    def __init__ (self, vismol_object, vismol_glcore, name="dots", indexes=None, active=True):
-        """ Class initialiser """
-        super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, name, active, indexes)
-        
-        self.level= self.vm_session.vm_config.gl_parameters['sphere_quality']
-        self.scale= self.vm_session.vm_config.gl_parameters['sphere_scale']
-    
-    def update_atomic_indexes(self, indexes=None):
-        """ Function doc """
-        for index in indexes:
-            self.atoms.append(self.vm_object.atoms[index])
-            self.atomic_indexes.append(index)
-        self._create_sphere_data()
-        self._update_sphere_data_to_vbos()
-        self.active = True
-        
-    def _update_sphere_data_to_vbos(self):
-        """ Function doc """
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
-        
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.coords.nbytes, self.coords, GL.GL_STATIC_DRAW)
-        
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.centr_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.centers.itemsize*len(self.centers), self.centers, GL.GL_STATIC_DRAW)
-        
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.colors.itemsize*len(self.colors), self.colors, GL.GL_STATIC_DRAW)
-    
-    def _create_sphere_data(self):
-        """ Function doc """
-        init = time.time()
-        qtty = len(self.atoms)
-        nucleus = [0.0, 0.0, 0.0] * qtty
-        colores = [0.0, 0.0, 0.0] * qtty
-        coords  = sphd.sphere_vertices[self.level] * qtty
-        centers = sphd.sphere_vertices[self.level] * qtty
-        colors  = sphd.sphere_vertices[self.level] * qtty
-        indexes = np.array(sphd.sphere_triangles[self.level] * qtty, dtype=np.uint32)
-        elems  = int(len(sphd.sphere_vertices[self.level]) / 3)
-        offset = int(len(sphd.sphere_vertices[self.level]))
-        inds_e = int(len(sphd.sphere_triangles[self.level]))
-        
-        self.centers_list = []
-        self.frames = []
-        frame =0
-        
-        for a, atom in enumerate(self.atoms):
-            pos = atom.coords(frame)
-            colors[a*offset:(a+1)*offset]  = [atom.color[0],atom.color[1],atom.color[2]]*elems
-            centers[a*offset:(a+1)*offset] = [pos[0],pos[1],pos[2]]*elems
-            for i in range(elems):
-                coords[a*offset+i*3]   *= atom.radius * self.scale
-                coords[a*offset+i*3+1] *= atom.radius * self.scale
-                coords[a*offset+i*3+2] *= atom.radius * self.scale
-                coords[a*offset+i*3]   += pos[0]
-                coords[a*offset+i*3+1] += pos[1]
-                coords[a*offset+i*3+2] += pos[2]
-            indexes[a*inds_e:(a+1)*inds_e] += a*elems
-        end = time.time()
-        print('Time used creating nucleus, vertices and colors:', end-init)
-        
-        self.coords = np.array(coords, dtype=np.float32)
-        self.frames.append(self.coords)
-        self.centers = np.array(centers, dtype=np.float32)
-        self.centers_list.append(self.centers)
-        self.colors  = np.array(colors, dtype=np.float32)
-        self.indexes = indexes
-        self.triangles = len(self.indexes)
-        init = time.time()
-        if len(self.vm_object.frames) > 1:
-            for frame in range(1, len(self.vm_object.frames) - 1):
-                coords  = sphd.sphere_vertices[self.level]*qtty
-                centers = sphd.sphere_vertices[self.level]*qtty
-                for a, atom in enumerate(self.atoms):
-                    pos = atom.coords(frame)
-                    centers[a*offset:(a+1)*offset] = [pos[0],pos[1],pos[2]]*elems
-                    for i in range(elems):
-                        coords[a*offset+i*3]   *= atom.radius * self.scale
-                        coords[a*offset+i*3+1] *= atom.radius * self.scale
-                        coords[a*offset+i*3+2] *= atom.radius * self.scale
-                        coords[a*offset+i*3]   += pos[0]
-                        coords[a*offset+i*3+1] += pos[1]
-                        coords[a*offset+i*3+2] += pos[2]
-                self.coords  = np.array(coords, dtype=np.float32)
-                self.frames.append(self.coords)
-                self.centers = np.array(centers, dtype=np.float32)
-                self.centers_list.append(self.centers)
-        end = time.time()
-        print('Time used creating nucleus, vertices and colors:', end-init)
-    
-    def _make_gl_vao_and_vbos(self):
-        """ Function doc """
-        self.shader_program     = self.vm_glcore.shader_programs[self.name]
-        self.sel_shader_program = self.vm_glcore.shader_programs[self.name + '_sel']
-        
-        self.vao = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.vao)
-        self.ind_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
-        
-        self.coord_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.coords.nbytes, self.coords, GL.GL_STATIC_DRAW)
-        gl_coord = GL.glGetAttribLocation(self.shader_program , 'vert_coord')
-        GL.glEnableVertexAttribArray(gl_coord)
-        GL.glVertexAttribPointer(gl_coord, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.coords.itemsize, ctypes.c_void_p(0))
-        
-        self.centr_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.centr_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.centers.itemsize*len(self.centers), self.centers, GL.GL_STATIC_DRAW)
-        gl_center = GL.glGetAttribLocation(self.shader_program , 'vert_centr')
-        GL.glEnableVertexAttribArray(gl_center)
-        GL.glVertexAttribPointer(gl_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.centers.itemsize, ctypes.c_void_p(0))
-        
-        self.col_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.colors.itemsize*len(self.colors), self.colors, GL.GL_STATIC_DRAW)
-        gl_colors = GL.glGetAttribLocation(self.shader_program, 'vert_color')
-        GL.glEnableVertexAttribArray(gl_colors)
-        GL.glVertexAttribPointer(gl_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.colors.itemsize, ctypes.c_void_p(0))
-        
-        self.triangles = len(self.indexes)
-        
-        colors_idx = self.vm_object.color_indexes
-        self._make_gl_sel_representation_vao_and_vbos(indexes=self.indexes, coords=self.coords,
-                                                      colors=colors_idx, dot_sizes=None)
-    
-    def draw_representation(self):
-        """ Function doc """
-        self._check_vao_and_vbos()
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        GL.glEnable(GL.GL_CULL_FACE)
-        GL.glCullFace(GL.GL_BACK)
-        GL.glUseProgram(self.shader_program)
-        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
-        self.vm_glcore.load_lights(self.shader_program)
-        self.vm_glcore.load_fog(self.shader_program)
-        
-        if self.vao is not None:
-            GL.glBindVertexArray (self.vao)
-            if self.vm_glcore.modified_view:
-                pass
-            else:
-                frame = self.vm_glcore._get_vismol_object_frame (self.vm_object)
-                self.coords = self.frames[frame]
-                self.centers =self.centers_list[frame]
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
-                GL.glBufferData(GL.GL_ARRAY_BUFFER, self.coords.itemsize*int(len(self.coords)), self.coords, GL.GL_STATIC_DRAW)
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.centr_vbo)
-                GL.glBufferData(GL.GL_ARRAY_BUFFER, self.centers.itemsize*len(self.centers), self.centers, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_TRIANGLES,  self.triangles , GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        GL.glUseProgram(0)
-        GL.glDisable(GL.GL_DEPTH_TEST)
-    
-    def draw_background_sel_representation  (self):
-        """ Function doc """
-        pass
 
 
 class ImpostorRepresentation(Representation):

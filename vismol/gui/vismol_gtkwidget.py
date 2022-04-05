@@ -275,6 +275,12 @@ class VismolGTKWidget(Gtk.GLArea):
     def menu_hide_impostor(self, widget):
         self.vm_session.show_or_hide(rep_type="impostor", show=False)
     
+    def menu_show_spheres(self, widget):
+        self.vm_session.show_or_hide(rep_type="spheres", show=True)
+    
+    def menu_hide_spheres(self, widget):
+        self.vm_session.show_or_hide(rep_type="spheres", show=False)
+    
     def menu_show_sticks(self, widget):
         self.vm_session.show_or_hide(rep_type="sticks", show=True)
     
@@ -313,6 +319,7 @@ class VismolGTKWidget(Gtk.GLArea):
                                      "nonbonded": ["MenuItem", self.menu_show_nonbonded],
                                      "sticks": ["MenuItem", self.menu_show_sticks],
                                      "impostor": ["MenuItem", self.menu_show_impostor],
+                                     "spheres": ["MenuItem", self.menu_show_spheres],
                                     }
                                  ],
                          "Hide": ["submenu",
@@ -321,6 +328,7 @@ class VismolGTKWidget(Gtk.GLArea):
                                      "nonbonded": ["MenuItem", self.menu_hide_nonbonded],
                                      "sticks": ["MenuItem", self.menu_hide_sticks],
                                      "impostor": ["MenuItem", self.menu_hide_impostor],
+                                     "spheres": ["MenuItem", self.menu_hide_spheres],
                                     }
                                  ],
                          "separator":["separator", None],
