@@ -58,7 +58,6 @@ class GLAxis:
                                    [-a, b, b],[ c, a, a],[-a, c,-a],
                                    [-a, c,-a],[ c, a, a],[-a, b,-b],
                                    [-a, b,-b],[ c, a, a],[ a, a,-c],
-
                                    [ a, a,-c],[ a,-b,-b],[ a,-c, a],
                                    [ a,-c, a],[ a,-b, b],[-a, a, c],
                                    [-a, a, c],[-a, b, b],[-a, c,-a],

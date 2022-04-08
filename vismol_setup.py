@@ -12,9 +12,6 @@ extensions = [
     Extension("vismol.utils.matrix_operations",
               sources=["vismol/utils/matrix_operations.pyx"],
               include_dirs=[np.get_include()]),
-    # Extension("vismol.glCore.sphere_representation",
-    #           sources=["vismol/glCore/sphere_representation.pyx"],
-    #           include_dirs=[np.get_include()]),
     Extension("vismol.utils.PDBFiles",
               sources=["vismol/utils/PDBFiles.pyx"],
               include_dirs=[np.get_include()]),
@@ -24,12 +21,9 @@ extensions = [
     Extension("vismol.utils.c_distances",
               sources=["vismol/utils/c_distances.pyx"],
               include_dirs=[np.get_include()]),
-    # Extension("vismol.vModel.VismolObject",
-    #           sources=["vismol/vModel/VismolObject.pyx"],
-    #           include_dirs=[np.get_include()]),
-    # Extension("vismol.vModel.Atom",
-    #           sources=["vismol/vModel/Atom.pyx"],
-    #           include_dirs=[np.get_include()])
+    Extension("vismol.utils.cartoon",
+              sources=["vismol/utils/cartoon.pyx"],
+              include_dirs=[np.get_include()]),
 ]
 
 setup(

@@ -4,94 +4,84 @@
 
 vertex_shader_non_bonded = """
 #version 330
-precision highp float; 
-precision highp int;
-
-uniform mat4 model_mat;
-uniform mat4 view_mat;
-
-const float xyz_offset = 0.2;
 
 in vec3 vert_coord;
 in vec3 vert_color;
 
 out vec3 geom_color;
-out vec4 geom_coord_1;
-out vec4 geom_coord_2;
-out vec4 geom_coord_3;
-out vec4 geom_coord_4;
-out vec4 geom_coord_5;
-out vec4 geom_coord_6;
+out vec4 geom_coord;
 
 void main(){
     geom_color = vert_color;
-    geom_coord_1 = view_mat * model_mat * vec4((vert_coord.x - xyz_offset), vert_coord.y, vert_coord.z, 1.0);
-    geom_coord_2 = view_mat * model_mat * vec4((vert_coord.x + xyz_offset), vert_coord.y, vert_coord.z, 1.0);
-    geom_coord_3 = view_mat * model_mat * vec4(vert_coord.x, (vert_coord.y - xyz_offset), vert_coord.z, 1.0);
-    geom_coord_4 = view_mat * model_mat * vec4(vert_coord.x, (vert_coord.y + xyz_offset), vert_coord.z, 1.0);
-    geom_coord_5 = view_mat * model_mat * vec4(vert_coord.x, vert_coord.y, (vert_coord.z - xyz_offset), 1.0);
-    geom_coord_6 = view_mat * model_mat * vec4(vert_coord.x, vert_coord.y, (vert_coord.z + xyz_offset), 1.0);
+    geom_coord = vec4(vert_coord, 1.0);
 }
 """
 geometry_shader_non_bonded = """
 #version 330
-precision highp float; 
-precision highp int;
 
-const float xyz_offset = 0.5;
+const float xyz_offset = 0.3;
 
 layout (points) in;
 layout (line_strip, max_vertices = 6) out;
 
 uniform mat4 proj_mat;
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+
 
 in vec3 geom_color[];
-in vec4 geom_coord_1[];
-in vec4 geom_coord_2[];
-in vec4 geom_coord_3[];
-in vec4 geom_coord_4[];
-in vec4 geom_coord_5[];
-in vec4 geom_coord_6[];
+in vec4 geom_coord[];
 
 out vec3 frag_color;
 out vec4 frag_coord;
 
 void main(){
-    gl_Position = proj_mat * geom_coord_1[0];
+    vec4 p1 = geom_coord[0];
+    vec4 p2 = geom_coord[0];
+    vec4 p3 = geom_coord[0];
+    vec4 p4 = geom_coord[0];
+    vec4 p5 = geom_coord[0];
+    vec4 p6 = geom_coord[0];
+    p1.x -= xyz_offset;
+    p2.x += xyz_offset;
+    p3.y -= xyz_offset;
+    p4.y += xyz_offset;
+    p5.z -= xyz_offset;
+    p6.z += xyz_offset;
+    
+    frag_coord = view_mat * model_mat * p1;
     frag_color = geom_color[0];
-    frag_coord = geom_coord_1[0];
+    gl_Position = proj_mat * frag_coord;
     EmitVertex();
-    gl_Position = proj_mat * geom_coord_2[0];
+    frag_coord = view_mat * model_mat * p2;
     frag_color = geom_color[0];
-    frag_coord = geom_coord_2[0];
+    gl_Position = proj_mat * frag_coord;
     EmitVertex();
     EndPrimitive();
     
-    gl_Position = proj_mat * geom_coord_3[0];
+    frag_coord = view_mat * model_mat * p3;
     frag_color = geom_color[0];
-    frag_coord = geom_coord_3[0];
+    gl_Position = proj_mat * frag_coord;
     EmitVertex();
-    gl_Position = proj_mat * geom_coord_4[0];
+    frag_coord = view_mat * model_mat * p4;
     frag_color = geom_color[0];
-    frag_coord = geom_coord_4[0];
+    gl_Position = proj_mat * frag_coord;
     EmitVertex();
     EndPrimitive();
     
-    gl_Position = proj_mat * geom_coord_5[0];
+    frag_coord = view_mat * model_mat * p5;
     frag_color = geom_color[0];
-    frag_coord = geom_coord_5[0];
+    gl_Position = proj_mat * frag_coord;
     EmitVertex();
-    gl_Position = proj_mat * geom_coord_6[0];
+    frag_coord = view_mat * model_mat * p6;
     frag_color = geom_color[0];
-    frag_coord = geom_coord_6[0];
+    gl_Position = proj_mat * frag_coord;
     EmitVertex();
     EndPrimitive();
 }
 """
 fragment_shader_non_bonded = """
 #version 330
-precision highp float; 
-precision highp int;
 
 uniform vec4 fog_color;
 uniform float fog_start;
@@ -114,93 +104,79 @@ void main(){
 }
 """
 
-
-
-
-
 sel_vertex_shader_non_bonded = """
 #version 330
-precision highp float; 
-precision highp int;
-
-uniform mat4 model_mat;
-uniform mat4 view_mat;
-
-const float xyz_offset = 0.5;
 
 in vec3 vert_coord;
 in vec3 vert_color;
 
 out vec3 geom_color;
-out vec4 geom_coord_1;
-out vec4 geom_coord_2;
-out vec4 geom_coord_3;
-out vec4 geom_coord_4;
-out vec4 geom_coord_5;
-out vec4 geom_coord_6;
+out vec4 geom_coord;
 
 void main(){
     geom_color = vert_color;
-    geom_coord_1 = view_mat * model_mat * vec4((vert_coord.x - xyz_offset), vert_coord.y, vert_coord.z, 1.0);
-    geom_coord_2 = view_mat * model_mat * vec4((vert_coord.x + xyz_offset), vert_coord.y, vert_coord.z, 1.0);
-    geom_coord_3 = view_mat * model_mat * vec4(vert_coord.x, (vert_coord.y - xyz_offset), vert_coord.z, 1.0);
-    geom_coord_4 = view_mat * model_mat * vec4(vert_coord.x, (vert_coord.y + xyz_offset), vert_coord.z, 1.0);
-    geom_coord_5 = view_mat * model_mat * vec4(vert_coord.x, vert_coord.y, (vert_coord.z - xyz_offset), 1.0);
-    geom_coord_6 = view_mat * model_mat * vec4(vert_coord.x, vert_coord.y, (vert_coord.z + xyz_offset), 1.0);
+    geom_coord = vec4(vert_coord, 1.0);
 }
 """
 sel_geometry_shader_non_bonded = """
 #version 330
-precision highp float; 
-precision highp int;
 
-const float xyz_offset = 0.5;
+const float xyz_offset = 0.3;
 
 layout (points) in;
 layout (line_strip, max_vertices = 6) out;
 
 uniform mat4 proj_mat;
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+
 
 in vec3 geom_color[];
-in vec4 geom_coord_1[];
-in vec4 geom_coord_2[];
-in vec4 geom_coord_3[];
-in vec4 geom_coord_4[];
-in vec4 geom_coord_5[];
-in vec4 geom_coord_6[];
+in vec4 geom_coord[];
 
 out vec3 frag_color;
 
 void main(){
-    gl_Position = proj_mat * geom_coord_1[0];
+    vec4 p1 = geom_coord[0];
+    vec4 p2 = geom_coord[0];
+    vec4 p3 = geom_coord[0];
+    vec4 p4 = geom_coord[0];
+    vec4 p5 = geom_coord[0];
+    vec4 p6 = geom_coord[0];
+    p1.x -= xyz_offset;
+    p2.x += xyz_offset;
+    p3.y -= xyz_offset;
+    p4.y += xyz_offset;
+    p5.z -= xyz_offset;
+    p6.z += xyz_offset;
+    
     frag_color = geom_color[0];
+    gl_Position = proj_mat * view_mat * model_mat * p1;
     EmitVertex();
-    gl_Position = proj_mat * geom_coord_2[0];
     frag_color = geom_color[0];
+    gl_Position = proj_mat * view_mat * model_mat * p2;
     EmitVertex();
     EndPrimitive();
     
-    gl_Position = proj_mat * geom_coord_3[0];
     frag_color = geom_color[0];
+    gl_Position = proj_mat * view_mat * model_mat * p3;
     EmitVertex();
-    gl_Position = proj_mat * geom_coord_4[0];
     frag_color = geom_color[0];
+    gl_Position = proj_mat * view_mat * model_mat * p4;
     EmitVertex();
     EndPrimitive();
     
-    gl_Position = proj_mat * geom_coord_5[0];
     frag_color = geom_color[0];
+    gl_Position = proj_mat * view_mat * model_mat * p5;
     EmitVertex();
-    gl_Position = proj_mat * geom_coord_6[0];
     frag_color = geom_color[0];
+    gl_Position = proj_mat * view_mat * model_mat * p6;
     EmitVertex();
     EndPrimitive();
 }
 """
 sel_fragment_shader_non_bonded = """
 #version 330
-precision highp float; 
-precision highp int;
 
 in vec3 frag_color;
 
@@ -210,6 +186,3 @@ void main(){
     final_color = vec4(frag_color, 1.0);
 }
 """
-
-
-
