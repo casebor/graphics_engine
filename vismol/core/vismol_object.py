@@ -38,6 +38,7 @@ from libgl.representations import PickingDotsRepresentation
 from libgl.representations import ImpostorRepresentation
 from libgl.representations import SticksRepresentation
 from libgl.representations import SpheresRepresentation
+from libgl.representations import DashedLinesRepresentation
 # from libgl.representations import WiresRepresentation
 # from libgl.representations import RibbonsRepresentation
 import utils.c_distances as cdist
@@ -82,6 +83,7 @@ class VismolObject:
         self.residues = {}
         self.chains = {}
         self.atom_unique_id_dic = {}
+        self.selected_atom_ids = set()
         self.bonds = None
         self.index_bonds = None # Pair of atoms, something like: [1, 3, 1, 17, 3, 4, 4, 20]
         self.non_bonded_atoms = None # Array of indexes
@@ -108,6 +110,8 @@ class VismolObject:
         self.core_representations["picking_dots"] = PickingDotsRepresentation(self,
                                                     self.vm_session.vm_glcore, active=True,
                                                     indexes=list(self.atoms.keys()))
+        self.core_representations["dash"] = DashedLinesRepresentation(self, self.vm_session.vm_glcore,
+                                                active=True, indexes=self.index_bonds)
     
     def create_representation(self, rep_type="lines", indexes=None):
         """ Function doc """
@@ -129,10 +133,10 @@ class VismolObject:
         elif rep_type == "spheres":
             self.representations["spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=list(self.atoms.keys()))
+        
         # elif rep_type == "ribbons":
         #     self.representations["ribbons"] = RibbonsRepresentation(self, self.vm_session.vm_glcore,
         #                                                             active=True, indexes=indexes)
-        #     self.representations["spheres"]._create_sphere_data()
         # elif rep_type == "dotted_lines":
         #     self.representations["dotted_lines"] = LinesRepresentation(self, self.vm_session.vm_glcore,
         #                                                                active=True, indexes=indexes)

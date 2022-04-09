@@ -43,6 +43,7 @@ import libgl.shaders.spheres as shaders_spheres
 import libgl.shaders.impostor as shaders_impostor
 import libgl.shaders.nonbonded as shaders_nonbonded
 import libgl.shaders.vm_freetype as shaders_vm_freetype
+import libgl.shaders.dashed_lines as shaders_dashed_lines
 import utils.matrix_operations as mop
 
 logger = getLogger(__name__)
@@ -100,8 +101,8 @@ class VismolGLCore:
         self.button = None
         self.dist_cam_zrp = np.linalg.norm(self.glcamera.get_position())
         self.shader_flag = True
-        self.modified_data = False
-        self.modified_view = False
+        self.modified_data = False # Used somewhere?
+        self.updated_coords = False
         self.dragging = False
         self.editing_mols = False
         self.show_axis = True
@@ -491,15 +492,15 @@ class VismolGLCore:
                         self.bckgrnd_color[2], self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         
-        if self.modified_view:
+        if self.updated_coords:
             for vm_object in self.vm_session.vm_objects_dic.values():
                 if vm_object.core_representations["picking_dots"] is None:
                     vm_object.build_core_representations()
-                vm_object.core_representations["picking_dots"].was_rep_modified = True
+                vm_object.core_representations["picking_dots"].was_rep_coord_modified = True
                 for rep in vm_object.representations.values():
                     if rep is not None:
-                        rep.was_rep_modified = True
-                        rep.was_sel_modified = True
+                        rep.was_rep_coord_modified = True
+                        rep.was_sel_coord_modified = True
         
         for vm_object in self.vm_session.vm_objects_dic.values():
             if vm_object.active:
@@ -523,8 +524,10 @@ class VismolGLCore:
                 # Here are represented the blue dots referring to the atom's selections
                 if vm_object.core_representations["picking_dots"] is None:
                     vm_object.build_core_representations()
-                _indexes = self.vm_session.selections[self.vm_session.current_selection].selected_atom_ids
-                vm_object.core_representations["picking_dots"].define_new_indexes_to_vbo(list(_indexes))
+                # _indexes = self.vm_session.selections[self.vm_session.current_selection].selected_atom_ids
+                # vm_object.core_representations["picking_dots"].define_new_indexes_to_vbo(list(_indexes))
+                vm_object.core_representations["picking_dots"].was_rep_ind_modified = True
+                vm_object.core_representations["picking_dots"].define_new_indexes_to_vbo(list(vm_object.selected_atom_ids))
                 vm_object.core_representations["picking_dots"].draw_representation()
         
         if self.show_dynamic_line and self.shift:
@@ -913,19 +916,18 @@ class VismolGLCore:
         self.shader_programs["spheres_sel"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
                                                         shaders_spheres.sel_fragment_shader_spheres)
     
-    
-    
-    
-    
-    def _compile_shader_dotted_lines(self):
+    def _compile_shader_dash(self):
         """ Function doc """
-        line_type = 3
-        self.shader_programs["dotted_lines"] = self.load_shaders(shaders_lines.shader_type[line_type]["vertex_shader"],
-                                                         shaders_lines.shader_type[line_type]["fragment_shader"],
-                                                         shaders_lines.shader_type[line_type]["geometry_shader"])
-        self.shader_programs["dotted_lines_sel"] = self.load_shaders( shaders_lines.shader_type[line_type]["sel_vertex_shader"],
-                                                              shaders_lines.shader_type[line_type]["sel_fragment_shader"],
-                                                              shaders_lines.shader_type[line_type]["sel_geometry_shader"])
+        self.shader_programs["dash"] = self.load_shaders(shaders_dashed_lines.vertex_shader_dashed_lines,
+                                                         shaders_dashed_lines.fragment_shader_dashed_lines,
+                                                         shaders_dashed_lines.geometry_shader_dashed_lines)
+        self.shader_programs["dash_sel"] = self.load_shaders( shaders_dashed_lines.sel_vertex_shader_dashed_lines,
+                                                              shaders_dashed_lines.sel_fragment_shader_dashed_lines,
+                                                              shaders_dashed_lines.sel_geometry_shader_dashed_lines)
+    
+    
+    
+    
     
     def _compile_shader_ribbon(self):
         """ Function doc """

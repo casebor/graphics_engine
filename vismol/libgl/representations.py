@@ -45,6 +45,12 @@ class Representation:
         
         self.was_rep_modified = False
         self.was_sel_modified = False
+        self.was_col_modified = False
+        self.was_rep_coord_modified = False
+        self.was_sel_coord_modified = False
+        self.was_rep_ind_modified = False
+        self.was_sel_ind_modified = False
+        self.was_rep_col_modified = False
         # representation
         self.vao = None
         self.ind_vbo = None
@@ -175,15 +181,21 @@ class Representation:
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_coord_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
     
-    def _load_ind_vbo(self, coord_vbo=False, sel_coord_vbo=False):
+    def _load_ind_vbo(self, ind_vbo=False, sel_ind_vbo=False):
         """ Function doc """
-        if coord_vbo:
+        if ind_vbo:
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
             GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
         
-        if sel_coord_vbo:
+        if sel_ind_vbo:
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.sel_ind_vbo)
             GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
+    
+    def _load_color_vbo(self, colors):
+        """ This function assigns the colors to
+            be drawn by the function  draw_representation"""
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
     
     def _enable_anti_alias_to_lines(self):
         """ Function doc """
@@ -238,10 +250,12 @@ class PickingDotsRepresentation(Representation):
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.vao)
         
-        if self.was_rep_modified:
+        if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
-            self.was_rep_modified = False
-        self._load_ind_vbo(coord_vbo=True)
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
         
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
@@ -276,10 +290,15 @@ class DotsRepresentation(Representation):
         self.vm_glcore.load_lights(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.was_rep_modified:
+        if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
-            self._load_ind_vbo(coord_vbo=True)
-            self.was_rep_modified = False
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
+        if self.was_col_modified:
+            self._load_color_vbo(None)
+            self.was_col_modified = False
         
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
@@ -300,10 +319,12 @@ class DotsRepresentation(Representation):
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         
-        if self.was_sel_modified:
+        if self.was_sel_coord_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
-            self._load_ind_vbo(sel_coord_vbo=True)
-            self.was_sel_modified = False
+            self.was_sel_coord_modified = False
+        if self.was_sel_ind_modified:
+            self._load_ind_vbo(sel_ind_vbo=True)
+            self.was_sel_ind_modified = False
         
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
@@ -332,12 +353,17 @@ class LinesRepresentation(Representation):
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.was_rep_modified:
+        if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
-            self._load_ind_vbo(coord_vbo=True)
-            self.was_rep_modified = False
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
+        if self.was_col_modified:
+            self._load_color_vbo(None)
+            self.was_col_modified = False
         
-        GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         self._disable_anti_alias_to_lines()
@@ -355,10 +381,12 @@ class LinesRepresentation(Representation):
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         
-        if self.was_sel_modified:
+        if self.was_sel_coord_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
-            self._load_ind_vbo(sel_coord_vbo=True)
-            self.was_sel_modified = False
+            self.was_sel_coord_modified = False
+        if self.was_sel_ind_modified:
+            self._load_ind_vbo(sel_ind_vbo=True)
+            self.was_sel_ind_modified = False
         
         GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
         
@@ -386,10 +414,15 @@ class NonBondedRepresentation(Representation):
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.was_rep_modified:
+        if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
-            self._load_ind_vbo(coord_vbo=True)
-            self.was_rep_modified = False
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
+        if self.was_col_modified:
+            self._load_color_vbo(None)
+            self.was_col_modified = False
         
         GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
@@ -403,110 +436,23 @@ class NonBondedRepresentation(Representation):
         self._check_vao_and_vbos()
         self._disable_anti_alias_to_lines()
         GL.glUseProgram(self.sel_shader_program)
-        GL.glLineWidth(20)
+        GL.glLineWidth(line_width_factor)
         GL.glEnable(GL.GL_DEPTH_TEST)
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         
-        if self.was_sel_modified:
+        if self.was_sel_coord_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
-            self._load_ind_vbo(sel_coord_vbo=True)
-            self.was_sel_modified = False
+            self.was_sel_coord_modified = False
+        if self.was_sel_ind_modified:
+            self._load_ind_vbo(sel_ind_vbo=True)
+            self.was_sel_ind_modified = False
         
-        GL.glDrawElements(GL.GL_POINTS, int(len(self.vm_object.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
+        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glLineWidth(1)
-        GL.glUseProgram(0)
-
-
-class ImpostorRepresentation(Representation):
-    """ Class doc """
-    
-    def __init__ (self, vismol_object, vismol_glcore, indexes, active=True):
-        """ Class initialiser """
-        super(ImpostorRepresentation, self).__init__(vismol_object, vismol_glcore, "impostor", active, indexes)
-    
-    def _make_gl_representation_vao_and_vbos(self):
-        """ Function doc """
-        logger.debug("building '{}' representation VAO and VBOs".format(self.name))
-        self.vao = self._make_gl_vao()
-        self.ind_vbo = self._make_gl_index_buffer(self.indexes)
-        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.shader_program)
-        self.col_vbo = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
-        self.size_vbo, self.ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
-    
-    def _make_gl_sel_representation_vao_and_vbos(self):
-        """ Function doc """
-        logger.debug("building '{}' background selection VAO and VBOs".format(self.name))
-        self.sel_vao = self._make_gl_vao()
-        self.sel_ind_vbo = self._make_gl_index_buffer(self.indexes)
-        self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.sel_shader_program)
-        self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
-        self.sel_size_vbo, self.sel_ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
-    
-    # def _modified_window_size(self):
-    #     ratio = self.vm_glcore.width / self.vm_glcore.height
-    #     if self.ratio != ratio:
-    #         return True
-    #     return False
-    
-    def _load_camera_pos(self, program):
-        xyz_coords = self.vm_glcore.glcamera.get_modelview_position(self.vm_object.model_mat)
-        u_campos = GL.glGetUniformLocation(program, "u_campos")
-        GL.glUniform3fv(u_campos, 1, xyz_coords)
-    
-    def draw_representation(self):
-        """ Function doc """
-        self._check_vao_and_vbos()
-        # if self._modified_window_size():
-        #     self._load_impostor_ratio_vbo(coord_vbo=True)
-        self._enable_anti_alias_to_lines()
-        GL.glUseProgram(self.shader_program)
-        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
-        self.vm_glcore.load_fog(self.shader_program)
-        self.vm_glcore.load_lights(self.shader_program)
-        self._load_camera_pos(self.shader_program)
-        GL.glBindVertexArray(self.vao)
-        # pm = self.vm_glcore.glcamera.projection_matrix
-        # print(pm[0,0] * pm[1,1], "fov")
-        
-        if self.was_rep_modified:
-            self._load_coord_vbo(coord_vbo=True)
-            self._load_ind_vbo(coord_vbo=True)
-            self.was_rep_modified = False
-        
-        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        self._disable_anti_alias_to_lines()
-        GL.glPointSize(1)
-        GL.glUseProgram(0)
-    
-    def draw_background_sel_representation(self):
-        """ Function doc """
-        self._check_vao_and_vbos()
-        # if self._modified_window_size():
-        #     self._load_impostor_ratio_vbo(sel_coord_vbo=True)
-        GL.glUseProgram(self.sel_shader_program)
-        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
-        # self.vm_glcore.load_lights(self.shader_program)
-        self._load_camera_pos(self.sel_shader_program)
-        GL.glBindVertexArray(self.sel_vao)
-        
-        if self.was_sel_modified:
-            self._load_coord_vbo(sel_coord_vbo=True)
-            self._load_ind_vbo(sel_coord_vbo=True)
-            self.was_sel_modified = False
-        
-        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        GL.glDisable(GL.GL_DEPTH_TEST)
-        GL.glPointSize(1)
         GL.glUseProgram(0)
 
 
@@ -535,10 +481,15 @@ class SticksRepresentation(Representation):
         self._load_camera_pos(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.was_rep_modified:
+        if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
-            self._load_ind_vbo(coord_vbo=True)
-            self.was_rep_modified = False
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
+        if self.was_col_modified:
+            self._load_color_vbo(None)
+            self.was_col_modified = False
         
         GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         
@@ -557,10 +508,12 @@ class SticksRepresentation(Representation):
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         
-        if self.was_sel_modified:
+        if self.was_sel_coord_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
-            self._load_ind_vbo(sel_coord_vbo=True)
-            self.was_sel_modified = False
+            self.was_sel_coord_modified = False
+        if self.was_sel_ind_modified:
+            self._load_ind_vbo(sel_ind_vbo=True)
+            self.was_sel_ind_modified = False
         
         GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
         
@@ -639,7 +592,7 @@ class SpheresRepresentation(Representation):
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        if self.was_rep_modified:
+        if self.was_rep_coord_modified or self.was_rep_ind_modified:
             coords, colors, rads = self._coords_colors_rads()
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.insta_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.nbytes, coords, GL.GL_STATIC_DRAW)
@@ -648,7 +601,8 @@ class SpheresRepresentation(Representation):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.rad_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, rads.nbytes, rads, GL.GL_STATIC_DRAW)
             self.elements = np.uint32(coords.shape[0])
-            self.was_rep_modified = False
+            self.was_rep_coord_modified = False
+            self.was_rep_ind_modified = False
         
         GL.glDrawElementsInstanced(GL.GL_TRIANGLES, self.instances_elemns, GL.GL_UNSIGNED_INT, None, self.elements)
         
@@ -665,7 +619,7 @@ class SpheresRepresentation(Representation):
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
         
-        if self.was_sel_modified:
+        if self.was_sel_coord_modified or self.was_sel_ind_modified:
             coords, colors, rads = self._sel_coords_colors_rads()
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_insta_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.nbytes, coords, GL.GL_STATIC_DRAW)
@@ -674,12 +628,170 @@ class SpheresRepresentation(Representation):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_rad_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, rads.nbytes, rads, GL.GL_STATIC_DRAW)
             self.elements = np.uint32(coords.shape[0])
-            self.was_sel_modified = False
+            self.was_sel_coord_modified = False
+            self.was_sel_ind_modified = False
         
         GL.glDrawElementsInstanced(GL.GL_TRIANGLES, self.instances_elemns, GL.GL_UNSIGNED_INT, None, self.elements)
         
         GL.glBindVertexArray(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(0)
+
+
+class ImpostorRepresentation(Representation):
+    """ Class doc """
+    
+    def __init__ (self, vismol_object, vismol_glcore, indexes, active=True):
+        """ Class initialiser """
+        super(ImpostorRepresentation, self).__init__(vismol_object, vismol_glcore, "impostor", active, indexes)
+    
+    def _make_gl_representation_vao_and_vbos(self):
+        """ Function doc """
+        logger.debug("building '{}' representation VAO and VBOs".format(self.name))
+        self.vao = self._make_gl_vao()
+        self.ind_vbo = self._make_gl_index_buffer(self.indexes)
+        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.shader_program)
+        self.col_vbo = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
+        self.size_vbo, self.ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
+    
+    def _make_gl_sel_representation_vao_and_vbos(self):
+        """ Function doc """
+        logger.debug("building '{}' background selection VAO and VBOs".format(self.name))
+        self.sel_vao = self._make_gl_vao()
+        self.sel_ind_vbo = self._make_gl_index_buffer(self.indexes)
+        self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.sel_shader_program)
+        self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
+        self.sel_size_vbo, self.sel_ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
+    
+    # def _modified_window_size(self):
+    #     ratio = self.vm_glcore.width / self.vm_glcore.height
+    #     if self.ratio != ratio:
+    #         return True
+    #     return False
+    
+    def _load_camera_pos(self, program):
+        xyz_coords = self.vm_glcore.glcamera.get_modelview_position(self.vm_object.model_mat)
+        u_campos = GL.glGetUniformLocation(program, "u_campos")
+        GL.glUniform3fv(u_campos, 1, xyz_coords)
+    
+    def draw_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        # if self._modified_window_size():
+        #     self._load_impostor_ratio_vbo(coord_vbo=True)
+        self._enable_anti_alias_to_lines()
+        GL.glUseProgram(self.shader_program)
+        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        self.vm_glcore.load_fog(self.shader_program)
+        self.vm_glcore.load_lights(self.shader_program)
+        self._load_camera_pos(self.shader_program)
+        GL.glBindVertexArray(self.vao)
+        # pm = self.vm_glcore.glcamera.projection_matrix
+        # print(pm[0,0] * pm[1,1], "fov")
+        
+        if self.was_rep_coord_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
+        if self.was_col_modified:
+            self._load_color_vbo(None)
+            self.was_col_modified = False
+        
+        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        self._disable_anti_alias_to_lines()
+        GL.glPointSize(1)
+        GL.glUseProgram(0)
+    
+    def draw_background_sel_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        # if self._modified_window_size():
+        #     self._load_impostor_ratio_vbo(sel_coord_vbo=True)
+        GL.glUseProgram(self.sel_shader_program)
+        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
+        # self.vm_glcore.load_lights(self.shader_program)
+        self._load_camera_pos(self.sel_shader_program)
+        GL.glBindVertexArray(self.sel_vao)
+        
+        if self.was_sel_coord_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self.was_sel_coord_modified = False
+        if self.was_sel_ind_modified:
+            self._load_ind_vbo(sel_ind_vbo=True)
+            self.was_sel_ind_modified = False
+        
+        GL.glDrawElements(GL.GL_POINTS, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glPointSize(1)
+        GL.glUseProgram(0)
+
+
+class DashedLinesRepresentation(Representation):
+    """ Class doc """
+    
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
+        """ Class initialiser """
+        super(DashedLinesRepresentation, self).__init__(vismol_object, vismol_glcore, "dash", active, indexes)
+    
+    def draw_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        self._enable_anti_alias_to_lines()
+        GL.glUseProgram(self.shader_program)
+        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"]
+        GL.glLineWidth(line_width)
+        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        self.vm_glcore.load_fog(self.shader_program)
+        GL.glBindVertexArray(self.vao)
+        
+        if self.was_rep_coord_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
+        if self.was_col_modified:
+            self._load_color_vbo(None)
+            self.was_col_modified = False
+        
+        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        self._disable_anti_alias_to_lines()
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
+
+    def draw_background_sel_representation(self, line_width_factor=5):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        self._disable_anti_alias_to_lines()
+        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"]
+        GL.glUseProgram(self.sel_shader_program)
+        GL.glLineWidth(line_width)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
+        GL.glBindVertexArray(self.sel_vao)
+        
+        if self.was_sel_coord_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self.was_sel_coord_modified = False
+        if self.was_sel_ind_modified:
+            self._load_ind_vbo(sel_ind_vbo=True)
+            self.was_sel_ind_modified = False
+        
+        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glLineWidth(1)
         GL.glUseProgram(0)
 
 

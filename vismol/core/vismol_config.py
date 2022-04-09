@@ -56,12 +56,12 @@ class VismolConfig:
                               "scroll_step": 0.9,
                               "field_of_view": 10,
                               "light_position": [-2.5, 2.5, 3.0],
-                              "light_color": [ 1.0, 1.0, 1.0,1.0],
+                              "light_color": [ 1.0, 1.0, 1.0, 1.0],
                               "light_ambient_coef": 0.4,
                               "light_shininess": 5.5,
                               "light_intensity": [0.6, 0.6, 0.6],
                               "light_specular_color": [1.0, 1.0, 1.0],
-                              "center_on_coord_sleep_time": 0.001,
+                              "center_on_coord_sleep_time": 0.01,
                               "gridsize": 0.8,
                               "maxbond": 2.4,
                               "bond_tolerance": 1.4,
@@ -77,13 +77,14 @@ class VismolConfig:
     
     def save_easyhybrid_config(self):
         """ Function doc """
-        config = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
-        with open(config, "w") as config_file:
+        config_path = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
+        with open(config_path, "w") as config_file:
             json.dump(self.gl_parameters, config_file, indent=2)
     
-    def load_easyhybrid_config(self):
+    def load_easyhybrid_config(self, config_path):
         """ Function doc """
-        config = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
-        with open(config, "r") as config_file:
+        if not os.path.isfile(config_path):
+          config_path = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
+        with open(config_path, "r") as config_file:
             self.gl_parameters = json.load(config_file)
     

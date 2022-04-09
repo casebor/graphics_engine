@@ -87,6 +87,7 @@ class Atom:
         self.ball_and_stick = False
         self.sticks         = False
         self.spheres        = False
+        self.dash           = False
         self.surface        = False
         self.bonds          = []
         self.isfree         = True

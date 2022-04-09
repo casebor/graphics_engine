@@ -86,110 +86,6 @@ void main(){
 """
 
 
-################################## DOTTED LINES ###################################
-
-vertex_shader_dotted_lines   = """
-#version 330
-precision highp float; 
-precision highp int;
-
-uniform mat4 model_mat;
-uniform mat4 view_mat;
-
-in vec3 vert_coord;
-in vec3 vert_color;
-
-out vec3 geom_color;
-out vec4 geom_coord;
-//const float vert_width = 0.10;
-//const float antialias_length = 0.058;
-
-void main(){
-    //geom_width = vert_width;
-    geom_color = vert_color;
-    geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
-}
-"""
-geometry_shader_dotted_lines = """
-#version 330
-precision highp float; 
-precision highp int;
-
-layout (lines) in;
-layout (line_strip, max_vertices = 4) out;
-
-uniform mat4 proj_mat;
-
-in vec3 geom_color[];
-in vec4 geom_coord[];
-//in float geom_width[];
-
-out vec3 frag_color;
-out vec4 frag_coord;
-out float line_dot_value; 
-
-void main(){
-    vec4 mid_coord = vec4((geom_coord[0].xyz + geom_coord[1].xyz)/2, 1.0);
-    gl_Position = proj_mat * geom_coord[0];
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    line_dot_value = 1;
-    EmitVertex();
-    gl_Position = proj_mat * mid_coord;
-    frag_color = geom_color[0];
-    frag_coord = mid_coord;
-    line_dot_value = 0;
-    EmitVertex();
-    EndPrimitive();
-    gl_Position = proj_mat * mid_coord;
-    frag_color = geom_color[1];
-    frag_coord = mid_coord;
-    line_dot_value = 0;
-    EmitVertex();
-    gl_Position = proj_mat * geom_coord[1];
-    frag_coord = geom_coord[1];
-    frag_color = geom_color[1];
-    line_dot_value = 1;
-    EmitVertex();
-    EndPrimitive();
-}
-"""
-fragment_shader_dotted_lines = """
-#version 330
-precision highp float; 
-precision highp int;
-
-uniform vec4 fog_color;
-uniform float fog_start;
-uniform float fog_end;
-
-in vec3 frag_color;
-in vec4 frag_coord;
-in float line_dot_value; 
-
-out vec4 final_color;
-
-void main(){
-
-    
-
-    float dist = abs(frag_coord.z);
-    if(dist>=fog_start){
-        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
-        final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
-    }
-    else{
-       final_color = vec4(frag_color, 1.0);
-    }
-
-
-
-    if(  mod( round(line_dot_value * 40) , 2 )  > 0 )
-         discard;
-    
-}
-"""
-
 ################################## SELECTION ###################################
 
 sel_vertex_shader_lines = """
@@ -1069,38 +965,29 @@ void main(){
 
 
 shader_type ={
-			0: { "vertex_shader"      : vertex_shader_lines  ,
-			     "geometry_shader"    : geometry_shader_lines,
-			     "fragment_shader"    : fragment_shader_lines,
-				 "sel_vertex_shader"  : sel_vertex_shader_lines  ,
+            0: { "vertex_shader"      : vertex_shader_lines  ,
+                 "geometry_shader"    : geometry_shader_lines,
+                 "fragment_shader"    : fragment_shader_lines,
+                 "sel_vertex_shader"  : sel_vertex_shader_lines  ,
                  "sel_geometry_shader": sel_geometry_shader_lines,
                  "sel_fragment_shader": sel_fragment_shader_lines
 
-			   },
-			
-			
-			1: {"vertex_shader"      : vertex_shader_nlines  ,
-			    "geometry_shader"    : geometry_shader_nlines,
-			    "fragment_shader"    : fragment_shader_nlines,
-			    "sel_vertex_shader"  : sel_vertex_shader_lines  ,
-			    "sel_geometry_shader": sel_geometry_shader_lines,
-			    "sel_fragment_shader": sel_fragment_shader_lines
-				},
-			
+               },
+            
+            
+            1: {"vertex_shader"      : vertex_shader_nlines  ,
+                "geometry_shader"    : geometry_shader_nlines,
+                "fragment_shader"    : fragment_shader_nlines,
+                "sel_vertex_shader"  : sel_vertex_shader_lines  ,
+                "sel_geometry_shader": sel_geometry_shader_lines,
+                "sel_fragment_shader": sel_fragment_shader_lines
+                },
+            
             2: {"vertex_shader"      : vertex_shader_sticks  ,
-			    "geometry_shader"    : geometry_shader_sticks,
-			    "fragment_shader"    : fragment_shader_sticks,
-			    "sel_vertex_shader"  : sel_vertex_shader_lines  ,
-			    "sel_geometry_shader": sel_geometry_shader_lines,
-			    "sel_fragment_shader": sel_fragment_shader_lines
-				},
-
-			3: { "vertex_shader"      : vertex_shader_dotted_lines  ,
-			     "geometry_shader"    : geometry_shader_dotted_lines,
-			     "fragment_shader"    : fragment_shader_dotted_lines,
-				 "sel_vertex_shader"  : sel_vertex_shader_lines  ,
-                 "sel_geometry_shader": sel_geometry_shader_lines,
-                 "sel_fragment_shader": sel_fragment_shader_lines
-
-			   },
+                "geometry_shader"    : geometry_shader_sticks,
+                "fragment_shader"    : fragment_shader_sticks,
+                "sel_vertex_shader"  : sel_vertex_shader_lines  ,
+                "sel_geometry_shader": sel_geometry_shader_lines,
+                "sel_fragment_shader": sel_fragment_shader_lines
+                },
 }

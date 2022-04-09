@@ -167,8 +167,8 @@ class VismolSession():
             if len(show_hide_indexes) > 0:
                 vm_object.representations[rep_type].define_new_indexes_to_vbo(show_hide_indexes)
                 vm_object.representations[rep_type].active = True
-                vm_object.representations[rep_type].was_rep_modified = True
-                vm_object.representations[rep_type].was_sel_modified = True
+                vm_object.representations[rep_type].was_rep_ind_modified = True
+                vm_object.representations[rep_type].was_sel_ind_modified = True
             else:
                 vm_object.representations[rep_type].active = False
         
@@ -180,20 +180,20 @@ class VismolSession():
         for i, vm_object in enumerate(self.vm_objects_dic.values()):
             if frame < vm_object.frames.shape[0]:
                 self.frame += 1
-                self.vm_glcore.modified_view = True
+                self.vm_glcore.updated_coords = True
                 break
             else:
                 pass
         else:
-            self.vm_glcore.modified_view = False
+            self.vm_glcore.updated_coords = False
     
     def reverse_frame(self):
         """ Function doc """
         if self.frame - 1 >= 0:
-            self.frame = self.frame - 1
-            self.vm_glcore.modified_view = True
+            self.frame -= 1
+            self.vm_glcore.updated_coords = True
         else:
-            self.vm_glcore.modified_view = False
+            self.vm_glcore.updated_coords = False
     
     def set_frame(self, frame=0):
         """ Function doc """
