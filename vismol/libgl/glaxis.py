@@ -26,6 +26,9 @@ import ctypes
 import numpy as np
 import utils.matrix_operations as mop
 from OpenGL import GL
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class GLAxis:
@@ -228,10 +231,10 @@ void main()
         GL.glAttachShader(self.gizmo_axis_program, f_shader)
         GL.glLinkProgram(self.gizmo_axis_program)
         if GL.glGetShaderiv(v_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
-            print("Error compiling the shader: ", "GL_VERTEX_SHADER")
+            logger.critical("Error compiling the shader: GL_VERTEX_SHADER")
             raise RuntimeError(GL.glGetShaderInfoLog(v_shader))
         if GL.glGetShaderiv(f_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
-            print("Error compiling the shader: ", "GL_FRAGMENT_SHADER")
+            logger.critical("Error compiling the shader: GL_FRAGMENT_SHADER")
             raise RuntimeError(GL.glGetShaderInfoLog(f_shader))
         return True
     
@@ -250,10 +253,10 @@ void main()
         GL.glAttachShader(self.gl_lines_program, f_shader)
         GL.glLinkProgram(self.gl_lines_program)
         if GL.glGetShaderiv(v_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
-            print("Error compiling the shader: ", "GL_VERTEX_SHADER")
+            logger.critical("Error compiling the shader: GL_VERTEX_SHADER")
             raise RuntimeError(GL.glGetShaderInfoLog(v_shader))
         if GL.glGetShaderiv(f_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
-            print("Error compiling the shader: ", "GL_FRAGMENT_SHADER")
+            logger.critical("Error compiling the shader: GL_FRAGMENT_SHADER")
             raise RuntimeError(GL.glGetShaderInfoLog(f_shader))
         return True
     

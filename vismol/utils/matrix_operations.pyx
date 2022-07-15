@@ -221,7 +221,7 @@ cpdef my_glFrustumf(np.float32_t left, np.float32_t rigth, np.float32_t bottom, 
     frust[1,1] = 2.0*near/(top-bottom)
     frust[2,0] = (rigth+left)/(rigth-left)
     frust[2,1] = (top+bottom)/(top-bottom)
-    frust[2,2] = (far+near)/(near-far)
+    frust[2,2] = -(far+near)/(far-near)
     frust[2,3] = -1.0
     frust[3,2] = -2.0*near*far/(far-near)
     return frust

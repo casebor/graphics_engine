@@ -25,6 +25,10 @@
 import math
 import numpy as np
 import utils.matrix_operations as mop
+from logging import getLogger
+
+logger = getLogger(__name__)
+
 
 class GLCamera():
     """ The GLCamera object creates a "camera" to be used in OpenGL.
@@ -85,11 +89,8 @@ class GLCamera():
             self.z_near = dist - 15.0
             self.z_far = dist + 15.0
         
-        #testing
-        #self.z_near = 0.1
-        #self.z_far = 100
-        self.fog_end = self.z_far 
-        self.fog_start = self.fog_end - self.min_zfar 
+        self.fog_end = self.z_far
+        self.fog_start = self.fog_end - self.min_zfar
         self.view_matrix = self._get_view_matrix(pos)
         self.projection_matrix = self._get_projection_matrix()
     
@@ -241,23 +242,22 @@ class GLCamera():
         """ Prints camera parameters in the terminal. Method created only for
             debugging purposes. It will come out in the final distribution?
         """
-        print("######## GLCAMERA PARAMETERS ########")
-        print("<= z_near    =>",self.z_near)
-        print("<= z_far     =>",self.z_far)
-        print("<= fog_start =>",self.fog_start)
-        print("<= fog_end   =>",self.fog_end)
-        print("<= position  =>",self.get_position())
-        print("######## GLCAMERA PARAMETERS ########")
+        logger.debug("######## GLCAMERA PARAMETERS ########")
+        logger.debug("<= z_near    => {}".format(self.z_near))
+        logger.debug("<= z_far     => {}".format(self.z_far))
+        logger.debug("<= fog_start => {}".format(self.fog_start))
+        logger.debug("<= fog_end   => {}".format(self.fog_end))
+        logger.debug("<= position  => {}".format(self.get_position()))
+        logger.debug("######## GLCAMERA PARAMETERS ########")
         return True
     
     def print_matrices(self):
         """ Prints camera matrices in the terminal. Method created only for
             debugging purposes. It will come out in the final distribution?
         """
-        print("######## GLCAMERA MATRICES ########")
-        print("<= view_matrix =>", self.view_matrix)
-        print("<= projection_matrix =>", self.projection_matrix)
-        print("######## GLCAMERA MATRICES ########")
+        logger.debug("######## GLCAMERA MATRICES ########")
+        logger.debug("<= view_matrix => {}".format(self.view_matrix))
+        logger.debug("<= projection_matrix => {}".format(self.projection_matrix))
+        logger.debug("######## GLCAMERA MATRICES ########")
         return True
-    
     

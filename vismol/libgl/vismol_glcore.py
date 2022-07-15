@@ -29,7 +29,6 @@ from logging import getLogger
 from libgl.glaxis import GLAxis
 from libgl.glcamera import GLCamera
 from libgl.vismol_font import VismolFont
-from libgl.dynamic_line import DynamicLine
 from libgl.selection_box import SelectionBox
 import libgl.shapes as shapes
 import libgl.shaders.pick as shaders_pick
@@ -83,7 +82,6 @@ class VismolGLCore:
         self.vm_font = VismolFont(color=[1, 1, 1, 0.6])
         self.axis = GLAxis()
         self.selection_box = SelectionBox()
-        self.dynamic_line = DynamicLine()
         self.parent_widget.set_has_depth_buffer(True)
         self.parent_widget.set_has_alpha(True)
         self.scroll = self.vm_config.gl_parameters["scroll_step"]
@@ -112,14 +110,11 @@ class VismolGLCore:
         self.selection_box_picking = False
         self.picking = False
         self.picking_x, self.picking_y = None, None
-        self.show_dynamic_line = False
-        self.show_dynamic_line_x, self.show_dynamic_line_y = None, None
         self.show_selection_box = False
         self.show_selection_box_x, self.show_selection_box_y = None, None
         self.mouse_x, self.mouse_y = np.float32(0.0), np.float32(0.0)
         self.mouse_rotate, self.mouse_zoom, self.mouse_pan = False, False, False
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = None, None, None
-        self.chars, self.xyz_pos, self.uv_coords = None, None, None
     
     def resize_window(self, width, height):
         """ Resizing function, takes the widht and height of the widget
@@ -131,8 +126,8 @@ class VismolGLCore:
         """
         self.width = np.float32(width)
         self.height = np.float32(height)
-        self.left = -self.width / self.height
-        self.right = -self.left
+        self.right = self.width / self.height
+        self.left = -self.right
         self.center_x = self.width / 2.0
         self.center_y = self.height / 2.0
         self.glcamera.viewport_aspect_ratio = self.width / self.height
@@ -156,19 +151,12 @@ class VismolGLCore:
         self.dragging = False
         if left:
             if self.shift:
-                if self.show_dynamic_line:
-                    self.dynamic_line.start = self.get_viewport_pos(mouse_x, mouse_y)
-                    self.dynamic_line.end = self.get_viewport_pos(mouse_x, mouse_y)
-                    self.dynamic_line.update_points()
-                    self.dynamic_line_x = mouse_x
-                    self.dynamic_line_y = self.height - mouse_y
-                else:
-                    self.show_selection_box = True
-                    self.selection_box.start = self.get_viewport_pos(mouse_x, mouse_y)
-                    self.selection_box.end = self.get_viewport_pos(mouse_x, mouse_y)
-                    self.selection_box.update_points()
-                    self.selection_box_x = mouse_x
-                    self.selection_box_y = self.height - mouse_y
+                self.show_selection_box = True
+                self.selection_box.start = self.get_viewport_pos(mouse_x, mouse_y)
+                self.selection_box.end = self.get_viewport_pos(mouse_x, mouse_y)
+                self.selection_box.update_points()
+                self.selection_box_x = mouse_x
+                self.selection_box_y = self.height - mouse_y
         if middle:
             self.picking_x = np.float32(mouse_x)
             self.picking_y = np.float32(mouse_y)
@@ -352,12 +340,8 @@ class VismolGLCore:
         """ Function doc """
         angle = np.sqrt(dx**2 + dy**2) / (self.width + 1) * 180.0
         if self.shift:
-            if self.show_dynamic_line:
-                self.dynamic_line.end = self.get_viewport_pos(self.mouse_x, self.mouse_y)
-                self.dynamic_line.update_points()
-            else:
-                self.selection_box.end = self.get_viewport_pos(self.mouse_x, self.mouse_y)
-                self.selection_box.update_points()
+            self.selection_box.end = self.get_viewport_pos(self.mouse_x, self.mouse_y)
+            self.selection_box.update_points()
         
         else:
             if self.ctrl:
@@ -530,13 +514,7 @@ class VismolGLCore:
                 vm_object.core_representations["picking_dots"].define_new_indexes_to_vbo(list(vm_object.selected_atom_ids))
                 vm_object.core_representations["picking_dots"].draw_representation()
         
-        if self.show_dynamic_line and self.shift:
-            if self.dynamic_line.vao is None:
-                self.dynamic_line._make_gl_selection_box()
-            else:
-                self.dynamic_line._draw_selection_box()
-        
-        if self.show_selection_box and self.shift and not self.vm_session.picking_selection_mode:
+        if not self.vm_session.picking_selection_mode and self.show_selection_box and self.shift:
             if self.selection_box.vao is None:
                 self.selection_box._make_gl_selection_box()
             else:
@@ -810,9 +788,9 @@ class VismolGLCore:
             self.vm_font.make_freetype_texture(self.core_shader_programs["freetype"])
         
         number = 1
-        self.chars     = 0
-        self.xyz_pos   = []
-        self.uv_coords = []
+        chars = 0
+        xyz_pos = []
+        uv_coords = []
         
         for atom in self.vm_session.picking_selections.picking_selections_list:
             if atom:
@@ -823,27 +801,27 @@ class VismolGLCore:
                 point = np.dot(point, self.model_mat)
                 GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font.texture_id)
                 for i, c in enumerate(text):
-                    self.chars += 1
+                    chars += 1
                     c_id = ord(c)
                     x = c_id % 16
                     y = c_id // 16 - 2
-                    self.xyz_pos.append(point[0] + i * self.vm_font.char_width)
-                    self.xyz_pos.append(point[1])
-                    self.xyz_pos.append(point[2])
-                    self.uv_coords.append(x * self.vm_font.text_u)
-                    self.uv_coords.append(y * self.vm_font.text_v)
-                    self.uv_coords.append((x + 1) * self.vm_font.text_u)
-                    self.uv_coords.append((y + 1) * self.vm_font.text_v)
+                    xyz_pos.append(point[0] + i * self.vm_font.char_width)
+                    xyz_pos.append(point[1])
+                    xyz_pos.append(point[2])
+                    uv_coords.append(x * self.vm_font.text_u)
+                    uv_coords.append(y * self.vm_font.text_v)
+                    uv_coords.append((x + 1) * self.vm_font.text_u)
+                    uv_coords.append((y + 1) * self.vm_font.text_v)
             number += 1
-        self.xyz_pos = np.array(self.xyz_pos, dtype=np.float32)
-        self.uv_coords = np.array(self.uv_coords, dtype=np.float32)
+        xyz_pos = np.array(xyz_pos, dtype=np.float32)
+        uv_coords = np.array(uv_coords, dtype=np.float32)
         
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.coord_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.xyz_pos.itemsize * len(self.xyz_pos),
-                        self.xyz_pos, GL.GL_DYNAMIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize * len(xyz_pos),
+                        xyz_pos, GL.GL_DYNAMIC_DRAW)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.text_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.uv_coords.itemsize * len(self.uv_coords),
-                        self.uv_coords, GL.GL_DYNAMIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize * len(uv_coords),
+                        uv_coords, GL.GL_DYNAMIC_DRAW)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_BLEND)
@@ -856,7 +834,7 @@ class VismolGLCore:
         self.vm_font.load_font_params(self.core_shader_programs["freetype"])
         
         GL.glBindVertexArray(self.vm_font.vao)
-        GL.glDrawArrays(GL.GL_POINTS, 0, self.chars)
+        GL.glDrawArrays(GL.GL_POINTS, 0, chars)
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
@@ -865,12 +843,6 @@ class VismolGLCore:
         """ Function doc """
         self.core_shader_programs["picking_dots"] = self.load_shaders(shaders_pick.vertex_shader_picking_dots,
                                                             shaders_pick.fragment_shader_picking_dots)
-    
-    def _compile_shader_freetype(self):
-        """ Function doc """
-        self.core_shader_programs["freetype"] = self.load_shaders(shaders_vm_freetype.vertex_shader_freetype,
-                                                         shaders_vm_freetype.fragment_shader_freetype,
-                                                         shaders_vm_freetype.geometry_shader_freetype)
     
     def _compile_shader_dots(self):
         """ Function doc """
@@ -925,19 +897,25 @@ class VismolGLCore:
                                                               shaders_dashed_lines.sel_fragment_shader_dashed_lines,
                                                               shaders_dashed_lines.sel_geometry_shader_dashed_lines)
     
-    
-    
-    
-    
-    def _compile_shader_ribbon(self):
+    def _compile_shader_freetype(self):
         """ Function doc """
-        line_type = self.vm_config.gl_parameters["ribbon_type"]
-        self.shader_programs["ribbon"] = self.load_shaders(shaders_lines.shader_type[line_type]["vertex_shader"],
-                                                    shaders_lines.shader_type[line_type]["fragment_shader"],
-                                                    shaders_lines.shader_type[line_type]["geometry_shader"])
-        self.shader_programs["ribbon_sel"] = self.load_shaders(shaders_lines.shader_type[line_type]["sel_vertex_shader"],
-                                                        shaders_lines.shader_type[line_type]["sel_fragment_shader"],
-                                                        shaders_lines.shader_type[line_type]["sel_geometry_shader"])
+        self.core_shader_programs["freetype"] = self.load_shaders(shaders_vm_freetype.vertex_shader_freetype,
+                                                         shaders_vm_freetype.fragment_shader_freetype,
+                                                         shaders_vm_freetype.geometry_shader_freetype)
+    
+    
+    
+    
+    
+    # def _compile_shader_ribbon(self):
+    #     """ Function doc """
+    #     line_type = self.vm_config.gl_parameters["ribbon_type"]
+    #     self.shader_programs["ribbon"] = self.load_shaders(shaders_lines.shader_type[line_type]["vertex_shader"],
+    #                                                 shaders_lines.shader_type[line_type]["fragment_shader"],
+    #                                                 shaders_lines.shader_type[line_type]["geometry_shader"])
+    #     self.shader_programs["ribbon_sel"] = self.load_shaders(shaders_lines.shader_type[line_type]["sel_vertex_shader"],
+    #                                                     shaders_lines.shader_type[line_type]["sel_fragment_shader"],
+    #                                                     shaders_lines.shader_type[line_type]["sel_geometry_shader"])
     
     def _compile_shader_impostor(self):
         """ Function doc """
@@ -949,36 +927,36 @@ class VismolGLCore:
                                                         shaders_impostor.shader_type[im_type]["sel_fragment_shader"],
                                                         shaders_impostor.shader_type[im_type]["sel_geometry_shader"])
     
-    def _compile_shader_surface(self):
-        """ Function doc """
-        self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_surface,
-                                                    shaders_surface.fragment_shader_surface,
-                                                    shaders_surface.geometry_shader_surface)
-        self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                        shaders_spheres.fragment_shader_spheres)
+    # def _compile_shader_surface(self):
+    #     """ Function doc """
+    #     self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_surface,
+    #                                                 shaders_surface.fragment_shader_surface,
+    #                                                 shaders_surface.geometry_shader_surface)
+    #     self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+    #                                                     shaders_spheres.fragment_shader_spheres)
         
-    def _compile_shader_cartoon(self):
-        """ Function doc """
-        self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
-                                                    shaders_cartoon.f_shader_triangles)
+    # def _compile_shader_cartoon(self):
+    #     """ Function doc """
+    #     self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
+    #                                                 shaders_cartoon.f_shader_triangles)
     
     #----------------------------NOT IMPLEMENTED YET---------------------------#
-    def _dynamic_bonds_shaders(self):
-        """ Function doc """
-        self.shader_programs["dynamic"] = self.load_shaders(shaders_sticks.vertex_shader_sticks,
-                                                    shaders_sticks.fragment_shader_sticks,
-                                                    shaders_sticks.geometry_shader_sticks)
-        self.shader_programs["dynamic_sel"] = self.load_shaders(shaders_sticks.sel_vertex_shader_sticks,
-                                                       shaders_sticks.sel_fragment_shader_sticks,
-                                                       shaders_sticks.sel_geometry_shader_sticks)
+    # def _dynamic_bonds_shaders(self):
+    #     """ Function doc """
+    #     self.shader_programs["dynamic"] = self.load_shaders(shaders_sticks.vertex_shader_sticks,
+    #                                                 shaders_sticks.fragment_shader_sticks,
+    #                                                 shaders_sticks.geometry_shader_sticks)
+    #     self.shader_programs["dynamic_sel"] = self.load_shaders(shaders_sticks.sel_vertex_shader_sticks,
+    #                                                    shaders_sticks.sel_fragment_shader_sticks,
+    #                                                    shaders_sticks.sel_geometry_shader_sticks)
     
-    def _wires_dot_shaders(self):
-        """ Function doc """
-        self.shader_programs["wires"] = self.load_shaders(shaders_wires.vertex_shader_wires,
-                                                  shaders_wires.fragment_shader_wires,
-                                                  shaders_wires.geometry_shader_wires)
-        self.shader_programs["wires_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                        shaders_spheres.fragment_shader_spheres)
+    # def _wires_dot_shaders(self):
+    #     """ Function doc """
+    #     self.shader_programs["wires"] = self.load_shaders(shaders_wires.vertex_shader_wires,
+    #                                               shaders_wires.fragment_shader_wires,
+    #                                               shaders_wires.geometry_shader_wires)
+    #     self.shader_programs["wires_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+    #                                                     shaders_spheres.fragment_shader_spheres)
     #----------------------------NOT IMPLEMENTED YET---------------------------#
     
     def _safe_frame_coords(self, vismol_object):

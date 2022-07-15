@@ -638,6 +638,67 @@ class SpheresRepresentation(Representation):
         GL.glUseProgram(0)
 
 
+class DashedLinesRepresentation(Representation):
+    """ Class doc """
+    
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
+        """ Class initialiser """
+        super(DashedLinesRepresentation, self).__init__(vismol_object, vismol_glcore, "dash", active, indexes)
+    
+    def draw_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        self._enable_anti_alias_to_lines()
+        GL.glUseProgram(self.shader_program)
+        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"]
+        GL.glLineWidth(line_width)
+        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        self.vm_glcore.load_fog(self.shader_program)
+        GL.glBindVertexArray(self.vao)
+        
+        if self.was_rep_coord_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
+        if self.was_col_modified:
+            self._load_color_vbo(None)
+            self.was_col_modified = False
+        
+        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        self._disable_anti_alias_to_lines()
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
+    
+    def draw_background_sel_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        self._disable_anti_alias_to_lines()
+        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"]
+        GL.glUseProgram(self.sel_shader_program)
+        GL.glLineWidth(line_width)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
+        GL.glBindVertexArray(self.sel_vao)
+        
+        if self.was_sel_coord_modified:
+            self._load_coord_vbo(sel_coord_vbo=True)
+            self.was_sel_coord_modified = False
+        if self.was_sel_ind_modified:
+            self._load_ind_vbo(sel_ind_vbo=True)
+            self.was_sel_ind_modified = False
+        
+        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
+
+
 class ImpostorRepresentation(Representation):
     """ Class doc """
     
@@ -733,66 +794,6 @@ class ImpostorRepresentation(Representation):
         GL.glPointSize(1)
         GL.glUseProgram(0)
 
-
-class DashedLinesRepresentation(Representation):
-    """ Class doc """
-    
-    def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
-        """ Class initialiser """
-        super(DashedLinesRepresentation, self).__init__(vismol_object, vismol_glcore, "dash", active, indexes)
-    
-    def draw_representation(self):
-        """ Function doc """
-        self._check_vao_and_vbos()
-        self._enable_anti_alias_to_lines()
-        GL.glUseProgram(self.shader_program)
-        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"]
-        GL.glLineWidth(line_width)
-        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
-        self.vm_glcore.load_fog(self.shader_program)
-        GL.glBindVertexArray(self.vao)
-        
-        if self.was_rep_coord_modified:
-            self._load_coord_vbo(coord_vbo=True)
-            self.was_rep_coord_modified = False
-        if self.was_rep_ind_modified:
-            self._load_ind_vbo(ind_vbo=True)
-            self.was_rep_ind_modified = False
-        if self.was_col_modified:
-            self._load_color_vbo(None)
-            self.was_col_modified = False
-        
-        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        self._disable_anti_alias_to_lines()
-        GL.glLineWidth(1)
-        GL.glUseProgram(0)
-
-    def draw_background_sel_representation(self, line_width_factor=5):
-        """ Function doc """
-        self._check_vao_and_vbos()
-        self._disable_anti_alias_to_lines()
-        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"]
-        GL.glUseProgram(self.sel_shader_program)
-        GL.glLineWidth(line_width)
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
-        GL.glBindVertexArray(self.sel_vao)
-        
-        if self.was_sel_coord_modified:
-            self._load_coord_vbo(sel_coord_vbo=True)
-            self.was_sel_coord_modified = False
-        if self.was_sel_ind_modified:
-            self._load_ind_vbo(sel_ind_vbo=True)
-            self.was_sel_ind_modified = False
-        
-        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
-        
-        GL.glBindVertexArray(0)
-        GL.glDisable(GL.GL_DEPTH_TEST)
-        GL.glLineWidth(1)
-        GL.glUseProgram(0)
 
 
 '''
