@@ -26,24 +26,24 @@ import time
 import numpy as np
 from OpenGL import GL
 from logging import getLogger
-from libgl.glaxis import GLAxis
-from libgl.glcamera import GLCamera
-from libgl.vismol_font import VismolFont
-from libgl.selection_box import SelectionBox
-import libgl.shapes as shapes
-import libgl.shaders.pick as shaders_pick
-import libgl.shaders.dots as shaders_dots
-import libgl.shaders.lines as shaders_lines
-import libgl.shaders.wires as shaders_wires
-import libgl.shaders.sticks as shaders_sticks
-import libgl.shaders.cartoon as shaders_cartoon
-import libgl.shaders.surface as shaders_surface
-import libgl.shaders.spheres as shaders_spheres
-import libgl.shaders.impostor as shaders_impostor
-import libgl.shaders.nonbonded as shaders_nonbonded
-import libgl.shaders.vm_freetype as shaders_vm_freetype
-import libgl.shaders.dashed_lines as shaders_dashed_lines
-import utils.matrix_operations as mop
+from vismol.libgl.glaxis import GLAxis
+from vismol.libgl.glcamera import GLCamera
+from vismol.libgl.vismol_font import VismolFont
+from vismol.libgl.selection_box import SelectionBox
+import vismol.libgl.shapes as shapes
+import vismol.libgl.shaders.pick as shaders_pick
+import vismol.libgl.shaders.dots as shaders_dots
+import vismol.libgl.shaders.lines as shaders_lines
+import vismol.libgl.shaders.wires as shaders_wires
+import vismol.libgl.shaders.sticks as shaders_sticks
+import vismol.libgl.shaders.cartoon as shaders_cartoon
+import vismol.libgl.shaders.surface as shaders_surface
+import vismol.libgl.shaders.spheres as shaders_spheres
+import vismol.libgl.shaders.impostor as shaders_impostor
+import vismol.libgl.shaders.nonbonded as shaders_nonbonded
+import vismol.libgl.shaders.vm_freetype as shaders_vm_freetype
+import vismol.libgl.shaders.dashed_lines as shaders_dashed_lines
+import vismol.utils.matrix_operations as mop
 
 logger = getLogger(__name__)
 

@@ -25,8 +25,8 @@
 import gi, sys
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
-from gui.vismol_main import VismolMainWindow
-from core.vismol_session import VismolSession
+from vismol.gui.vismol_main import VismolMainWindow
+from vismol.core.vismol_session import VismolSession
 
 
 def main():

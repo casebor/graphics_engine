@@ -26,17 +26,17 @@ import os
 import time
 import numpy as np
 from logging import getLogger
-from utils import AUXFiles
-from utils import GROFiles
-from utils import MOL2Files
-from utils import PDBFiles
-from utils import PSFFiles
-from utils import AMBERFiles
-from utils import XYZFiles
-from model.atom import Atom
-from model.residue import Residue
-from model.chain import Chain
-from core.vismol_object import VismolObject
+from vismol.utils import AUXFiles
+from vismol.utils import GROFiles
+from vismol.utils import MOL2Files
+from vismol.utils import PDBFiles
+from vismol.utils import PSFFiles
+from vismol.utils import AMBERFiles
+from vismol.utils import XYZFiles
+from vismol.model.atom import Atom
+from vismol.model.residue import Residue
+from vismol.model.chain import Chain
+from vismol.core.vismol_object import VismolObject
 
 logger = getLogger(__name__)
 

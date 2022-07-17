@@ -26,8 +26,8 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
 from logging import getLogger
-from libgl.vismol_glcore import VismolGLCore
-from gui.filechooser import FileChooser
+from vismol.libgl.vismol_glcore import VismolGLCore
+from vismol.gui.filechooser import FileChooser
 
 logger = getLogger(__name__)
 

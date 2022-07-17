@@ -6,8 +6,8 @@ import os
 import time
 import multiprocessing
 import numpy as np
-import utils.c_distances as cdist
-from core.vismol_object import VismolObject
+import vismol.utils.c_distances as cdist
+from vismol.core.vismol_object import VismolObject
 
 
 def load_mol2_files(infile=None, vismol_session=None, gridsize=3):

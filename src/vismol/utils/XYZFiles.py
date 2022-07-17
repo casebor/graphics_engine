@@ -6,7 +6,7 @@ import os
 import time
 import multiprocessing
 import numpy as np
-from core.vismol_object import VismolObject
+from vismol.core.vismol_object import VismolObject
 
 
 def load_xyz_file(infile=None, vismol_session=None, gridsize=3):

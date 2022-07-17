@@ -25,23 +25,23 @@
 import time
 import numpy as np
 from logging import getLogger
-from model.atom import Atom
-from model.bond import Bond
-from model.chain import Chain
-from model.residue import Residue
-from model.molecular_properties import COLOR_PALETTE
-from libgl.vismol_font import VismolFont
-from libgl.representations import DotsRepresentation
-from libgl.representations import LinesRepresentation
-from libgl.representations import NonBondedRepresentation
-from libgl.representations import PickingDotsRepresentation
-from libgl.representations import ImpostorRepresentation
-from libgl.representations import SticksRepresentation
-from libgl.representations import SpheresRepresentation
-from libgl.representations import DashedLinesRepresentation
-# from libgl.representations import WiresRepresentation
-# from libgl.representations import RibbonsRepresentation
-import utils.c_distances as cdist
+from vismol.model.atom import Atom
+from vismol.model.bond import Bond
+from vismol.model.chain import Chain
+from vismol.model.residue import Residue
+from vismol.model.molecular_properties import COLOR_PALETTE
+from vismol.libgl.vismol_font import VismolFont
+from vismol.libgl.representations import DotsRepresentation
+from vismol.libgl.representations import LinesRepresentation
+from vismol.libgl.representations import NonBondedRepresentation
+from vismol.libgl.representations import PickingDotsRepresentation
+from vismol.libgl.representations import ImpostorRepresentation
+from vismol.libgl.representations import SticksRepresentation
+from vismol.libgl.representations import SpheresRepresentation
+from vismol.libgl.representations import DashedLinesRepresentation
+# from vismol.libgl.representations import WiresRepresentation
+# from vismol.libgl.representations import RibbonsRepresentation
+import vismol.utils.c_distances as cdist
 
 logger = getLogger(__name__)
 

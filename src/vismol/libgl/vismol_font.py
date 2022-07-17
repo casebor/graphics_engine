@@ -27,7 +27,7 @@ import freetype as ft
 import ctypes
 from OpenGL import GL
 import os
-import libgl.glaxis as glaxis
+import vismol.libgl.glaxis as glaxis
 fontpath = os.path.split(glaxis.__file__)[:-1]
 fontpath = os.path.join(*fontpath, "fonts", "VeraMono.ttf")
 

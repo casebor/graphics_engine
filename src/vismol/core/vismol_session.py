@@ -25,11 +25,11 @@
 
 import os
 import numpy as np
-from utils import parser
+from vismol.utils import parser
 from logging import getLogger
-from core.vismol_config import VismolConfig
-from core.vismol_selections import VismolPickingSelection as VMPick
-from core.vismol_selections import VismolViewingSelection as VMSele
+from vismol.core.vismol_config import VismolConfig
+from vismol.core.vismol_selections import VismolPickingSelection as VMPick
+from vismol.core.vismol_selections import VismolViewingSelection as VMSele
 
 logger = getLogger(__name__)
 
@@ -54,7 +54,7 @@ class VismolSession():
         self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None, "pk3pk4":None}
         
         if toolkit == "Gtk_3.0":
-            from gui.vismol_gtkwidget import VismolGTKWidget
+            from vismol.gui.vismol_gtkwidget import VismolGTKWidget
             self.selection_box_frame = None
             if widget is None:
                 self.vm_widget = VismolGTKWidget(self)

@@ -49,6 +49,7 @@ setup(
         # "gui": ["gtk_widgets/*.glade"],
         # "libgl": ["fonts/*.ttf"],
     },
+    scripts=["scripts/vismol_simple.py"],
     install_requires=[
         "numpy>=1.20.0",
         "Cython>=0.29.12",

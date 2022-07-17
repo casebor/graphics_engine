@@ -5,8 +5,8 @@
 import os
 import time
 import numpy as np
-import utils.c_distances as cdist
-from core.vismol_object import VismolObject
+import vismol.utils.c_distances as cdist
+from vismol.core.vismol_object import VismolObject
 
 
 def load_netcdf4_file (filein = None, visObj = None):

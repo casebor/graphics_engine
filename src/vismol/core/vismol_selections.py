@@ -24,8 +24,8 @@
 
 import time
 import numpy as np
-from utils import matrix_operations as mop
-from core.vismol_object import VismolObject
+from vismol.utils import matrix_operations as mop
+from vismol.core.vismol_object import VismolObject
 
 
 class VismolViewingSelection:

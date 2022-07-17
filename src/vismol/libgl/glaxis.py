@@ -24,7 +24,7 @@
 
 import ctypes
 import numpy as np
-import utils.matrix_operations as mop
+import vismol.utils.matrix_operations as mop
 from OpenGL import GL
 from logging import getLogger
 

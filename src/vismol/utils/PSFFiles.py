@@ -4,7 +4,7 @@
 
 import os
 import numpy as np
-from core.vismol_object import VismolObject
+from vismol.core.vismol_object import VismolObject
 
 
 def load_PSF_topology_file(infile=None, vismol_session=None, gridsize=3):

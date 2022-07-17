@@ -24,7 +24,7 @@
 
 import math
 import numpy as np
-import utils.matrix_operations as mop
+import vismol.utils.matrix_operations as mop
 from logging import getLogger
 
 logger = getLogger(__name__)

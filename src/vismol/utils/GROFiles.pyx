@@ -7,8 +7,8 @@ import time
 import multiprocessing
 import numpy as np
 cimport numpy as np
-from core.vismol_object import VismolObject
-from model.molecular_properties import AtomTypes
+from vismol.core.vismol_object import VismolObject
+from vismol.model.molecular_properties import AtomTypes
 
 from pprint import pprint
 

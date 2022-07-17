@@ -23,7 +23,7 @@
 #  
 
 import numpy as np
-from model.molecular_properties import ATOM_TYPES
+from vismol.model.molecular_properties import ATOM_TYPES
 
 
 class Atom:

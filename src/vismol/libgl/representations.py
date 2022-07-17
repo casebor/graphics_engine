@@ -529,7 +529,7 @@ class SpheresRepresentation(Representation):
     def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
         """ Class initialiser """
         super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, "spheres", active, indexes)
-        import utils.sphere_data as sphd
+        import vismol.utils.sphere_data as sphd
         self.level = self.vm_session.vm_config.gl_parameters["sphere_quality"]
         self.scale = self.vm_session.vm_config.gl_parameters["sphere_scale"]
         self.sphere_vertices = sphd.sphere_vertices[self.level] * self.scale

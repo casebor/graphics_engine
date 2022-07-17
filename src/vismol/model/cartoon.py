@@ -5,7 +5,7 @@
 #  
 
 import numpy as np
-import utils.matrix_operations as mop
+import vismol.utils.matrix_operations as mop
 
 p = 0.6;
 q = 0.8071;
