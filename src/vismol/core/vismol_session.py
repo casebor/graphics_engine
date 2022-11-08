@@ -208,9 +208,12 @@ class VismolSession():
     def _selection_function_set(self, selected, _type=None, disable=True):
         """ Function doc """
         if self.picking_selection_mode: # True for picking mode
-            assert len(selected) == 1
-            selected = list(selected)[0]
-            self.picking_selections.selection_function_picking(selected)
+            if selected:
+                assert len(selected) == 1
+                selected = list(selected)[0]
+                self.picking_selections.selection_function_picking(selected)
+            else:
+                self.picking_selections.selection_function_picking(None)
         else: # False for viewing mode
             self.selections[self.current_selection].selection_function_viewing_set(selected, _type, disable)
     

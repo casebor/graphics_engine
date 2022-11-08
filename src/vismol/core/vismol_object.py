@@ -133,7 +133,10 @@ class VismolObject:
         elif rep_type == "spheres":
             self.representations["spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=list(self.atoms.keys()))
-        
+
+        elif rep_type == "dash":
+            self.representations["dash"] = LinesRepresentation(self, self.vm_session.vm_glcore,
+                                                active=True, indexes=self.index_bonds)
         # elif rep_type == "ribbons":
         #     self.representations["ribbons"] = RibbonsRepresentation(self, self.vm_session.vm_glcore,
         #                                                             active=True, indexes=indexes)

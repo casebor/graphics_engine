@@ -265,6 +265,7 @@ class VismolPickingSelection:
         atom3 = self.picking_selections_list[2]
         atom4 = self.picking_selections_list[3]
         
+        '''
         if atom1 and atom2:
             self.refresh_pk1pk2_representations(vobj_label="pk1pk2", atom1=atom1, atom2=atom2)
             self.vm_session.vm_geometric_object_dic["pk1pk2"].representations["dash"].active = True
@@ -301,7 +302,7 @@ class VismolPickingSelection:
         else:
             if self.vm_session.vm_geometric_object_dic["pk3pk4"]:
                 self.vm_session.vm_geometric_object_dic["pk3pk4"].representations["dash"].active = False
-    
+        '''
     def refresh_pk1pk2_representations(self, vobj_label="pk1pk2", atom1=None, atom2=None):
         """ Function doc """
         xyz1 = atom1.coords()
@@ -346,6 +347,6 @@ class VismolPickingSelection:
             self.vobject_picking.active = True
             self.vobject_picking.set_model_matrix(self.vm_session.vm_glcore.model_mat)
             
-            self.vobject_picking.create_representation(rep_type = "dash")
+            #self.vobject_picking.create_representation(rep_type = "dash")
             self.vm_session.vm_geometric_object_dic[vobj_label] = self.vobject_picking
 

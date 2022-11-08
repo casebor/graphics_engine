@@ -499,10 +499,11 @@ class VismolGLCore:
         # Viewing and picking selections cannot be displayed at the same time.
         if self.vm_session.picking_selection_mode:
             self._draw_picking_label()
-            for rep_name in self.vm_session.vm_geometric_object_dic.keys():
-                if self.vm_session.vm_geometric_object_dic[rep_name]:
-                    if self.vm_session.vm_geometric_object_dic[rep_name].representations["dotted_lines"].active:
-                        self.vm_session.vm_geometric_object_dic[rep_name].representations["dotted_lines"].draw_representation()
+            '''Here is where we will draw the dashed lines'''
+            #for rep_name in self.vm_session.vm_geometric_object_dic.keys():
+            #    if self.vm_session.vm_geometric_object_dic[rep_name]:
+            #        if self.vm_session.vm_geometric_object_dic[rep_name].representations["dotted_lines"].active:
+            #            self.vm_session.vm_geometric_object_dic[rep_name].representations["dotted_lines"].draw_representation()
         else:
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
                 # Here are represented the blue dots referring to the atom's selections
