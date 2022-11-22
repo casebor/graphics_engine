@@ -37,7 +37,7 @@ from vismol.model.atom import Atom
 from vismol.model.residue import Residue
 from vismol.model.chain import Chain
 from vismol.core.vismol_object import VismolObject
-
+from pprint import pprint
 logger = getLogger(__name__)
 
 def _load_aux_file(vismol_session, infile):
@@ -69,6 +69,12 @@ def _load_pdb_file(vismol_session, infile):
     unique_id = len(vismol_session.atom_dic_id)
     initial = time.time()
     atom_id = 0
+    
+
+    print('\n\n\n')
+    pprint(topo)
+
+    
     for _atom in topo:
         if _atom["chain"] not in vm_object.chains.keys():
             vm_object.chains[_atom["chain"]] = Chain(vm_object, name=_atom["chain"])
@@ -92,6 +98,9 @@ def _load_pdb_file(vismol_session, infile):
         unique_id += 1
     logger.debug("Time used to build the tree: {:>8.5f} secs".format(time.time() - initial))
     vm_object.frames = PDBFiles.get_coords_from_raw_frames(rawframes, atom_id, vismol_session.vm_config.n_proc)
+    print(type(vm_object.frames))
+    print(vm_object.frames)
+    print('\n\n\n')
     vm_object.mass_center = np.mean(vm_object.frames[0], axis=0)
     vm_object.find_bonded_and_nonbonded_atoms()
     return vm_object

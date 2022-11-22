@@ -104,6 +104,7 @@ class VismolViewingSelection:
             if selected_atom in self.selected_atoms:
                 if disable:
                     self.selected_atoms.discard(selected_atom)
+                    selected_atom.vm_object.selected_atom_ids.discard(selected_atom.atom_id)
                     selected_atom.selected = False
             else:
                 self.selected_atoms.add(selected_atom)
@@ -118,6 +119,7 @@ class VismolViewingSelection:
                 if disable:
                     for atom in selected_atom.residue.atoms.values():
                         self.selected_atoms.discard(atom)
+                        atom.vm_object.selected_atom_ids.discard(atom.atom_id)
                         atom.selected = False
             # if the selected atoms is not in the selected list add atom by atom
             else:
@@ -148,6 +150,7 @@ class VismolViewingSelection:
                     for residue in selected_atom.chain.residues.values():
                         for atom in residue.atoms.values():
                             self.selected_atoms.discard(atom)
+                            atom.vm_object.selected_atom_ids.discard(atom.atom_id)
                             atom.selected = False
             else:
                 for residue in selected_atom.chain.residues.values():

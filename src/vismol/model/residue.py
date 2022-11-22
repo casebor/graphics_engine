@@ -78,7 +78,7 @@ class Residue:
         sum_y = 0.0
         sum_z = 0.0
         
-        for atom in self.atoms:
+        for atom in self.atoms.values():
             coord = atom.coords (frame)
             sum_x += coord[0]
             sum_y += coord[1]

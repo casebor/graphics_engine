@@ -62,6 +62,7 @@ cpdef _get_frame_coords(frames, atom_qtty):
     cdef int i = 0
     cdef int j = 0
     coords = np.empty([len(frames), atom_qtty, 3], dtype=np.float32)
+    print(coords)
     for frame in frames:
         j = 0
         lines = frame.strip().split("\n")
@@ -73,6 +74,8 @@ cpdef _get_frame_coords(frames, atom_qtty):
                 coords[i,j,:] = x, y, z
                 j += 1
         i += 1
+    print("_get_frame_coords(frames, atom_qtty)")
+    print(coords)
     return coords
 
 cpdef _get_ranges(traj_size, batch_size):

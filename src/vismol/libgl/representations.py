@@ -491,7 +491,8 @@ class SticksRepresentation(Representation):
             self._load_color_vbo(None)
             self.was_col_modified = False
         
-        GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        #GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         self._disable_anti_alias_to_lines()
