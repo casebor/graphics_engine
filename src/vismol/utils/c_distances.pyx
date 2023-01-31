@@ -140,7 +140,7 @@ cpdef list get_connections_within_grid_element(list list_of_atoms, coords, cov_r
 
     
     for i, atom_idx_i in enumerate(list_of_atoms[:-1]):
-        for atom_idx_j in list_of_atoms[i:]:    
+        for j, atom_idx_j in enumerate(list_of_atoms[i:]):    
             if atom_idx_i == atom_idx_j :
                 pass            
             else:
@@ -148,6 +148,7 @@ cpdef list get_connections_within_grid_element(list list_of_atoms, coords, cov_r
                 r_ij            = calculate_sqrt_distance(atom_idx_i, atom_idx_j, coords)
                 # r_ij = np.linalg.norm(coords[atom_idx_i] - coords[atom_idx_j])
                 cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*1.4
+                #cov_rad_ij_sqrt = ( (cov_rad[i] + cov_rad[j] )**2)*1.4
                 
                 #print (atom_idx_i, atom_idx_j,cov_rad[atom_idx_j],cov_rad[atom_idx_j] , r_ij, cov_rad_ij_sqrt)
                 if r_ij <= cov_rad_ij_sqrt:
@@ -195,7 +196,7 @@ cpdef list get_connections_between_grid_elements(list atomic_grid1,
                 else:
                     r_ij            = calculate_sqrt_distance(atom_idx_i, atom_idx_j, coords)
                     # r_ij = np.linalg.norm(coords[atom_idx_i] - coords[atom_idx_j])
-                    #cov_rad_ij_sqrt =  cov_rad[atom_idx_i] + cov_rad[atom_idx_j] 
+                    #cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*1.4
                     cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*1.4
                     #print (atom_idx_i, atom_idx_j,cov_rad[atom_idx_j],cov_rad[atom_idx_j] , r_ij, cov_rad_ij_sqrt)
                     if r_ij <= cov_rad_ij_sqrt:

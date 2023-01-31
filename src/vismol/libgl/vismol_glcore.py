@@ -644,7 +644,7 @@ class VismolGLCore:
                             vm_object.representations[rep_name].draw_background_sel_representation()
         
         GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
-        data = GL.glReadPixels(pos_x, pos_y, width, height, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
+        data = GL.glReadPixels(float(pos_x), float(pos_y), width, height, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
         data = list(data)
         picked_set = set()
         for i in range(0, len(data), 4):
@@ -684,7 +684,7 @@ class VismolGLCore:
         
         GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
         pos = [self.picking_x, self.height - self.picking_y]
-        data = GL.glReadPixels(pos[0], pos[1], 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
+        data = GL.glReadPixels(float(pos[0]), float(pos[1]), 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
         
         #converting RGB values to atoms address (unique id)
         pickedID = data[0] + data[1] * 256 + data[2] * 256 * 256;

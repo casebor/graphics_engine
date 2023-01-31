@@ -52,7 +52,8 @@ class VismolViewingSelection:
             for vm_object in self.vm_session.vm_objects_dic.values():
                 for atom in vm_object.atoms.values():
                     atom.selected = False
-    
+                    #atom.vm_object.selected_atom_ids.discard(atom.atom_id)
+
     def _build_selected_atoms_coords_and_selected_objects_from_selected_atoms(self):
         """ Function doc """
         coords = []
@@ -85,6 +86,8 @@ class VismolViewingSelection:
                 self.selecting_by_atom(selected, disable)
             elif self.selection_mode == "residue":
                 self.selecting_by_residue(selected, disable)
+            elif self.selection_mode == "molecule":
+                self.selecting_by_molecule(selected, disable)
             elif self.selection_mode == "chain":
                 self.selecting_by_chain(selected, disable)
             else:
@@ -124,6 +127,23 @@ class VismolViewingSelection:
             # if the selected atoms is not in the selected list add atom by atom
             else:
                 for atom in selected_atom.residue.atoms.values():
+                    self.selected_atoms.add(atom)
+                    atom.selected = True
+    
+    def selecting_by_molecule(self, selected_atoms, disable=True):
+        """ """
+        self._clear_selection_buffer()
+        # if the selected atoms IS in the selected list
+        for selected_atom in selected_atoms:
+            if selected_atom in self.selected_atoms:
+                if disable:
+                    for atom in selected_atom.molecule.atoms.values():
+                        self.selected_atoms.discard(atom)
+                        atom.vm_object.selected_atom_ids.discard(atom.atom_id)
+                        atom.selected = False
+            # if the selected atoms is not in the selected list add atom by atom
+            else:
+                for atom in selected_atom.molecule.atoms.values():
                     self.selected_atoms.add(atom)
                     atom.selected = True
     

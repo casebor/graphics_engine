@@ -29,6 +29,7 @@ from vismol.model.atom import Atom
 from vismol.model.bond import Bond
 from vismol.model.chain import Chain
 from vismol.model.residue import Residue
+from vismol.model.molecule import Molecule
 from vismol.model.molecular_properties import COLOR_PALETTE
 from vismol.libgl.vismol_font import VismolFont
 from vismol.libgl.representations import DotsRepresentation
@@ -82,6 +83,8 @@ class VismolObject:
         self.atoms = {}
         self.residues = {}
         self.chains = {}
+        self.molecules = {}
+
         self.atom_unique_id_dic = {}
         self.selected_atom_ids = set()
         self.bonds = None
@@ -89,6 +92,10 @@ class VismolObject:
         self.non_bonded_atoms = None # Array of indexes
         self.cov_radii_array = None    # a list of covalent radius values for all  --> will be used to calculate de bonds
         
+          
+        self.topology = {} # {92: [93, 99], 93: [92, 94, 96, 100], 99: [92],...}
+                           # important to define molecules
+                           
         self.representations = {}
         for rep_type in self.vm_config.representations_available:
             self.representations[rep_type] = None
@@ -200,14 +207,32 @@ class VismolObject:
                     green -= color_step
     
     def find_bonded_and_nonbonded_atoms(self, selection=None, frame=0, gridsize=0.8,
-                                         maxbond=2.4, tolerance=1.4):
-        """ Function doc """
+                                         maxbond=2.4, tolerance=1.4, internal = True):
+        """
+            Receives a dictionary as a selection:
+
+            selection = {'atom_id': atom_object, ...} ()
+
+            frame - (frame number)
+
+            grid_size - (usually should not be changed. Default is: 0.8)
+
+            maxbond - (Size of the maximum bond to be monitored. Bonds greater than "maxbond" 
+            may be disregarded. Default is: 2.4 A)
+
+            tolerance (Safety factor that multiplies the term (ra_cov + rb_cov)**2. Default is: 1.4)
+
+            internal (If True, calculates the bindings for the object itself. Used in the object's 
+            genesis. If False, returns a list of atom_ids like  [0,1, # bond  between 0 and 1 
+                                                                 1,2, # bond  between 1 and 2
+                                                                 0,3] # bond  between 0 and 3 )
+        """
         if self.index_bonds is not None:
             logger.critical("It seems that there is already information about "\
                 "the contacts in this VismolObject, trying to override the data "\
                 "can produce serious problems :(")
         initial = time.time()
-        atoms_frame_mask = np.zeros(len(self.atoms), dtype=np.bool)
+        atoms_frame_mask = np.zeros(len(self.atoms), bool)
         if self.cov_radii_array is None:
             self.cov_radii_array = np.empty(len(self.atoms), dtype=np.float32)
             for i, atom in self.atoms.items():
@@ -218,11 +243,14 @@ class VismolObject:
             atoms_frame_mask[:] = True
         else:
             atoms_frame_mask[:] = False
-            for atom in selection:
+            for atom in selection.values():
                 atoms_frame_mask[atom.atom_id] = True
         
-        cov_rads = self.cov_radii_array[atoms_frame_mask]
-        coords = self.frames[frame][atoms_frame_mask]
+        #cov_rads = self.cov_radii_array[atoms_frame_mask]
+        #coords = self.frames[frame][atoms_frame_mask]
+        cov_rads = self.cov_radii_array
+        coords = self.frames[frame]#[atoms_frame_mask]
+        
         indexes = []
         gridpos_list = []
         for atom in selection.values():
@@ -230,23 +258,35 @@ class VismolObject:
             gridpos_list.append(atom.get_grid_position(gridsize=gridsize, frame=frame))
         logger.debug("Time used for preparing the atom mask, covalent radii list "\
                      "and grid positions: {}".format(time.time() - initial))
-        
-        initial = time.time()
-        self.index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
-                                        cov_rads, gridpos_list, gridsize, maxbond)
-        msg = """Building grid elements  :
-    Total number of Atoms   : {}
-    Gridsize                : {}
-    Bonds                   : {}
-    Bonds calcultation time : {} seconds""".format(len(selection), gridsize,
-                                len(self.index_bonds), time.time() - initial)
-        logger.info(msg)
-        self._bonds_from_pair_of_indexes_list()
-        self._get_non_bonded_from_bonded_list()
+        if internal is True:
+            initial = time.time()
+            self.index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
+                                            cov_rads, gridpos_list, gridsize, maxbond)
+            msg = """Building grid elements  :
+        Total number of Atoms   : {}
+        Gridsize                : {}
+        Bonds                   : {}
+        Bonds calcultation time : {} seconds""".format(len(selection), gridsize,
+                                    len(self.index_bonds), time.time() - initial)
+            logger.info(msg)
+            self._bonds_from_pair_of_indexes_list()
+            self._get_non_bonded_from_bonded_list()
+            
+            #bachega's code
+            initial = time.time()
+            self._generate_topology_from_index_bonds()
+            self.define_molecules()
+            final = time.time()
+            print('defining molecules: ', final - initial)
+        else:
+            index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
+                                            cov_rads, gridpos_list, gridsize, maxbond)
+            return index_bonds
     
     def _bonds_from_pair_of_indexes_list(self):
         """ Function doc 
-        bonds_list = [[0,1] , [0,4] , [1,3], ...]
+        self.index_bonds = [[0,1] , [0,4] , [1,3], ...]
+        self.bonds = [bond1(obj), bond2(obj), bond3(obj), ...] 
         """
         assert self.bonds is None
         self.bonds = []
@@ -286,6 +326,69 @@ class VismolObject:
         """ Function doc """
         self.model_mat = np.copy(mat)
     
+    def _generate_topology_from_index_bonds(self, bonds = None):
+        """ Function doc """
+        if bonds is None:
+            bonds =  self.index_bonds
+        else:
+            pass
+
+        
+        bonds_pairs = []
+        topology    = {}
+        
+        for i  in range(0, len(bonds),2):
+            bonds_pairs.append([bonds[i], bonds[i+1]])
+        
+        
+        for bond in bonds_pairs:
+            if bond[0] in topology.keys():
+                topology[bond[0]].append(bond[1])
+            else:
+                topology[bond[0]] = []
+                topology[bond[0]].append(bond[1])
+            
+            
+            if bond[1] in topology.keys():
+                topology[bond[1]].append(bond[0])
+            else:
+                topology[bond[1]] = []
+                topology[bond[1]].append(bond[0])
+        self.topology = topology
+
+    def define_molecules (self):
+        """ Function doc """
+        groups = find_groups(self.topology)
+        #print(groups)     # groups = [{0, 1, 2}, {3, 4, 5, 6}, {8, 9, 7}]
+        #print(self.atoms) # self.atoms =  {0: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcdf0>, 1: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcfd0>, 2: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcf40>, 3: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38250>, 4: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38040>, 5: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38070>, 6: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e380a0>, 7: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e380d0>, 8: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38100>, 9: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38130>}
+        
+        for mol_index, group in enumerate( groups ):
+            atoms = {}
+            molecule = Molecule(self, name="UNK", index = mol_index)
+            
+            for atom_index in list(group):
+                #print(self.atoms)
+                #print (list(group), int(atom_index), self.atoms[int(atom_index)].atom_id)
+                
+                #try:
+                #    
+                #except:
+                #    print(list(group), int(atom_index))
+                molecule.atoms[atom_index] = self.atoms[atom_index]
+                self.atoms[atom_index].molecule = molecule
+                
+            
+            #molecule = Molecule(self, name="UNK", index = mol_index, atoms = atoms)
+            self.molecules[mol_index] = molecule
+        
+        
+        print(self.molecules)
+        
+
+        
+
+
+
     # def get_backbone_indexes(self):
     #     """ Function doc """
     #     chains_list = []
@@ -314,3 +417,24 @@ class VismolObject:
     #             distance = bond.distance()
     #             if distance < 4.0:
     #                 self.c_alpha_bonds.append(bond)
+def DFS(graph, node, visited):
+    ''' 
+        The DFS function takes a graph, a node, and a set of 
+        visited nodes as inputs, and performs a depth-first 
+        search starting from the node. 
+    '''
+    visited.add(node)
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            DFS(graph, neighbor, visited)
+
+def find_groups(graph):
+    visited = set()
+    groups = []
+    for node in graph:
+        if node not in visited:
+            group = set()
+            DFS(graph, node, group)
+            groups.append(group)
+            visited |= group
+    return groups

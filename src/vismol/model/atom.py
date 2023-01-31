@@ -39,6 +39,8 @@ class Atom:
         self.index = index   # - Remember that the "index" attribute refers to the numbering of atoms (it is not a zero base, it starts at 1 for the first atom)
         self.residue = residue
         self.chain = chain
+        self.molecule = None
+        
         self.pos = pos     # - coordinates of the first frame
         self.unique_id = None
         

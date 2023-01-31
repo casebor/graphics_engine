@@ -31,7 +31,8 @@ class VismolConfig:
     def __init__ (self, vismol_session):
         """ Class initialiser """
         self.vismol_session = vismol_session
-        self.gl_parameters = {"background_color": [0.0, 0.0, 0.0, 1.0],
+        self.gl_parameters = {"background_color": [0.0, 0.0, 0.0, 1.0],#[1.0, 1.0, 1.0, 1.0],#"background_color": [0.0, 0.0, 0.0, 1.0],
+                              
                               "color_type": 0,
                               "dot_size": 20,
                               "dots_size": 2,
