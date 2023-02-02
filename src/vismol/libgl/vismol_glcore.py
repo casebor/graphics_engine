@@ -485,6 +485,9 @@ class VismolGLCore:
                     if rep is not None:
                         rep.was_rep_coord_modified = True
                         rep.was_sel_coord_modified = True
+                        if rep.is_dynamic:
+                            rep.was_rep_ind_modified = True
+                            rep.was_sel_ind_modified = True
         
         for vm_object in self.vm_session.vm_objects_dic.values():
             if vm_object.active:
@@ -881,6 +884,15 @@ class VismolGLCore:
         self.shader_programs["sticks_sel"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["sel_vertex_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
+    def _compile_shader_ribbons(self):
+        """ Function doc """
+        sticks_type = self.vm_config.gl_parameters["ribbon_type"]
+        self.shader_programs["ribbons"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["vertex_shader"],
+                                                   shaders_sticks.shader_type[sticks_type]["fragment_shader"],
+                                                   shaders_sticks.shader_type[sticks_type]["geometry_shader"])
+        self.shader_programs["ribbons_sel"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["sel_vertex_shader"],
+                                                       shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
+                                                       shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
     
     def _compile_shader_spheres(self):
         """ Function doc """
@@ -971,9 +983,11 @@ class VismolGLCore:
             self.vm_session.frame = 0
         if self.vm_session.frame >= vismol_object.frames.shape[0] - 1:
             frame_coords = vismol_object.frames[vismol_object.frames.shape[0] - 1]
+            frame = vismol_object.frames.shape[0] - 1
         else:
             frame_coords = vismol_object.frames[self.vm_session.frame]
-        return frame_coords
+            frame = self.vm_session.frame
+        return frame_coords, frame
     
     def _get_vismol_object_frame(self, vismol_object):
         """ Function doc """

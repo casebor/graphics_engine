@@ -34,7 +34,7 @@ logger = getLogger(__name__)
 class Representation:
     """ Class doc """
     
-    def __init__ (self, vismol_object, vismol_glcore, name, active, indexes):
+    def __init__ (self, vismol_object, vismol_glcore, name, active, indexes, is_dynamic = False):
         self.vm_object = vismol_object
         self.vm_session = vismol_object.vm_session
         self.vm_glcore = vismol_glcore
@@ -42,6 +42,8 @@ class Representation:
         self.active = active
         self.indexes = np.array(indexes, dtype=np.uint32)
         self.elements = np.uint32(self.indexes.shape[0])
+        
+        self.is_dynamic = is_dynamic
         
         self.was_rep_modified = False
         self.was_sel_modified = False
@@ -172,7 +174,7 @@ class Representation:
     def _load_coord_vbo(self, coord_vbo=False, sel_coord_vbo=False):
         """ This function assigns the coordinates to 
         be drawn by the function  draw_representation"""
-        frame = self.vm_glcore._safe_frame_coords(self.vm_object)
+        frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
         if coord_vbo:
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
@@ -183,6 +185,10 @@ class Representation:
     
     def _load_ind_vbo(self, ind_vbo=False, sel_ind_vbo=False):
         """ Function doc """
+        if self.is_dynamic:
+            frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
+            self.define_new_indexes_to_vbo(input_indexes = self.vm_object.dynamic_bonds[f])
+            
         if ind_vbo:
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
             GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
@@ -459,10 +465,10 @@ class NonBondedRepresentation(Representation):
 class SticksRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True, is_dynamic = False, name = "sticks"):
         """ Class initialiser """
-        super(SticksRepresentation, self).__init__(vismol_object, vismol_glcore, "sticks", active, indexes)
-    
+        super(SticksRepresentation, self).__init__(vismol_object, vismol_glcore, name, active, indexes, is_dynamic)
+
     def _load_camera_pos(self, program):
         xyz_coords = self.vm_glcore.glcamera.get_modelview_position(self.vm_object.model_mat)
         u_campos = GL.glGetUniformLocation(program, "u_campos")
@@ -492,7 +498,11 @@ class SticksRepresentation(Representation):
             self.was_col_modified = False
         
         #GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
-        GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
+        if self.is_dynamic:
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
+        else:
+            #normal rep
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         self._disable_anti_alias_to_lines()
@@ -559,7 +569,7 @@ class SpheresRepresentation(Representation):
     
     def _coords_colors_rads(self):
         coords, colors, rads = [], [], []
-        frame = self.vm_glcore._safe_frame_coords(self.vm_object)
+        frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
         for i in self.indexes:
             coords.append(frame[i])
             colors.append(self.vm_object.atoms[i].color)
@@ -571,7 +581,7 @@ class SpheresRepresentation(Representation):
     
     def _sel_coords_colors_rads(self):
         coords, colors, rads = [], [], []
-        frame = self.vm_glcore._safe_frame_coords(self.vm_object)
+        frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
         for i in self.indexes:
             coords.append(frame[i])
             colors.append(self.vm_object.atoms[i].color_id)

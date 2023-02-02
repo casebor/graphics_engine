@@ -1,6 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
+vertex_shader_ribbon_stick = """
+#version 330
+precision highp float; 
+precision highp int;
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+const float vert_rad = 0.25;
+
+out vec3 geom_color;
+out vec4 geom_coord;
+out float geom_rad;
+
+void main(){
+    geom_color = vert_color;
+    geom_rad = vert_rad;
+    geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
+}
+"""
 
 vertex_shader_sticks = """
 #version 330
@@ -23,6 +44,7 @@ void main(){
     geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
 }
 """
+
 geometry_shader_sticks = """
 #version 330
 precision highp float; 
@@ -888,4 +910,14 @@ shader_type ={0: {"vertex_shader"      : vertex_shader_sticks,
                   "sel_geometry_shader": geometry_shader_impostor_sticks,
                   "sel_fragment_shader": sel_fragment_shader_impostor_sticks
                   },
+              2: {"vertex_shader"      : vertex_shader_ribbon_stick, 
+                  "geometry_shader"    : geometry_shader_sticks,     
+                  "fragment_shader"    : fragment_shader_sticks,     
+                  "sel_vertex_shader"  : vertex_shader_ribbon_stick, 
+                  "sel_geometry_shader": geometry_shader_sticks,     
+                  "sel_fragment_shader": sel_fragment_shader_sticks  
+                 },
+             
+  
+        
              }

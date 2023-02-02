@@ -44,7 +44,7 @@ class VismolConfig:
                               "line_color": 0,
                               "ribbon_width": 1000,
                               "ribbon_width_selection": 100,
-                              "ribbon_type": 1,
+                              "ribbon_type": 2,
                               "ribbon_color": 0,
                               "sphere_type": 0,
                               "sphere_scale": 0.25,
@@ -73,7 +73,7 @@ class VismolConfig:
         #                                   "surface", "cartoon", "freetype",
         #                                   "picking_dots"}
         self.representations_available = {"dots", "lines", "nonbonded", "impostor",
-                                          "sticks", "spheres"}
+                                          "sticks", "spheres", 'ribbons'}
     
     
     def save_easyhybrid_config(self):

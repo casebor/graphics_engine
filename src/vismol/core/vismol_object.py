@@ -108,7 +108,8 @@ class VismolObject:
         self.picking_dots_vao = None
         self.picking_dot_buffers = None
         
-        # self.dynamic_bons       = [] # Pair of atoms, something like: [0,1,1,2,3,4] 
+        self.dynamic_bonds  = [] # Pair of atoms, something like: [[0,1,1,2,3,4] , [0,1,1,2], ...]
+                                # Like self.index_bonds but for each frame
         self.c_alpha_bonds = []
         self.c_alpha_atoms = []
     
@@ -144,9 +145,9 @@ class VismolObject:
         elif rep_type == "dash":
             self.representations["dash"] = LinesRepresentation(self, self.vm_session.vm_glcore,
                                                 active=True, indexes=self.index_bonds)
-        # elif rep_type == "ribbons":
-        #     self.representations["ribbons"] = RibbonsRepresentation(self, self.vm_session.vm_glcore,
-        #                                                             active=True, indexes=indexes)
+        elif rep_type == "ribbons":
+            self.representations["ribbons"] = SticksRepresentation(self, self.vm_session.vm_glcore,
+                                                                    active=True, indexes=self.index_bonds, name  = 'ribbons')
         # elif rep_type == "dotted_lines":
         #     self.representations["dotted_lines"] = LinesRepresentation(self, self.vm_session.vm_glcore,
         #                                                                active=True, indexes=indexes)
@@ -227,10 +228,13 @@ class VismolObject:
                                                                  1,2, # bond  between 1 and 2
                                                                  0,3] # bond  between 0 and 3 )
         """
-        if self.index_bonds is not None:
-            logger.critical("It seems that there is already information about "\
-                "the contacts in this VismolObject, trying to override the data "\
-                "can produce serious problems :(")
+        if internal:
+            if self.index_bonds is not None:
+                logger.critical("It seems that there is already information about "\
+                    "the contacts in this VismolObject, trying to override the data "\
+                    "can produce serious problems :(")
+        
+        
         initial = time.time()
         atoms_frame_mask = np.zeros(len(self.atoms), bool)
         if self.cov_radii_array is None:
@@ -277,7 +281,8 @@ class VismolObject:
             self._generate_topology_from_index_bonds()
             self.define_molecules()
             final = time.time()
-            print('defining molecules: ', final - initial)
+            print('        Defining molecule indexes: ', final - initial)
+            self.define_Calpha_backbone()
         else:
             index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
                                             cov_rads, gridpos_list, gridsize, maxbond)
@@ -285,7 +290,7 @@ class VismolObject:
     
     def _bonds_from_pair_of_indexes_list(self):
         """ Function doc 
-        self.index_bonds = [[0,1] , [0,4] , [1,3], ...]
+        self.index_bonds = [0,1  , 0,4  ,  1,3  , ...]
         self.bonds = [bond1(obj), bond2(obj), bond3(obj), ...] 
         """
         assert self.bonds is None
@@ -327,7 +332,15 @@ class VismolObject:
         self.model_mat = np.copy(mat)
     
     def _generate_topology_from_index_bonds(self, bonds = None):
-        """ Function doc """
+        """ 
+        bonds = [92,93  ,  92,99  ,  ...]
+        
+        Returns a graph in dictionary form (this may in turn be 
+        needed to determine which objects are molecules).
+        
+        defines: self.topology = {92: [93, 99], 93: [92, 94, 96, 100], 99: [92],...}
+        
+        """
         if bonds is None:
             bonds =  self.index_bonds
         else:
@@ -357,38 +370,101 @@ class VismolObject:
         self.topology = topology
 
     def define_molecules (self):
-        """ Function doc """
-        groups = find_groups(self.topology)
-        #print(groups)     # groups = [{0, 1, 2}, {3, 4, 5, 6}, {8, 9, 7}]
-        #print(self.atoms) # self.atoms =  {0: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcdf0>, 1: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcfd0>, 2: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcf40>, 3: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38250>, 4: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38040>, 5: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38070>, 6: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e380a0>, 7: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e380d0>, 8: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38100>, 9: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38130>}
+        """ Function doc 
+        self.topology  = It is a graph written in the form of a dictionary:
+                        {
+                         index1 : [index2 , index3, ...], 
+                         index2 : [index1 , index4, ...]
+                         ...}
         
+        groups = [{0, 1, 2}, {3, 4, 5, 6}, {8, 9, 7}]
+        
+        self.atoms =  {
+                       0: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcdf0>, 
+                       1: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcfd0>, 
+                       2: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323cbcf40>, 
+                       3: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38250>, 
+                       4: <pdynamo.pDynamo2EasyHybrid.Atom object at 0x7f3323e38040>, 
+                       5: ...
+                       }
+        
+        This function populates the molecule dictionary (self.molecules), each 
+        molecule object is created very similarly to the residue object
+        
+        """
+        groups = find_groups(self.topology)
         for mol_index, group in enumerate( groups ):
             atoms = {}
             molecule = Molecule(self, name="UNK", index = mol_index)
             
             for atom_index in list(group):
-                #print(self.atoms)
-                #print (list(group), int(atom_index), self.atoms[int(atom_index)].atom_id)
-                
-                #try:
-                #    
-                #except:
-                #    print(list(group), int(atom_index))
                 molecule.atoms[atom_index] = self.atoms[atom_index]
                 self.atoms[atom_index].molecule = molecule
                 
-            
-            #molecule = Molecule(self, name="UNK", index = mol_index, atoms = atoms)
             self.molecules[mol_index] = molecule
         
+        #-------------------------------------------------------------
+        # non_bonded_atoms
+        # Should be here, ohterwise we will have selection problems
+        #-------------------------------------------------------------
+
+        for atom_index in self.non_bonded_atoms:
+            mol_index += 1
+            molecule = Molecule(self, name="UNK", index = mol_index)
+            molecule.atoms[atom_index] = self.atoms[atom_index]
+            self.atoms[atom_index].molecule = molecule
+            self.molecules[mol_index] = molecule
+            
+        #print(self.molecules)
         
-        print(self.molecules)
+    def define_Calpha_backbone (self):
+        """ Function doc 
+        Verifica quais conexões entre c_alphas são válidas.
+        """
         
+        
+        self.c_alpha_bonds = []
+        self.c_alpha_atoms = []
+        
+        #
+        # Building the self.c_alpha_atoms dict
+        # {atom_id : atom_object, ...}
+        #
+        for c_index, chain in self.chains.items():
+            for r_index, residue in chain.residues.items():
+                if residue.is_protein:
+                    for a_index, atom in residue.atoms.items():
+                        if atom.name == "CA":
+                            self.c_alpha_atoms.append(atom)
 
         
+        for i in range(1, len(self.c_alpha_atoms)):
 
+            atom_before  = self.c_alpha_atoms[i-1]
+            resi_before  = atom_before.residue.index
+            index_before = atom_before.atom_id
+            
 
-
+            atom  = self.c_alpha_atoms[i]
+            resi  = atom.residue.index
+            index = atom.atom_id
+            
+            '''Checks whether the two residues are in sequence 
+            (otherwise there is a break in the backbone structure)'''
+            if resi == resi_before + 1:
+                
+                bond = Bond(atom_i=atom_before, atom_index_i=index_before,
+                            atom_j=atom, atom_index_j=index)
+                
+                distance = bond.distance()
+                if distance < 4.0:
+                    self.c_alpha_bonds.append(bond)
+        
+        print(self.c_alpha_bonds)
+        print(self.c_alpha_atoms)
+        
+        #print(c_alpha, r_indexes)
+                            
     # def get_backbone_indexes(self):
     #     """ Function doc """
     #     chains_list = []
