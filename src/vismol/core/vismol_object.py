@@ -140,7 +140,10 @@ class VismolObject:
                                                                   active=True, indexes=self.index_bonds)
         elif rep_type == "spheres":
             self.representations["spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
-                                                    active=True, indexes=list(self.atoms.keys()))
+                                                    active=True, indexes=list(self.atoms.keys()) )
+        elif rep_type == "vdw_spheres":
+            self.representations["vdw_spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
+                                                    active=True, indexes=list(self.atoms.keys()), vdw =True)
 
         elif rep_type == "dash":
             self.representations["dash"] = LinesRepresentation(self, self.vm_session.vm_glcore,
@@ -148,6 +151,13 @@ class VismolObject:
         elif rep_type == "ribbons":
             self.representations["ribbons"] = SticksRepresentation(self, self.vm_session.vm_glcore,
                                                                     active=True, indexes=self.index_bonds, name  = 'ribbons')
+        elif rep_type == "dynamic":
+            #print(self.dynamic_bonds)
+            self.representations["dynamic"] = SticksRepresentation(self, self.vm_session.vm_glcore,
+                                                                  active=True, indexes=self.index_bonds, is_dynamic = True)
+        
+        
+        
         # elif rep_type == "dotted_lines":
         #     self.representations["dotted_lines"] = LinesRepresentation(self, self.vm_session.vm_glcore,
         #                                                                active=True, indexes=indexes)
@@ -460,39 +470,11 @@ class VismolObject:
                 if distance < 4.0:
                     self.c_alpha_bonds.append(bond)
         
-        print(self.c_alpha_bonds)
-        print(self.c_alpha_atoms)
+        #print(self.c_alpha_bonds)
+        #print(self.c_alpha_atoms)
         
-        #print(c_alpha, r_indexes)
-                            
-    # def get_backbone_indexes(self):
-    #     """ Function doc """
-    #     chains_list = []
-    #     bonds_pairs = []
-    #     bonds_indexes = []
-        
-    #     self.c_alpha_bonds = []
-    #     self.c_alpha_atoms = []
-    #     for chain in self.chains:
-    #         for residue in self.chains[chain].residues:
-    #             if residue.is_protein:
-    #                 for atom in residue.atoms:
-    #                     if atom.name == "CA":
-    #                         self.c_alpha_atoms.append(atom)
-        
-    #     for i in range(1, len(self.c_alpha_atoms)):
-    #         atom_before = self.c_alpha_atoms[i-1]
-    #         resi_before = atom_before.resi
-    #         index_before = self.atoms.index(atom_before)
-    #         atom = self.c_alpha_atoms[i]
-    #         resi = atom.resi
-    #         index = self.atoms.index(atom)
-    #         if resi == resi_before + 1:
-    #             bond = Bond(atom_i=atom_before, atom_index_i=index_before,
-    #                         atom_j=atom, atom_index_j=index)
-    #             distance = bond.distance()
-    #             if distance < 4.0:
-    #                 self.c_alpha_bonds.append(bond)
+
+
 def DFS(graph, node, visited):
     ''' 
         The DFS function takes a graph, a node, and a set of 

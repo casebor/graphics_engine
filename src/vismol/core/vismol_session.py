@@ -134,6 +134,13 @@ class VismolSession():
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
+            elif rep_type == "dynamic":
+                self.define_dynamic_bonds()
+                for bond in vm_object.bonds:
+                    if bond.atom_i.dynamic and bond.atom_j.dynamic:
+                        show_hide_indexes.append(bond.atom_index_i)
+                        show_hide_indexes.append(bond.atom_index_j)
+            
             elif rep_type == "dots":
                 for atom in vm_object.atoms.values():
                     if atom.dots:
@@ -152,6 +159,11 @@ class VismolSession():
             elif rep_type == "spheres":
                 for atom in vm_object.atoms.values():
                     if atom.spheres:
+                        show_hide_indexes.append(atom.atom_id)
+            
+            elif rep_type == "vdw_spheres":
+                for atom in vm_object.atoms.values():
+                    if atom.vdw_spheres:
                         show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "ribbons": # add by bachega at 02/02/2023
@@ -230,8 +242,25 @@ class VismolSession():
             self.selection_box_frame.change_sel_type_in_combobox(sel_type)
         self.selections[self.current_selection].selection_mode = sel_type
     
-    
-    
+    def define_dynamic_bonds (self):
+        """ Function doc """
+        selection = self.selections[self.current_selection]
+        selection_dict = {}
+        vobject = None
+        for atom in selection.selected_atoms:
+            selection_dict[atom.atom_id] = atom
+            vobject = atom.vm_object
+        
+        
+        vobject.dynamic_bonds = []
+        for frame in range(len(vobject.frames)):            
+            bonds = vobject.find_bonded_and_nonbonded_atoms(selection=selection_dict, frame=frame, internal = False)
+            vobject.dynamic_bonds.append(bonds)
+            #print(len(bonds), bonds)
+        #print(vobject.dynamic_bonds)
+
+
+
     # def delete_vismol_object_by_index(self, index):
     #     """ Function doc
     #     """

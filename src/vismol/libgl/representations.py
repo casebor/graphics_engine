@@ -537,13 +537,16 @@ class SticksRepresentation(Representation):
 class SpheresRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True, vdw = False):
         """ Class initialiser """
         super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, "spheres", active, indexes)
         import vismol.utils.sphere_data as sphd
         self.level = self.vm_session.vm_config.gl_parameters["sphere_quality"]
         self.scale = self.vm_session.vm_config.gl_parameters["sphere_scale"]
-        self.sphere_vertices = sphd.sphere_vertices[self.level] * self.scale
+        if vdw:
+            self.sphere_vertices = sphd.sphere_vertices[self.level] 
+        else:
+            self.sphere_vertices = sphd.sphere_vertices[self.level]* self.scale
         self.sphere_indexes = sphd.sphere_triangles[self.level]
         self.instances_elemns = self.sphere_indexes.shape[0]
     

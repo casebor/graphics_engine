@@ -893,12 +893,28 @@ class VismolGLCore:
         self.shader_programs["ribbons_sel"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["sel_vertex_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
+    def _compile_shader_dynamic(self):
+        """ Function doc """
+        sticks_type = self.vm_config.gl_parameters["sticks_type"]
+        self.shader_programs["dynamic"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["vertex_shader"],
+                                                   shaders_sticks.shader_type[sticks_type]["fragment_shader"],
+                                                   shaders_sticks.shader_type[sticks_type]["geometry_shader"])
+        self.shader_programs["dynamic_sel"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["sel_vertex_shader"],
+                                                       shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
+                                                       shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
     
     def _compile_shader_spheres(self):
         """ Function doc """
         self.shader_programs["spheres"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
                                                     shaders_spheres.fragment_shader_spheres)
         self.shader_programs["spheres_sel"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
+                                                        shaders_spheres.sel_fragment_shader_spheres)
+    
+    def _compile_shader_vdw_spheres(self):
+        """ Function doc """
+        self.shader_programs["vdw_spheres"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+                                                    shaders_spheres.fragment_shader_spheres)
+        self.shader_programs["vdw_spheres_sel"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
                                                         shaders_spheres.sel_fragment_shader_spheres)
     
     def _compile_shader_dash(self):
