@@ -275,8 +275,8 @@ class VismolPickingSelection:
             for atom2 in self.picking_selections_list[c+1:]:
                 if atom1 and atom2:
                     frame = self.vm_session.get_frame()
-                    coords1 = atom1.coords(frame)
-                    coords2 = atom2.coords(frame)
+                    coords1 = atom1.coords(frame = None)
+                    coords2 = atom2.coords(frame = None)
                     dist = np.linalg.norm(coords1 - coords2)
                     name1 = atom1.name
                     name2 = atom2.name

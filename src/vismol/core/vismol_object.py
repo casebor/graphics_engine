@@ -289,9 +289,17 @@ class VismolObject:
             #bachega's code
             initial = time.time()
             self._generate_topology_from_index_bonds()
+            
+            
+            #try:
             self.define_molecules()
+            #except:
+            #    print('Error: failure when trying to find molecules')
+            
+            
             final = time.time()
             print('        Defining molecule indexes: ', final - initial)
+            #print ('\n',self.topology, '\n')
             self.define_Calpha_backbone()
         else:
             index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
@@ -402,7 +410,9 @@ class VismolObject:
         molecule object is created very similarly to the residue object
         
         """
-        groups = find_groups(self.topology)
+        #groups = find_groups(self.topology)
+        groups = find_connected_components(self.topology)
+        
         for mol_index, group in enumerate( groups ):
             atoms = {}
             molecule = Molecule(self, name="UNK", index = mol_index)
@@ -475,11 +485,83 @@ class VismolObject:
         
 
 
+
+
+def find_connected_components(graph):
+    """
+    
+    graph = topology (self.topology)
+    
+    eg: 
+
+        self.topology = {0: [1, 2, 1], 1: [0, 0], 2: [0], 3: [6, 4, 5], 6: [3], 4: [3], 5: [3], 7: [8, 9], 8: [7], 9: [7]}
+    
+    
+    
+    This version of the function also takes a graph represented as a dictionary and 
+    returns a list of connected components, where each connected component is a 
+    list of nodes.
+
+    The function starts by initializing an empty set called visited to keep track 
+    of the nodes that have been visited and an empty list called components to 
+    store the connected components.
+
+    The function then iterates over each node in the graph and checks if it has 
+    been visited yet. If the node has not been visited, the function starts a DFS 
+    from that node.
+
+    The DFS is implemented using a stack-based approach. The function initializes 
+    a stack with the starting node and an empty list called component to store the 
+    nodes in the connected component.
+
+    The function then enters a loop that continues as long as the stack is not 
+    empty. In each iteration of the loop, the function pops a node from the stack 
+    and checks if it has been visited yet. If the node has not been visited, the 
+    function adds it to the visited set, appends it to the component list, and 
+    adds its unvisited neighbors to the stack.
+
+    After the DFS has completed, the function appends the component list to the 
+    components list.
+
+    Finally, the function returns the components list, which contains the connected 
+    components of the graph. Each connected component is represented as a list of 
+    nodes.
+    
+    eg:
+        components = [[0, 1, 2], [3, 5, 4, 6], [7, 9, 8]]
+    
+    """
+    
+    
+    visited = set()
+    components = []
+
+    for start_node in graph:
+        if start_node not in visited:
+            stack = [start_node]
+            component = []
+            while stack:
+                node = stack.pop()
+                if node not in visited:
+                    visited.add(node)
+                    component.append(node)
+                    stack.extend([neighbor for neighbor in graph[node] if neighbor not in visited])
+            components.append(component)
+    return components
+
+
+
+
+
+
 def DFS(graph, node, visited):
     ''' 
         The DFS function takes a graph, a node, and a set of 
         visited nodes as inputs, and performs a depth-first 
         search starting from the node. 
+        
+        is not being used
+
     '''
     visited.add(node)
     for neighbor in graph[node]:
@@ -487,6 +569,16 @@ def DFS(graph, node, visited):
             DFS(graph, neighbor, visited)
 
 def find_groups(graph):
+    '''
+    
+    is not being used due: 
+    
+    Python: maximum recursion depth exceeded while calling a Python object
+
+    for more info access: 
+    https://stackoverflow.com/questions/6809402/python-maximum-recursion-depth-exceeded-while-calling-a-python-object
+        
+    '''
     visited = set()
     groups = []
     for node in graph:

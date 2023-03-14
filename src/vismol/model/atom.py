@@ -236,15 +236,40 @@ class Atom:
             ball = ATOM_TYPES[self.symbol][6]
         return ball
     
+    
     def coords(self, frame=None):
-        """ Function doc """
+        """ 
+        frame = int
+        
+        Returns the coordinates of an atom according to the specified frame. 
+        If no frame is specified, the frame set by easyhybrid (probably by the 
+        scale bar of the trajectory manipulation window) is used. If the object 
+        (vobject) has a smaller number of frames than the one set by the 
+        interface, the last frame of the object is used.
+        
+        return  xyz 
+        """
         if frame is None:
             frame  = self.vm_object.vm_session.frame
-        # x = self.vm_object.frames[frame][(self.index-1)*3  ]
-        # y = self.vm_object.frames[frame][(self.index-1)*3+1]
-        # z = self.vm_object.frames[frame][(self.index-1)*3+2]
-        # return np.array([x, y, z])
+            print (frame, len(self.vm_object.frames))
+            
+            if len(self.vm_object.frames)-1 <= frame:
+                frame = len(self.vm_object.frames)-1
+            else:
+                pass
+        
         return self.vm_object.frames[frame, self.atom_id]
+    
+    
+    #def coords(self, frame=None):
+    #    """ Function doc """
+    #    if frame is None:
+    #        frame  = self.vm_object.vm_session.frame
+    #    # x = self.vm_object.frames[frame][(self.index-1)*3  ]
+    #    # y = self.vm_object.frames[frame][(self.index-1)*3+1]
+    #    # z = self.vm_object.frames[frame][(self.index-1)*3+2]
+    #    # return np.array([x, y, z])
+    #    return self.vm_object.frames[frame, self.atom_id]
     
     def get_grid_position(self, gridsize=3, frame=None):
         """ Function doc """
