@@ -7,6 +7,8 @@ vertex_shader_dashed_lines = """
 
 uniform mat4 model_mat;
 uniform mat4 view_mat;
+precision highp float; 
+precision highp int;
 
 in vec3 vert_coord;
 in vec3 vert_color;
@@ -21,6 +23,8 @@ void main(){
 """
 geometry_shader_dashed_lines = """
 #version 330
+precision highp float; 
+precision highp int;
 
 layout (lines) in;
 layout (line_strip, max_vertices = 4) out;
@@ -74,7 +78,7 @@ in float line_dot_value;
 out vec4 final_color;
 
 void main(){
-    if(mod(round(line_dot_value * 10), 4) > 0)
+    if(mod(round(line_dot_value * 20), 4) > 0)
          discard;
     
     float dist = abs(frag_coord.z);

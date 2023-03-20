@@ -134,6 +134,12 @@ class VismolSession():
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
+            elif rep_type == "dash":
+                for bond in vm_object.bonds:
+                    if bond.atom_i.dash and bond.atom_j.dash:
+                        show_hide_indexes.append(bond.atom_index_i)
+                        show_hide_indexes.append(bond.atom_index_j)
+            
             elif rep_type == "dynamic":
                 self.define_dynamic_bonds()
                 for bond in vm_object.bonds:

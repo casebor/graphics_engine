@@ -26,6 +26,7 @@ import time
 import numpy as np
 from vismol.utils import matrix_operations as mop
 from vismol.core.vismol_object import VismolObject
+from vismol.model.atom import Atom
 
 
 class VismolViewingSelection:
@@ -289,8 +290,21 @@ class VismolPickingSelection:
         atom4 = self.picking_selections_list[3]
         
         '''
+        new_indexes =[]
+        show  = False
+        for index, atom in enumerate(self.picking_selections_list):
+            if atom is not None:
+                new_indexes.append(index)
+                self.vm_session.vm_glcore.sphere_selection.frames[0][index] = atom.coords(frame = None)
+                self.vm_session.vm_glcore.sphere_selection.representations["spheres"].define_new_indexes_to_vbo(new_indexes)
+                self.vm_session.vm_glcore.sphere_selection.representations["spheres"].was_rep_ind_modified = True
+                self.vm_session.vm_glcore.sphere_selection.representations["spheres"].active = True
+        '''
+
+        '''
         if atom1 and atom2:
             self.refresh_pk1pk2_representations(vobj_label="pk1pk2", atom1=atom1, atom2=atom2)
+            print(self.vm_session.vm_geometric_object_dic["pk1pk2"])
             self.vm_session.vm_geometric_object_dic["pk1pk2"].representations["dash"].active = True
             if atom3:
                 xyz1 = atom1.coords()
@@ -325,51 +339,62 @@ class VismolPickingSelection:
         else:
             if self.vm_session.vm_geometric_object_dic["pk3pk4"]:
                 self.vm_session.vm_geometric_object_dic["pk3pk4"].representations["dash"].active = False
-        '''
+        #'''
     def refresh_pk1pk2_representations(self, vobj_label="pk1pk2", atom1=None, atom2=None):
         """ Function doc """
         xyz1 = atom1.coords()
         xyz2 = atom2.coords()
         frame = np.array(xyz1 + xyz2, dtype=np.float32)
         
-        if self.vm_session.vm_geometric_object_dic[vobj_label]:
-            self.vm_session.vm_geometric_object_dic[vobj_label].frames = [frame]
-            self.vm_session.vm_geometric_object_dic[vobj_label].representations["dash"]._make_gl_vao_and_vbos()
-            self.vm_session.vm_geometric_object_dic[vobj_label].active = True
-        else:
-            atoms = []
-            atoms.append({
-                          "index"      : 0             , 
-                          "name"       : "pK"           , 
-                          "resi"       : ""            , 
-                          "resn"       : ""            , 
-                          "chain"      : ""            , 
-                          "symbol"     : "pK"           , 
-                          "occupancy"  : 00.00         , 
-                          "bfactor"    : 0.00          , 
-                          "charge"     : 0.00           
-                          })
-            atoms.append({
-                          "index"      : 1     , 
-                          "name"       : "pK"   , 
-                          "resi"       : ""    , 
-                          "resn"       : ""    , 
-                          "chain"      : ""    , 
-                          "symbol"     : "pK"   , 
-                          "occupancy"  : 00.00 , 
-                          "bfactor"    : 0.00  , 
-                          "charge"     : 0.00   
-                          })
-            
-            frame = np.array(xyz1 + xyz2, dtype=np.float32)
-            self.vobject_picking = VismolObject(name="UNK", index=-1,
-                                                vismol_session                 = self.vm_session,
-                                                trajectory                     = [frame],
-                                                bonds_pair_of_indexes          = [0,1])
-            
-            self.vobject_picking.active = True
-            self.vobject_picking.set_model_matrix(self.vm_session.vm_glcore.model_mat)
-            
-            #self.vobject_picking.create_representation(rep_type = "dash")
-            self.vm_session.vm_geometric_object_dic[vobj_label] = self.vobject_picking
+        #if self.vm_session.vm_geometric_object_dic[vobj_label] is not None:
+        #    self.vm_session.vm_geometric_object_dic[vobj_label].frames = [frame]
+        #    self.vm_session.vm_geometric_object_dic[vobj_label].representations["dash"]._make_gl_vao_and_vbos()
+        #    self.vm_session.vm_geometric_object_dic[vobj_label].active = True
+        #else:
+            #atoms = []
+        frame = np.array(xyz1 + xyz2, dtype=np.float32)
+        self.vobject_picking = VismolObject(name="UNK", index=-1,
+                                            vismol_session                 = self.vm_session,
+                                            trajectory                     = [frame],
+                                            bonds_pair_of_indexes          = [0,1])
+        self.vobject_picking.set_model_matrix(self.vm_session.vm_glcore.model_mat)
 
+
+
+
+
+
+        atom1 = Atom(vismol_object = self.vobject_picking, 
+                    name          ='pK'  , 
+                    index         = 0,
+                    residue       = None , 
+                    chain         = None, 
+                    atom_id       = 0,
+                    occupancy     = 0, 
+                    bfactor       = 0 ,
+                    charge        = 0 )
+        
+        atom2 = Atom(vismol_object = self.vobject_picking, 
+                     name          ='pK'  , 
+                     index         = 1,
+                     residue       = None , 
+                     chain         = None, 
+                     atom_id       = 1,
+                     occupancy     = 0, 
+                     bfactor       = 0 ,
+                     charge        = 0 )
+
+        color = [1,1,0]
+        atom1.color = np.array(color, dtype=np.float32)
+        atom2.color = np.array(color, dtype=np.float32)
+
+
+        self.vobject_picking.atoms[0] = atom1
+        self.vobject_picking.atoms[1] = atom2
+        self.vobject_picking._generate_color_vectors(-1)
+        self.vobject_picking.active = True
+        self.vobject_picking.index_bonds = [0,1]
+        self.vobject_picking.create_representation(rep_type="dash")
+        #self.vobject_picking.create_representation(rep_type = "dash")
+        self.vm_session.vm_geometric_object_dic[vobj_label] = self.vobject_picking
+        print(self.vm_session.vm_geometric_object_dic)

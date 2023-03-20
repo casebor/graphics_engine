@@ -73,7 +73,7 @@ class VismolConfig:
         #                                   "ribbon", "sticks", "spheres", "impostor",
         #                                   "surface", "cartoon", "freetype",
         #                                   "picking_dots"}
-        self.representations_available = {"dots", "lines", "nonbonded", "impostor",
+        self.representations_available = {"dots", "lines", "nonbonded", "impostor",'dash',
                                           "sticks", "spheres", 'ribbons', 'dynamic','vdw_spheres'}
     
     

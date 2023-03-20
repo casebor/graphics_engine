@@ -45,6 +45,9 @@ import vismol.libgl.shaders.vm_freetype as shaders_vm_freetype
 import vismol.libgl.shaders.dashed_lines as shaders_dashed_lines
 import vismol.utils.matrix_operations as mop
 
+from vismol.core.vismol_object import VismolObject
+from vismol.model.atom import Atom
+
 logger = getLogger(__name__)
 
 
@@ -64,6 +67,7 @@ class VismolGLCore:
         self.shader_programs = {}
         self.core_shader_programs = {}
         self.representations_available = self.vm_config.representations_available
+        self.sphere_selection = None
     
     def initialize(self):
         """ Enables the buffers and other charasteristics of the OpenGL context.
@@ -501,12 +505,30 @@ class VismolGLCore:
         # Check if the picking function is active.
         # Viewing and picking selections cannot be displayed at the same time.
         if self.vm_session.picking_selection_mode:
-            self._draw_picking_label()
-            '''Here is where we will draw the dashed lines'''
+            
+            '''#
+            #------------------------------------------------------------------
+            if self.sphere_selection is not None:
+                pass
+                #self.sphere_selection.representations["spheres"].draw_representation()
+            else:
+                self._create_sphere_selection()  
+                #self.sphere_selection.representations["spheres"].draw_representation()
+            #------------------------------------------------------------------
+            '''#
+            
             #for rep_name in self.vm_session.vm_geometric_object_dic.keys():
             #    if self.vm_session.vm_geometric_object_dic[rep_name]:
-            #        if self.vm_session.vm_geometric_object_dic[rep_name].representations["dotted_lines"].active:
-            #            self.vm_session.vm_geometric_object_dic[rep_name].representations["dotted_lines"].draw_representation()
+            #        self.vm_session.vm_geometric_object_dic[rep_name].representations[rep_name].draw_representation()
+            
+            
+            self._draw_picking_label()
+            
+            '''Here is where we will draw the dashed lines'''
+            for rep_name in self.vm_session.vm_geometric_object_dic.keys():
+                if self.vm_session.vm_geometric_object_dic[rep_name]:
+                    if self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].active:
+                        self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].draw_representation()
         else:
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
                 # Here are represented the blue dots referring to the atom's selections
@@ -528,6 +550,77 @@ class VismolGLCore:
             self.axis._draw(True)
             self.axis._draw(False)
         return True
+    
+    def _create_sphere_selection (self):
+        """ Function doc """
+        self.sphere_selection = VismolObject(self.vm_session, len(self.vm_session.vm_objects_dic), name='test')
+        self.sphere_selection.set_model_matrix(self.model_mat)
+        self.sphere_selection.create_representation(rep_type="spheres")
+        coords    = np.empty([1, 4, 3], dtype=np.float32)
+        self.sphere_selection.frames = coords
+        
+        for index in range(0,4):
+            atom = Atom(vismol_object = self.sphere_selection, 
+                    name          ='Br'  , 
+                    index         = index,
+                    residue       = None , 
+                    chain         = None, 
+                    atom_id       = index,
+                    occupancy     = 0, 
+                    bfactor       = 0 ,
+                    charge        = 0 )
+            
+            atom.vdw_rad  = 2.5 
+            atom.cov_rad  = 2.5 
+            atom.ball_rad = 2.5 
+            color = [1,1,0]
+            atom.color = np.array(color, dtype=np.float32)
+            self.sphere_selection.atoms[index] = atom
+        
+        
+        self.sphere_selection.representations["spheres"].define_new_indexes_to_vbo(range(0,4))
+        self.sphere_selection.representations["spheres"].active = False
+        self.sphere_selection.representations["spheres"].was_rep_ind_modified = True
+        self.vm_session.vm_geometric_object_dic['spheres'] = self.sphere_selection
+        
+        '''
+        for index in range(1,5):
+            atoms.append({"name"     : 'Au',
+                          "resn"     : 'SEL',
+                          "chain"    : 'A',
+                          "resi"     : '1',
+                          "occupancy": '1',
+                          "bfactor"  : 0,
+                          "charge"   : 0,
+                          "index"    : index})
+        
+        for _atom in atoms:
+            if _atom["chain"] not in vm_object.chains.keys():
+                vm_object.chains[_atom["chain"]] = Chain(vm_object, name=_atom["chain"])
+            _chain = vm_object.chains[_atom["chain"]]
+            
+            if _atom["resi"] not in _chain.residues.keys():
+                _r = Residue(vm_object, name=_atom["resn"], index=_atom["resi"], chain=_chain)
+                vm_object.residues[_atom["resi"]] = _r
+                _chain.residues[_atom["resi"]] = _r
+            _residue = _chain.residues[_atom["resi"]]
+            
+            atom = Atom(vm_object, name=_atom["name"], index=_atom["index"],
+                        residue=_residue, chain=_chain, atom_id=atom_id,
+                        occupancy=_atom["occupancy"], bfactor=_atom["bfactor"],
+                        charge=_atom["charge"])
+            atom.unique_id = unique_id
+            atom._generate_atom_unique_color_id()
+            _residue.atoms[atom_id] = atom
+            vm_object.atoms[atom_id] = atom
+            atom_id += 1
+            unique_id += 1
+        #logger.debug("Time used to build the tree: {:>8.5f} secs".format(time.time() - initial))
+        vm_object.frames = PDBFiles.get_coords_from_raw_frames(rawframes, atom_id, vismol_session.vm_config.n_proc)
+        '''
+
+
+
     
     def create_gl_programs(self):
         """ Function doc

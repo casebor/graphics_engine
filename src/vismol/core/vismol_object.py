@@ -146,7 +146,7 @@ class VismolObject:
                                                     active=True, indexes=list(self.atoms.keys()), vdw =True)
 
         elif rep_type == "dash":
-            self.representations["dash"] = LinesRepresentation(self, self.vm_session.vm_glcore,
+            self.representations["dash"] = DashedLinesRepresentation(self, self.vm_session.vm_glcore,
                                                 active=True, indexes=self.index_bonds)
         elif rep_type == "ribbons":
             self.representations["ribbons"] = SticksRepresentation(self, self.vm_session.vm_glcore,

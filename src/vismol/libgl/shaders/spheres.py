@@ -81,7 +81,7 @@ void main(){
     float dist = abs(frag_coord.z);
     if(dist>=fog_start){
         float fog_factor = (fog_end-dist)/(fog_end-fog_start);
-        final_color = mix(fog_color, out_color, fog_factor);
+        final_color = mix(fog_color, out_color, fog_factor );
     }
     else{
        final_color = out_color;
