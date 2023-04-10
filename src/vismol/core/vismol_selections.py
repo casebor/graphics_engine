@@ -291,15 +291,17 @@ class VismolPickingSelection:
         
         '''
         new_indexes =[]
-        show  = False
+        #self.vm_session.vm_geometric_object_dic['picking_spheres'].representations["picking_spheres"].active  = False
+        
         for index, atom in enumerate(self.picking_selections_list):
+            print (atom, index)
             if atom is not None:
                 new_indexes.append(index)
                 self.vm_session.vm_glcore.sphere_selection.frames[0][index] = atom.coords(frame = None)
-                self.vm_session.vm_glcore.sphere_selection.representations["spheres"].define_new_indexes_to_vbo(new_indexes)
-                self.vm_session.vm_glcore.sphere_selection.representations["spheres"].was_rep_ind_modified = True
-                self.vm_session.vm_glcore.sphere_selection.representations["spheres"].active = True
-        '''
+                self.vm_session.vm_geometric_object_dic['picking_spheres'].representations["picking_spheres"].define_new_indexes_to_vbo(new_indexes)
+                self.vm_session.vm_geometric_object_dic['picking_spheres'].representations["picking_spheres"].was_rep_ind_modified = True
+                self.vm_session.vm_geometric_object_dic['picking_spheres'].representations["picking_spheres"].active = True
+        #'''#
 
         '''
         if atom1 and atom2:

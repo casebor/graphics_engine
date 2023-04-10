@@ -133,6 +133,8 @@ class Atom:
                     symbol = "Ca"
                 elif name[1] =="l":
                     symbol = "Cl"
+                elif name[1] =="L":
+                    symbol = "Cl"
                 elif name[1] =="d":
                     symbol = "Cd"
                 elif name[1] =="u":

@@ -34,11 +34,11 @@ class VismolConfig:
         self.gl_parameters = {"background_color": [0.0, 0.0, 0.0, 1.0],#[1.0, 1.0, 1.0, 1.0],#"background_color": [0.0, 0.0, 0.0, 1.0],
                               
                               "color_type": 0,
-                              "dot_size": 20,
+                              "dot_size": 2,
                               "dots_size": 2,
                               "dot_type": 1,
                               "dot_sel_size": 1.5,
-                              "line_width": 2,
+                              "line_width": 3,
                               "line_width_selection": 80,
                               "line_type": 0,
                               "line_color": 0,
@@ -74,7 +74,7 @@ class VismolConfig:
         #                                   "surface", "cartoon", "freetype",
         #                                   "picking_dots"}
         self.representations_available = {"dots", "lines", "nonbonded", "impostor",'dash',
-                                          "sticks", "spheres", 'ribbons', 'dynamic','vdw_spheres'}
+                                          "sticks", "spheres", 'ribbons', 'dynamic','vdw_spheres', 'picking_spheres'}
     
     
     def save_easyhybrid_config(self):

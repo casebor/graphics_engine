@@ -515,20 +515,25 @@ class VismolGLCore:
                 self._create_sphere_selection()  
                 #self.sphere_selection.representations["spheres"].draw_representation()
             #------------------------------------------------------------------
-            '''#
             
-            #for rep_name in self.vm_session.vm_geometric_object_dic.keys():
-            #    if self.vm_session.vm_geometric_object_dic[rep_name]:
-            #        self.vm_session.vm_geometric_object_dic[rep_name].representations[rep_name].draw_representation()
             
+            #if self.sphere_selection.representations["picking_spheres"]:
+            #    if self.sphere_selection.representations["picking_spheres"].active:
+            #        self.sphere_selection.representations["picking_spheres"].draw_representation()
+            
+            for rep_name in self.vm_session.vm_geometric_object_dic.keys():
+                if self.vm_session.vm_geometric_object_dic[rep_name]:
+                    if self.vm_session.vm_geometric_object_dic[rep_name].active:
+                        self.vm_session.vm_geometric_object_dic[rep_name].representations[rep_name].draw_representation()
+            #'''#
             
             self._draw_picking_label()
             
             '''Here is where we will draw the dashed lines'''
-            for rep_name in self.vm_session.vm_geometric_object_dic.keys():
-                if self.vm_session.vm_geometric_object_dic[rep_name]:
-                    if self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].active:
-                        self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].draw_representation()
+            #for rep_name in self.vm_session.vm_geometric_object_dic.keys():
+            #    if self.vm_session.vm_geometric_object_dic[rep_name]:
+            #        if self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].active:
+            #            self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].draw_representation()
         else:
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
                 # Here are represented the blue dots referring to the atom's selections
@@ -555,7 +560,7 @@ class VismolGLCore:
         """ Function doc """
         self.sphere_selection = VismolObject(self.vm_session, len(self.vm_session.vm_objects_dic), name='test')
         self.sphere_selection.set_model_matrix(self.model_mat)
-        self.sphere_selection.create_representation(rep_type="spheres")
+        self.sphere_selection.create_representation(rep_type="picking_spheres")
         coords    = np.empty([1, 4, 3], dtype=np.float32)
         self.sphere_selection.frames = coords
         
@@ -570,18 +575,18 @@ class VismolGLCore:
                     bfactor       = 0 ,
                     charge        = 0 )
             
-            atom.vdw_rad  = 2.5 
-            atom.cov_rad  = 2.5 
-            atom.ball_rad = 2.5 
-            color = [1,1,0]
+            atom.vdw_rad  = 2.3 
+            atom.cov_rad  = 2.3 
+            atom.ball_rad = 2.3 
+            color = [0.0,0.0,0.2]
             atom.color = np.array(color, dtype=np.float32)
             self.sphere_selection.atoms[index] = atom
         
         
-        self.sphere_selection.representations["spheres"].define_new_indexes_to_vbo(range(0,4))
-        self.sphere_selection.representations["spheres"].active = False
-        self.sphere_selection.representations["spheres"].was_rep_ind_modified = True
-        self.vm_session.vm_geometric_object_dic['spheres'] = self.sphere_selection
+        self.sphere_selection.representations["picking_spheres"].define_new_indexes_to_vbo(range(0,4))
+        self.sphere_selection.representations["picking_spheres"].active = True
+        self.sphere_selection.representations["picking_spheres"].was_rep_ind_modified = True
+        self.vm_session.vm_geometric_object_dic['picking_spheres'] = self.sphere_selection
         
         '''
         for index in range(1,5):
@@ -1003,10 +1008,18 @@ class VismolGLCore:
         self.shader_programs["spheres_sel"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
                                                         shaders_spheres.sel_fragment_shader_spheres)
     
+    def _compile_shader_picking_spheres(self):
+        """ Function doc """
+        #print('\npicking_spheres'*10)
+        self.shader_programs["picking_spheres"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
+                                                                    shaders_spheres.sel_fragment_shader_spheres)
+        self.shader_programs["picking_spheres_sel"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
+                                                                        shaders_spheres.sel_fragment_shader_spheres)
+    
     def _compile_shader_vdw_spheres(self):
         """ Function doc """
-        self.shader_programs["vdw_spheres"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-                                                    shaders_spheres.fragment_shader_spheres)
+        self.shader_programs["vdw_spheres"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
+                                                    shaders_spheres.sel_fragment_shader_spheres)
         self.shader_programs["vdw_spheres_sel"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
                                                         shaders_spheres.sel_fragment_shader_spheres)
     

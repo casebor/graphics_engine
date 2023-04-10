@@ -141,6 +141,11 @@ class VismolObject:
         elif rep_type == "spheres":
             self.representations["spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=list(self.atoms.keys()) )
+        
+        elif rep_type == "picking_spheres":
+            self.representations["picking_spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
+                                                    active=True, indexes=list(self.atoms.keys()), mode =1 )
+        
         elif rep_type == "vdw_spheres":
             self.representations["vdw_spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=list(self.atoms.keys()), vdw =True)

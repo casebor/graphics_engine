@@ -70,6 +70,7 @@ class Representation:
         self.sel_shader_program = None
     
     def _check_vao_and_vbos(self):
+        #print(self.name)
         self.shader_program = self.vm_glcore.shader_programs[self.name]
         self.sel_shader_program = self.vm_glcore.shader_programs[self.name + "_sel"]
         if self.vao is None:
@@ -537,9 +538,14 @@ class SticksRepresentation(Representation):
 class SpheresRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, vismol_object, vismol_glcore, indexes, active=True, vdw = False):
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True, vdw = False, mode = 0):
         """ Class initialiser """
-        super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, "spheres", active, indexes)
+        if mode == 0:
+            super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, "spheres", active, indexes)
+        elif mode ==1:
+            super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, "picking_spheres", active, indexes)
+        else:
+            pass
         import vismol.utils.sphere_data as sphd
         self.level = self.vm_session.vm_config.gl_parameters["sphere_quality"]
         self.scale = self.vm_session.vm_config.gl_parameters["sphere_scale"]

@@ -265,8 +265,15 @@ class VismolSession():
             #print(len(bonds), bonds)
         #print(vobject.dynamic_bonds)
 
+    def hide_axes (self):
+        """ Function doc """
+        self.vm_glcore.show_axis = False
+    def show_axes (self):
+        """ Function doc """
+        self.vm_glcore.show_axis = True
 
-
+        
+    
     # def delete_vismol_object_by_index(self, index):
     #     """ Function doc
     #     """
