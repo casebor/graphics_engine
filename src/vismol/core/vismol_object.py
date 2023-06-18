@@ -415,9 +415,10 @@ class VismolObject:
         molecule object is created very similarly to the residue object
         
         """
+        #try:
         #groups = find_groups(self.topology)
         groups = find_connected_components(self.topology)
-        
+        mol_index = 0
         for mol_index, group in enumerate( groups ):
             atoms = {}
             molecule = Molecule(self, name="UNK", index = mol_index)
@@ -434,14 +435,17 @@ class VismolObject:
         #-------------------------------------------------------------
 
         for atom_index in self.non_bonded_atoms:
+            #try:
             mol_index += 1
             molecule = Molecule(self, name="UNK", index = mol_index)
             molecule.atoms[atom_index] = self.atoms[atom_index]
             self.atoms[atom_index].molecule = molecule
             self.molecules[mol_index] = molecule
+
+            #print(self.molecules)
+        #except:
+        #    print('Failure to determine the list of molecules!')
             
-        #print(self.molecules)
-        
     def define_Calpha_backbone (self):
         """ Function doc 
         Verifica quais conexões entre c_alphas são válidas.

@@ -833,12 +833,15 @@ class VismolGLCore:
             view_mat -- transformation matrix for the camera used
             proj_mat -- matrix for the space to be visualized in the scene
         """
+        
+        # it is not necessary get the location everytime - change it later pls!
         model = GL.glGetUniformLocation(program, "model_mat")
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, model_mat)
         view = GL.glGetUniformLocation(program, "view_mat")
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.view_matrix)
         proj = GL.glGetUniformLocation(program, "proj_mat")
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
+
     
     def load_dot_params(self, program):
         """ Function doc
@@ -963,6 +966,13 @@ class VismolGLCore:
         self.shader_programs["lines_sel"] = self.load_shaders(shaders_lines.shader_type[line_type]["sel_vertex_shader"],
                                                       shaders_lines.shader_type[line_type]["sel_fragment_shader"],
                                                       shaders_lines.shader_type[line_type]["sel_geometry_shader"])
+        #sticks_type = self.vm_config.gl_parameters["sticks_type"]
+        #self.shader_programs["lines"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["vertex_shader"],
+        #                                           shaders_sticks.shader_type[sticks_type]["fragment_shader"],
+        #                                           shaders_sticks.shader_type[sticks_type]["geometry_shader"])
+        #self.shader_programs["lines_sel"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["sel_vertex_shader"],
+        #                                               shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
+        #                                               shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
     
     def _compile_shader_nonbonded(self):
         """ Function doc """

@@ -139,6 +139,8 @@ class Atom:
                     symbol = "Cd"
                 elif name[1] =="u":
                     symbol = "Cu"
+                elif name[1] =="U":
+                    symbol = "Cu"
                 else:
                     symbol = "C"
             

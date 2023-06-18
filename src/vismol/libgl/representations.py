@@ -670,11 +670,23 @@ class DashedLinesRepresentation(Representation):
         self._check_vao_and_vbos()
         self._enable_anti_alias_to_lines()
         GL.glUseProgram(self.shader_program)
-        line_width = self.vm_session.vm_config.gl_parameters["line_width_selection"]
+        line_width = self.vm_session.vm_config.gl_parameters["line_width"]
+        line_width = (line_width*200/abs(self.vm_glcore.dist_cam_zrp)/2)**0.5
         GL.glLineWidth(line_width)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
+        
+        color = GL.glGetUniformLocation(self.shader_program, "uniform_color")
+        #GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
+        color2 = np.array([1.0 ,1.0, 0.0], dtype=np.float32)
+        GL.glUniform3fv(color, 1, color2)
+        
+        '''
+        test = GL.glGetUniformLocation(self.shader_program, "test_int")
+        test_int = 5
+        GL.glUniform1i(test, test_int)
+        '''
         
         if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
