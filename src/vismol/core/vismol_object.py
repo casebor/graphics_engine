@@ -113,6 +113,15 @@ class VismolObject:
         self.c_alpha_bonds = []
         self.c_alpha_atoms = []
     
+        ''' Cell and Symmetry'''
+        self.cell_parameters  = None
+        self.cell_coordinates = None
+        self.cell_indexes     = None
+        self.cell_colors      = None
+        self.cell_bonds       = None
+    
+    
+    
     def build_core_representations(self):
         """ Function doc """
         self.core_representations["picking_dots"] = PickingDotsRepresentation(self,
@@ -493,6 +502,98 @@ class VismolObject:
         #print(self.c_alpha_atoms)
         
 
+    def _calculate_unit_cell_vertices(self, a, b, c, alpha, beta, gamma):
+        '''
+        Returns the list of vertices positions of 
+        a box with parameters a, b, c, alpha, beta, gamma.
+        '''
+        
+        # Convert angles to radians
+        alpha_rad = np.radians(alpha)
+        beta_rad  = np.radians(beta)
+        gamma_rad = np.radians(gamma)
+
+        # Calculate unit cell vectors
+        v1 = np.array([a, 0, 0])
+        v2 = np.array([b * np.cos(gamma_rad), b * np.sin(gamma_rad), 0])
+        v3_x = c * np.cos(beta_rad)
+        v3_y = c * (np.cos(alpha_rad) - np.cos(beta_rad) * np.cos(gamma_rad)) / np.sin(gamma_rad)
+        v3_z = np.sqrt(c**2 - v3_x**2 - v3_y**2)
+        v3 = np.array([v3_x, v3_y, v3_z])
+
+        # Define the eight vertices of the unit cell
+        vertices = [
+            np.array([0, 0, 0]),
+            v1,
+            v2,
+            v2 + v1,
+            v3,
+            v3 + v1,
+            v3 + v2,
+            v3 + v2 + v1
+        ]
+
+        return vertices
+    
+    def set_cell (self, a, b, c, alpha, beta, gamma, color = [0.5, 0.5, 0.5]):
+        """
+        Assign the cell parameters to the 
+        "vismol_object" object.
+        
+        Arguments a, b, c, alpha, beta, gamma 
+        must be obtained externally.
+        
+        """
+        
+        self.cell_parameters = {'a'     : a, 
+                                'b'     : b, 
+                                'c'     : c, 
+                                'alpha' : alpha, 
+                                'beta'  : beta, 
+                                'gamma' : gamma
+                               }
+         
+        vertices = self._calculate_unit_cell_vertices(a, b, c, alpha, beta, gamma)
+
+
+        '''
+        The coordinates follow the same structure as the atoms, 
+        they are organized in a trajectory structure with only one 
+        frame.
+        '''
+        self.cell_coordinates = np.empty([1, 8, 3], dtype=np.float32)
+        self.cell_indexes     = []
+       
+        
+        '''
+        The connections between the vertices of the boxes 
+        are pre-established.
+        '''
+        self.cell_bonds       = [0,1, 0,2, 2,3, 0,4 , 1,3 , 1,5 , 2,3 , 2,6 , 3,7 , 4,6 , 4,5, 5,7, 6,7]       
+        self.cell_bonds       = np.array(self.cell_bonds, dtype=np.uint32)
+        
+        
+        '''
+        The colors of the vertices follow the same 
+        structure used in atoms
+        '''
+        self.cell_colors      = np.empty([8, 3], dtype=np.float32)
+
+        for i, vertex in enumerate(vertices, 0):
+        
+            print("Vertex {}: {:7.3f} {:7.3f} {:7.3f}".format(i, vertex[0] ,vertex[1] ,vertex[2]))
+            self.cell_indexes.append(i)
+            
+            self.cell_colors[i] = np.array(color, dtype=np.float32)
+            self.cell_coordinates[0,i,:] = vertex[0] ,vertex[1] ,vertex[2]  
+            
+
+        print('\n\n')
+        print (self.cell_colors)
+
+
+
+
 
 
 
@@ -557,11 +658,6 @@ def find_connected_components(graph):
                     stack.extend([neighbor for neighbor in graph[node] if neighbor not in visited])
             components.append(component)
     return components
-
-
-
-
-
 
 def DFS(graph, node, visited):
     ''' 

@@ -677,12 +677,14 @@ class DashedLinesRepresentation(Representation):
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
+        #How to pass data to shader on the fly. It's not the most efficient wood, but it's an okay solution in this case.
         color = GL.glGetUniformLocation(self.shader_program, "uniform_color")
         #GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
         color2 = np.array([1.0 ,1.0, 0.0], dtype=np.float32)
         GL.glUniform3fv(color, 1, color2)
         
         '''
+        #How to pass data to shader on the fly. It's not the most efficient wood, but it's an okay solution in this case.
         test = GL.glGetUniformLocation(self.shader_program, "test_int")
         test_int = 5
         GL.glUniform1i(test, test_int)
@@ -825,6 +827,255 @@ class ImpostorRepresentation(Representation):
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glPointSize(1)
         GL.glUseProgram(0)
+
+
+
+class CellLineRepresentation:
+    """ Class doc 
+    
+    This is a modified version of the Representations class. 
+    The differences are in the methods:
+
+    # _make_gl_representation_vao_and_vbos
+    # _load_coord_vbo
+    # _load_color_vbo
+
+    In this case, there is a modification in the code so that 
+    the coordinates, indices and colors transmitted to the GPU 
+    refer to the cell parameters.
+
+    In this class there is no selection presentation.
+    """
+    
+    def __init__ (self, vismol_object, vismol_glcore, name, active, indexes, is_dynamic = False):
+        self.vm_object = vismol_object
+        self.vm_session = vismol_object.vm_session
+        self.vm_glcore = vismol_glcore
+        self.name = name
+        self.active = active
+        self.indexes = np.array(indexes, dtype=np.uint32)
+        self.elements = np.uint32(self.indexes.shape[0])
+        
+        self.is_dynamic = is_dynamic
+        
+        self.was_rep_modified = False
+        self.was_sel_modified = False
+        self.was_col_modified = False
+        self.was_rep_coord_modified = False
+        self.was_sel_coord_modified = False
+        self.was_rep_ind_modified = False
+        self.was_sel_ind_modified = False
+        self.was_rep_col_modified = False
+        # representation
+        self.vao = None
+        self.ind_vbo = None
+        self.coord_vbo = None
+        self.col_vbo = None
+        self.size_vbo = None
+        # selection
+        #self.sel_vao = None
+        #self.sel_ind_vbo = None
+        #self.sel_coord_vbo = None
+        #self.sel_col_vbo = None
+        #self.sel_size_vbo = None
+        # shaders
+        self.shader_program = None
+        self.sel_shader_program = None
+    
+    def _check_vao_and_vbos(self):
+        #print(self.name)
+        self.shader_program = self.vm_glcore.shader_programs[self.name]
+        #self.sel_shader_program = self.vm_glcore.shader_programs[self.name + "_sel"]
+        if self.vao is None:
+            self._make_gl_representation_vao_and_vbos()
+        #if self.sel_vao is None:
+        #    self._make_gl_sel_representation_vao_and_vbos()
+    
+    def _make_gl_representation_vao_and_vbos(self):
+        """ Function doc """
+        logger.debug("building '{}' representation VAO and VBOs".format(self.name))
+        self.vao = self._make_gl_vao()
+        self.ind_vbo   = self._make_gl_index_buffer(self.indexes)
+        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.cell_coordinates[0], self.shader_program)
+        self.col_vbo   = self._make_gl_color_buffer(self.vm_object.cell_colors, self.shader_program)
+    
+    #def _make_gl_sel_representation_vao_and_vbos(self):
+    #    """ Function doc """
+    #    logger.debug("building '{}' background selection VAO and VBOs".format(self.name))
+    #    self.sel_vao = self._make_gl_vao()
+    #    self.sel_ind_vbo = self._make_gl_index_buffer(self.indexes)
+    #    self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.cell_coordinates[0], self.sel_shader_program)
+    #    self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
+    
+    def _make_gl_vao(self):
+        """ Function doc """
+        vao = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(vao)
+        return vao
+    
+    def _make_gl_index_buffer(self, indexes):
+        """ Function doc """
+        ind_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.nbytes, indexes, GL.GL_DYNAMIC_DRAW)
+        return ind_vbo
+    
+    def _make_gl_coord_buffer(self, coords, program):
+        """ Function doc """
+        coord_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.nbytes, coords, GL.GL_STATIC_DRAW)
+        att_position = GL.glGetAttribLocation(program, "vert_coord")
+        GL.glEnableVertexAttribArray(att_position)
+        GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
+        return coord_vbo
+    
+    def _make_gl_color_buffer(self, colors, program, instances=False):
+        """ Function doc """
+        col_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
+        att_colors = GL.glGetAttribLocation(program, "vert_color")
+        GL.glEnableVertexAttribArray(att_colors)
+        GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+        if instances:
+            GL.glVertexAttribDivisor(att_colors, 1)
+        return col_vbo
+    
+    #def _make_gl_radius_buffer(self, radii, program, instances=False):
+    #    """ Function doc """
+    #    rad_vbo = GL.glGenBuffers(1)
+    #    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, rad_vbo)
+    #    GL.glBufferData(GL.GL_ARRAY_BUFFER, radii.nbytes, radii, GL.GL_STATIC_DRAW)
+    #    att_rads = GL.glGetAttribLocation(program, "vert_radius")
+    #    GL.glEnableVertexAttribArray(att_rads)
+    #    GL.glVertexAttribPointer(att_rads, 1, GL.GL_FLOAT, GL.GL_FALSE, radii.itemsize, ctypes.c_void_p(0))
+    #    if instances:
+    #        GL.glVertexAttribDivisor(att_rads, 1)
+    #    return rad_vbo
+    
+    #def _make_gl_instance_buffer(self, instances, program):
+    #    """ Function doc """
+    #    insta_vbo = GL.glGenBuffers(1)
+    #    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, insta_vbo)
+    #    GL.glBufferData(GL.GL_ARRAY_BUFFER, instances.nbytes, instances, GL.GL_STATIC_DRAW)
+    #    gl_insta = GL.glGetAttribLocation(program, "vert_instance")
+    #    GL.glEnableVertexAttribArray(gl_insta)
+    #    GL.glVertexAttribPointer(gl_insta, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+    #    GL.glVertexAttribDivisor(gl_insta, 1)
+    #    return insta_vbo
+    
+    #def _make_gl_impostor_buffer(self, impostors_radii, program):
+    #    """ Function doc """
+    #    size_vbo = GL.glGenBuffers(1)
+    #    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, size_vbo)
+    #    GL.glBufferData(GL.GL_ARRAY_BUFFER, impostors_radii.nbytes, impostors_radii, GL.GL_STATIC_DRAW)
+    #    att_size = GL.glGetAttribLocation(program, "vert_dot_size")
+    #    GL.glEnableVertexAttribArray(att_size)
+    #    GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, impostors_radii.itemsize, ctypes.c_void_p(0))
+    #    
+    #    self.ratio = self.vm_glcore.width / self.vm_glcore.height
+    #    ratio_vbo = 1
+    #    # ratio = np.repeat(self.ratio, impostors_radii.shape[0])
+    #    # ratio_vbo = GL.glGenBuffers(1)
+    #    # GL.glBindBuffer(GL.GL_ARRAY_BUFFER, ratio_vbo)
+    #    # GL.glBufferData(GL.GL_ARRAY_BUFFER, ratio.nbytes, ratio, GL.GL_STATIC_DRAW)
+    #    # att_ratio = GL.glGetAttribLocation(program, "hw_ratio")
+    #    # GL.glEnableVertexAttribArray(att_ratio)
+    #    # GL.glVertexAttribPointer(att_ratio, 1, GL.GL_FLOAT, GL.GL_FALSE, ratio.itemsize, ctypes.c_void_p(0))
+    #    return size_vbo, ratio_vbo
+    
+    def _load_coord_vbo(self, coord_vbo=False, sel_coord_vbo=False):
+        """ This function assigns the coordinates to 
+        be drawn by the function  draw_representation"""
+        #frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
+        frame = self.vm_object.cell_coordinates[0]
+        if coord_vbo:
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
+        
+        #if sel_coord_vbo:
+        #    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sel_coord_vbo)
+        #    GL.glBufferData(GL.GL_ARRAY_BUFFER, frame.nbytes, frame, GL.GL_STATIC_DRAW)
+    
+    def _load_ind_vbo(self, ind_vbo=False, sel_ind_vbo=False):
+        """ Function doc """
+        #if self.is_dynamic:
+        #    frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
+        #    self.define_new_indexes_to_vbo(input_indexes = self.vm_object.dynamic_bonds[f])
+            
+        if ind_vbo:
+            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
+            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
+        
+        #if sel_ind_vbo:
+        #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.sel_ind_vbo)
+        #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL.GL_DYNAMIC_DRAW)
+    
+    def _load_color_vbo(self, colors):
+        """ This function assigns the colors to
+            be drawn by the function  draw_representation"""
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vm_object.cell_colors.nbytes, self.vm_object.cell_colors, GL.GL_STATIC_DRAW)
+    
+    def _enable_anti_alias_to_lines(self):
+        """ Function doc """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glEnable(GL.GL_LINE_SMOOTH)
+        GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
+    
+    def _disable_anti_alias_to_lines(self):
+        """ Function doc """
+        GL.glDisable(GL.GL_LINE_SMOOTH)
+        GL.glDisable(GL.GL_BLEND)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def define_new_indexes_to_vbo(self, input_indexes):
+        """ Function doc """
+        self.indexes = np.array(input_indexes, dtype=np.uint32)
+        self.elements = np.uint32(self.indexes.shape[0])
+
+
+    def draw_representation(self):
+        """ Function doc """
+        self._check_vao_and_vbos()
+        self._enable_anti_alias_to_lines()
+        GL.glUseProgram(self.shader_program)
+        line_width = self.vm_session.vm_config.gl_parameters["line_width"]
+        line_width = (line_width*200/abs(self.vm_glcore.dist_cam_zrp)/2)**0.5
+        GL.glLineWidth(line_width)
+        self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
+        self.vm_glcore.load_fog(self.shader_program)
+        GL.glBindVertexArray(self.vao)
+        
+        if self.was_rep_coord_modified:
+            self._load_coord_vbo(coord_vbo=True)
+            self.was_rep_coord_modified = False
+        if self.was_rep_ind_modified:
+            self._load_ind_vbo(ind_vbo=True)
+            self.was_rep_ind_modified = False
+        #self.was_col_modified = True
+        if self.was_col_modified:
+            self._load_color_vbo(None)
+            self.was_col_modified = False
+        
+        GL.glDrawElements(GL.GL_LINES, self.elements, GL.GL_UNSIGNED_INT, None)
+        
+        GL.glBindVertexArray(0)
+        self._disable_anti_alias_to_lines()
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
+
+    def draw_background_sel_representation(self, line_width_factor=5):
+        """ Function doc """
+        pass
+
+
+
+
+
 
 
 
