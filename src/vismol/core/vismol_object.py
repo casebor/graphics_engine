@@ -231,6 +231,20 @@ class VismolObject:
                     self.color_rainbow[i,:] = red, green, blue
                     green -= color_step
     
+    def define_bonds_from_external (self, index_bonds = [], internal = True):
+        """ Function doc """
+        if internal is True:
+            self.index_bonds = index_bonds
+
+            self._bonds_from_pair_of_indexes_list()
+            self._get_non_bonded_from_bonded_list()
+            
+            self._generate_topology_from_index_bonds()
+            self.define_molecules()
+            self.define_Calpha_backbone()
+        else:
+            return index_bonds
+    
     def find_bonded_and_nonbonded_atoms(self, selection=None, frame=0, gridsize=0.8,
                                          maxbond=2.4, tolerance=1.4, internal = True):
         """
