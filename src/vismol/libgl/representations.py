@@ -1085,7 +1085,7 @@ class LabelRepresentation:
         self.active = True
         self.was_rep_ind_modified = False
         self.was_sel_ind_modified = False    
-    
+        self.is_dynamic = False
     def define_new_indexes_to_vbo(self, indexes):
         """ Function doc """
         self.indexes = indexes
