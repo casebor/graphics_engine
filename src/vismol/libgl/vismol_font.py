@@ -161,6 +161,17 @@ class VismolFont():
         print(self.text_vbo, "text_vbo")
         print(self.coord_vbo, "coord_vbo")
     
+    
+    def set_dimensions (self, width, height ):
+        """ Function doc """
+        self.char_width  =  width
+        self.char_height =  height
+        self.offset = np.array([ width/2.0,  height/2.0], dtype=np.float32)
+    
+    def set_color (self, r = 1.0, g = 1.0, b = 1.0):      
+        self.color = np.array([r,g,b], dtype=np.float32)
+    
+    
     def draw_labels(self):
         """ Function doc """
         pass

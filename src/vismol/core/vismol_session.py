@@ -120,7 +120,7 @@ class VismolSession():
         self._change_attributes_for_atoms(selection.selected_atoms, rep_type, show)
         for vm_object in selection.selected_objects:
             if vm_object.representations[rep_type] is None:
-                vm_object.create_representation(rep_type=rep_type)
+                vm_object.create_representation(rep_type = rep_type)
             show_hide_indexes = []
             if rep_type == "lines":
                 for bond in vm_object.bonds:
@@ -185,20 +185,29 @@ class VismolSession():
             elif rep_type == "surface":
                 logger.error("Not implementer for 'surface' yet.")
                 raise NotImplementedError("Not implementer for 'surface' yet.")
+            
             elif rep_type == "cartoon":
                 logger.error("Not implementer for 'cartoon' yet.")
                 raise NotImplementedError("Not implementer for 'cartoon' yet.")
             
+            elif rep_type == "labels":
+                for atom in vm_object.atoms.values():
+                    if atom.labels:
+                        show_hide_indexes.append(atom.atom_id)
+            
             if len(show_hide_indexes) > 0:
+                print('vm_object.representations[rep_type].active = True')
                 vm_object.representations[rep_type].define_new_indexes_to_vbo(show_hide_indexes)
                 vm_object.representations[rep_type].active = True
                 vm_object.representations[rep_type].was_rep_ind_modified = True
                 vm_object.representations[rep_type].was_sel_ind_modified = True
             else:
                 vm_object.representations[rep_type].active = False
-        
+                print('vm_object.representations[rep_type].active = False')
+
         self.vm_widget.queue_draw()
-    
+        return selection
+        
     def forward_frame(self):
         """ Function doc """
         frame = self.frame + 1

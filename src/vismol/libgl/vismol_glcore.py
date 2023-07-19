@@ -83,7 +83,7 @@ class VismolGLCore:
                                  self.width / self.height,
                                  np.array([0,0,10], dtype=np.float32),
                                  self.zero_reference_point)
-        self.vm_font = VismolFont(color=[1, 1, 1, 0.6])
+        self.vm_font = VismolFont(color=[1, 1, 1, 1])
         self.axis = GLAxis()
         self.selection_box = SelectionBox()
         self.parent_widget.set_has_depth_buffer(True)
@@ -200,9 +200,12 @@ class VismolGLCore:
                 self.picking_y = np.float32(mouse_y)
                 self.picking = True
                 self.button = 1
+                #dragging is set to false here
+                self.dragging = False
                 self.parent_widget.queue_draw()
             if middle:
                 if self.atom_picked is not None:
+                    self.dragging = True
                     self.button = 2
                     self.center_on_atom(self.atom_picked)
                     self.atom_picked = None
@@ -253,6 +256,11 @@ class VismolGLCore:
                     menu_type = "sele_menu"
                 # The right button (button = 3) always opens one of the available menus.
                 self.parent_widget.show_gl_menu(menu_type=menu_type, info=info)
+        
+        
+        
+        self.dragging = False
+        self.parent_widget.queue_draw()
     
     def mouse_motion(self, mouse_x, mouse_y):
         """ Function doc
@@ -274,6 +282,11 @@ class VismolGLCore:
         if changed:
             self.dragging = True
             self.parent_widget.queue_draw()
+        
+        #else:
+        #    self.dragging = False
+        #    self.parent_widget.queue_draw()
+            
     
     def mouse_scroll(self, direction):
         """ Function doc
@@ -462,7 +475,7 @@ class VismolGLCore:
             return True
         return False
     
-    def render(self):
+    def render(self, rotating = False):
         """ This is the function that will be called everytime the window
             needs to be re-drawed.
         """
@@ -475,6 +488,8 @@ class VismolGLCore:
             self._selection_box_pick()
         if self.picking:
             self._pick()
+        
+        #print('self.dragging', self.dragging)
         
         GL.glClearColor(self.bckgrnd_color[0], self.bckgrnd_color[1],
                         self.bckgrnd_color[2], self.bckgrnd_color[3])
@@ -496,14 +511,26 @@ class VismolGLCore:
         for vm_object in self.vm_session.vm_objects_dic.values():
             if vm_object.active:
                 if vm_object.frames.shape[0] > 0:
+                    #print(vm_object.representations)
                     for representation in vm_object.representations.values():
                         if representation is not None:
                             # Only shows the representation if
                             # representations[rep_name].active = True
                             if representation.active:
                                 representation.draw_representation()
+                                
         # Check if the picking function is active.
         # Viewing and picking selections cannot be displayed at the same time.
+        
+        
+        '''
+        if self.dragging:
+            pass
+        else:
+            self._draw_labels()
+        '''
+        
+        
         if self.vm_session.picking_selection_mode:
             
             '''#
@@ -530,10 +557,13 @@ class VismolGLCore:
             self._draw_picking_label()
             
             '''Here is where we will draw the dashed lines'''
-            #for rep_name in self.vm_session.vm_geometric_object_dic.keys():
-            #    if self.vm_session.vm_geometric_object_dic[rep_name]:
-            #        if self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].active:
-            #            self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].draw_representation()
+            '''#
+            for rep_name in self.vm_session.vm_geometric_object_dic.keys():
+                if self.vm_session.vm_geometric_object_dic[rep_name]:
+                    if self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].active:
+                        self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].draw_representation()
+            '''#
+        
         else:
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
                 # Here are represented the blue dots referring to the atom's selections
@@ -884,6 +914,69 @@ class VismolGLCore:
         bck_col = GL.glGetUniformLocation(program, "alias_color")
         GL.glUniform3fv(bck_col, 1, self.bckgrnd_color[:3])
     
+    
+    def _draw_labels(self):
+        if self.vm_font.vao is None:
+            self.vm_font.make_freetype_font()
+            self.vm_font.make_freetype_texture(self.core_shader_programs["freetype"])
+        number = 1
+        self.chars = 0
+        xyz_pos = []
+        uv_coords = []
+        
+        self.do_once = True
+        
+        if self.do_once:
+            for vm_object in self.vm_session.vm_objects_dic.values():
+                for index, atom in vm_object.atoms.items():
+                    text = atom.residue.name +'/'+ atom.name+'/'+str(atom.index)
+                    frame = self._get_vismol_object_frame(atom.vm_object)
+                    x, y, z = atom.coords(frame)
+                    point = np.array([x, y, z, 1], dtype=np.float32)
+                    point = np.dot(point, self.model_mat)
+                    GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font.texture_id)
+                    for i, c in enumerate(text):
+                        self.chars += 1
+                        c_id = ord(c)
+                        x = c_id % 16
+                        y = c_id // 16 - 2
+                        xyz_pos.append(point[0] + i * self.vm_font.char_width)
+                        xyz_pos.append(point[1])
+                        xyz_pos.append(point[2])
+                        uv_coords.append(x * self.vm_font.text_u)
+                        uv_coords.append(y * self.vm_font.text_v)
+                        uv_coords.append((x + 1) * self.vm_font.text_u)
+                        uv_coords.append((y + 1) * self.vm_font.text_v)
+                number += 1
+            xyz_pos = np.array(xyz_pos, dtype=np.float32)
+            uv_coords = np.array(uv_coords, dtype=np.float32)
+            
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.coord_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize * len(xyz_pos),
+                            xyz_pos, GL.GL_DYNAMIC_DRAW)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.text_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize * len(uv_coords),
+                            uv_coords, GL.GL_DYNAMIC_DRAW)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+            GL.glDisable(GL.GL_DEPTH_TEST)
+            GL.glEnable(GL.GL_BLEND)
+            GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+            GL.glUseProgram(self.core_shader_programs["freetype"])
+            self.do_once = False
+        
+        self.vm_font.load_matrices(self.core_shader_programs["freetype"],
+                                   self.glcamera.view_matrix,
+                                   self.glcamera.projection_matrix)
+        self.vm_font.load_font_params(self.core_shader_programs["freetype"])
+        
+        GL.glBindVertexArray(self.vm_font.vao)
+        GL.glDrawArrays(GL.GL_POINTS, 0, self.chars)
+        GL.glDisable(GL.GL_BLEND)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+
+
+    
     def _draw_picking_label(self):
         """ This function draws the labels of the atoms selected by the
             function picking #1 #2 #3 #4
@@ -1209,7 +1302,7 @@ class VismolGLCore:
                 if vm_object:
                     model_pos = vm_object.model_mat.T.dot(pos)[:3]
                     vm_object.model_mat = mop.my_glTranslatef(vm_object.model_mat, -model_pos)
-            
+            #self.dragging = True
             self.parent_widget.queue_draw()
     
     def queue_draw(self):

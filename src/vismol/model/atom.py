@@ -94,7 +94,19 @@ class Atom:
         self.surface        = False
         self.bonds          = []
         self.isfree         = True
-    
+        self.labels         = False
+        self.label_text     = ''
+                              #{
+                              #'index'     : False,
+                              #'name'      : False,
+                              #'symbol'    : False,
+                              #'MM_type'   : False,
+                              #'MM_charge' : False,
+                              #'res_type'  : False,
+                              #'res_number': False,
+                              #'chain'     : False,
+                              #}
+        
     def _get_symbol(self):
         """ Function doc """
         name = self.name.strip()

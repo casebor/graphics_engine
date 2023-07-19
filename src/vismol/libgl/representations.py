@@ -27,6 +27,7 @@ import ctypes
 import numpy as np
 from OpenGL import GL
 from logging import getLogger
+from vismol.libgl.vismol_font import VismolFont
 
 logger = getLogger(__name__)
 
@@ -829,7 +830,6 @@ class ImpostorRepresentation(Representation):
         GL.glUseProgram(0)
 
 
-
 class CellLineRepresentation:
     """ Class doc 
     
@@ -1073,11 +1073,106 @@ class CellLineRepresentation:
         pass
 
 
+class LabelRepresentation:
+    
+    def __init__ (self, vismol_object, vismol_glcore, indexes, labels, color = [1, 1, 1, 1]):
+        self.vm_object = vismol_object
+        self.vm_session = vismol_object.vm_session
+        self.vm_glcore = vismol_glcore
+        self.vm_font = VismolFont(color=color)
+        self.indexes = indexes
+        self.labels = labels
+        self.active = True
+        self.was_rep_ind_modified = False
+        self.was_sel_ind_modified = False    
+    
+    def define_new_indexes_to_vbo(self, indexes):
+        """ Function doc """
+        self.indexes = indexes
+    
+    def draw_representation(self):
+        """ Function doc """
+        if self.vm_glcore.dragging:
+            return False
+
+        if self.vm_font.vao is None:
+            self.vm_font.set_dimensions (width = 0.15, height= 0.18 )
+            #self.vm_font.set_color(r = 255, g = 0, b =0)
+            self.vm_font.make_freetype_font()
+            #self.vm_font.make_freetype_texture(self.core_shader_programs["freetype"])
+            self.vm_font.make_freetype_texture(self.vm_glcore.core_shader_programs["freetype"])
+        
+        
+        
+        number = 1
+        self.chars = 0
+        xyz_pos = []
+        uv_coords = []
+        
+        
+        #for vm_object in self.vm_session.vm_objects_dic.values():
+        #for index, atom in vm_object.atoms.items():
+        for index in self.indexes:
+            atom = self.vm_object.atoms[index]
+            
+            
+            
+            text = atom.label_text#+'/'+str(atom.index)
+            #text = atom.residue.name +'/'+ atom.name+'/'+str(atom.index)
+            
+            
+            
+            frame = self.vm_glcore._get_vismol_object_frame(atom.vm_object)
+            x, y, z = atom.coords(frame)
+            point = np.array([x, y, z, 1], dtype=np.float32)
+            point = np.dot(point, self.vm_glcore.model_mat)
+            GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font.texture_id)
+            for i, c in enumerate(text):
+                self.chars += 1
+                c_id = ord(c)
+                x = c_id %  16      #  16  
+                y = c_id // 16 - 2  #  16 - 2
+                xyz_pos.append((point[0] + i * self.vm_font.char_width) - (len(text)*0.1)/2)
+                xyz_pos.append(point[1])
+                xyz_pos.append(point[2])
+                uv_coords.append(x * self.vm_font.text_u)
+                uv_coords.append(y * self.vm_font.text_v)
+                uv_coords.append((x + 1) * self.vm_font.text_u)
+                uv_coords.append((y + 1) * self.vm_font.text_v)
 
 
 
+        xyz_pos = np.array(xyz_pos, dtype=np.float32)
+        uv_coords = np.array(uv_coords, dtype=np.float32)
+
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.coord_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize * len(xyz_pos),
+                        xyz_pos, GL.GL_DYNAMIC_DRAW)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.text_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize * len(uv_coords),
+                        uv_coords, GL.GL_DYNAMIC_DRAW)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glUseProgram(self.vm_glcore.core_shader_programs["freetype"])
+        self.do_once = False
+        
+        self.vm_font.load_matrices(self.vm_glcore.core_shader_programs["freetype"],
+                                   self.vm_glcore.glcamera.view_matrix,
+                                   self.vm_glcore.glcamera.projection_matrix)
+        self.vm_font.load_font_params(self.vm_glcore.core_shader_programs["freetype"])
+        
+        GL.glBindVertexArray(self.vm_font.vao)
+        GL.glDrawArrays(GL.GL_POINTS, 0, self.chars)
+        GL.glDisable(GL.GL_BLEND)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
 
 
+    def draw_background_sel_representation(self, line_width_factor=5):
+        """ Function doc """
+        pass
 
 '''
 class DynamicBonds(Representation):

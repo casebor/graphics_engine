@@ -40,6 +40,7 @@ from vismol.libgl.representations import ImpostorRepresentation
 from vismol.libgl.representations import SticksRepresentation
 from vismol.libgl.representations import SpheresRepresentation
 from vismol.libgl.representations import DashedLinesRepresentation
+from vismol.libgl.representations import LabelRepresentation
 # from vismol.libgl.representations import WiresRepresentation
 # from vismol.libgl.representations import RibbonsRepresentation
 import vismol.utils.c_distances as cdist
@@ -119,7 +120,7 @@ class VismolObject:
         self.cell_indexes     = None
         self.cell_colors      = None
         self.cell_bonds       = None
-    
+        self.representations['labels'] = None
     
     
     def build_core_representations(self):
@@ -169,6 +170,14 @@ class VismolObject:
             #print(self.dynamic_bonds)
             self.representations["dynamic"] = SticksRepresentation(self, self.vm_session.vm_glcore,
                                                                   active=True, indexes=self.index_bonds, is_dynamic = True)
+        
+        elif rep_type == "labels":
+            #print(self.dynamic_bonds)
+            self.representations["labels"] = LabelRepresentation(vismol_object  = self  ,  
+                                                                  vismol_glcore = self.vm_session.vm_glcore , 
+                                                                  indexes       = [0,1,2] , 
+                                                                  labels        = None     , 
+                                                                  color         = [1, 1, 0, 1])
         
         
         
