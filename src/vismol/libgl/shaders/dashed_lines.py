@@ -3,7 +3,7 @@
 #
 
 vertex_shader_dashed_lines = """
-#version 450
+#version 330
 precision highp float; 
 precision highp int;
 
@@ -56,7 +56,7 @@ void main(){
 #}
 #"""
 geometry_shader_dashed_lines =  """
-#version 450
+#version 330
 precision highp float; 
 precision highp int;
 
@@ -145,7 +145,7 @@ void main(){
 #}
 #"""
 fragment_shader_dashed_lines = """
-#version 450
+#version 330
 precision highp float; 
 precision highp int;
 
