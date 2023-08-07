@@ -93,6 +93,6 @@ void main(){
 }
 
 for label in shaders:
-	print label
-	print shaders[label]
+	print (label)
+	print (shaders[label])
 #print shaders['vertex_shader_lines']

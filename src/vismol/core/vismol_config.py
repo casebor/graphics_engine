@@ -47,10 +47,12 @@ class VismolConfig:
                               "ribbon_type": 2,
                               "ribbon_color": 0,
                               "sphere_type": 0,
-                              "sphere_scale": 0.25,
+                              "sphere_scale": 0.15,
+                              #"sphere_scale": 0.25,
                               "sphere_quality": 2,
                               "impostor_type": 0,
-                              "sticks_radius": 2.5,
+                              #"sticks_radius": 2.5,
+                              "sticks_radius": 0.5,
                               "sticks_color": 0,
                               "sticks_type": 0,
                               "antialias": True,
@@ -73,7 +75,7 @@ class VismolConfig:
         #                                   "ribbon", "sticks", "spheres", "impostor",
         #                                   "surface", "cartoon", "freetype",
         #                                   "picking_dots"}
-        self.representations_available = {"dots", "lines", "nonbonded", "impostor",'dash',
+        self.representations_available = {"dots", "lines", "nonbonded", "impostor",'dash', #"cartoon",
                                           "sticks", "spheres", 'ribbons', 'dynamic','vdw_spheres', 'picking_spheres'}
     
     

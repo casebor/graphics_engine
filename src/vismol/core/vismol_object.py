@@ -53,6 +53,19 @@ class VismolObject:
         a model on the screen. Everything that is represented in the graphical 
         form is stored in the form of a VismolObject.
         
+        
+        Arguments:
+        - vismol_session: Vismol Session - Necessary to build the "atomtree_structure".
+                          The vismol_session contains the atom_id_counter (self.vm_session.atom_id_counter).
+        - index: Unique index for the VismolObject to find it in self.vm_session.vismol_objects_dic.
+        - name: Label that describes the object (default: "UNK").
+        - active: Boolean flag to enable/disable the object (default: False).
+        - trajectory: A list of coordinates representing the trajectory frames.
+                      Each frame is represented as a list of [x, y, z] coordinates (optional).
+        - color_palette: Integer number to access the color pick for carbon atoms (0 = green, 1 = purple, ...) (optional).
+        - bonds_pair_of_indexes: Pair of atoms used to define bonds, like [1, 3, 1, 17, 3, 4, 4, 20] (optional).
+   
+        
         Arguments
         
         name       = string  - Label that describes the object  
@@ -65,45 +78,71 @@ class VismolObject:
     def __init__(self, vismol_session, index, name="UNK", active=False, trajectory=None,
                  color_palette=None, bonds_pair_of_indexes=None):
         """ Class initialiser """
+        # References to vismol_session and its configuration
         self.vm_session = vismol_session
         self.vm_config = vismol_session.vm_config
+                                   
+                                   # Unique index for the VismolObject to find it in self.vm_session.vismol_objects_dic
         self.index = index         # import to find vboject in self.vm_session.vismol_objects_dic
+        
         self.name = name
-        self.active = active       # for "show and hide"   enable/disable
-        self.frames = trajectory
+        self.active = active       # Boolean flag to enable/disable the object (show and hide) # for "show and hide"   enable/disable
+        
+        self.frames = trajectory  # A list of coordinates representing the trajectory frames
+                                  # Each frame is represented as a list of [x, y, z] coordinates
+                                  # (set as None if not provided)
+        
         if color_palette is None:
-            self.color_palette = COLOR_PALETTE[0]
+            self.color_palette = COLOR_PALETTE[0] # Default color palette for carbon atoms (0 = green)
         else:
             self.color_palette = color_palette #this is an integer num to access the color pick for carbon atoms (0 = green, 1 = purple, ...) 
+                                               # Integer number to access the specified color palette
         
-        self.editing = False       # for translate and rotate  xyz coords 
+                                   
+        self.editing = False       # for translate and rotate  xyz coords
+                                   # Boolean flag for translate and rotate XYZ coordinates 
+        
         self.mass_center = np.zeros(3, dtype=np.float32)
-        self.vm_font = VismolFont()
-        self.coords = None
+        self.vm_font = VismolFont() # Font object used for visualization
+        self.coords = None          # Set as None for now (not defined in the provided code)
         
+        
+        # Dictionaries to store atoms, residues, chains, and molecules with their respective indexes as keys
         self.atoms = {}
         self.residues = {}
         self.chains = {}
         self.molecules = {}
 
-        self.atom_unique_id_dic = {}
-        self.selected_atom_ids = set()
-        self.bonds = None
+        self.atom_unique_id_dic = {}   # Dictionary to store atom unique identifiers (not yet defined in the code)
+        self.selected_atom_ids = set() # Set to store the IDs of selected atoms (not yet defined in the code)
+        
+        
+        self.bonds = None       # Bond objects representing connections between atoms
         self.index_bonds = None # Pair of atoms, something like: [1, 3, 1, 17, 3, 4, 4, 20]
+                                # Pair of atoms used to define bonds (set as None if not provided)
+        
         self.non_bonded_atoms = None # Array of indexes
-        self.cov_radii_array = None    # a list of covalent radius values for all  --> will be used to calculate de bonds
+                                     # Array of indexes for non-bonded atoms (not yet defined in the code)
+                                     
+        self.cov_radii_array = None  # a list of covalent radius values for all  --> will be used to calculate de bonds
+                                     # List of covalent radius values for all atoms (not yet defined in the code)
         
           
         self.topology = {} # {92: [93, 99], 93: [92, 94, 96, 100], 99: [92],...}
                            # important to define molecules
                            
-        self.representations = {}
+        self.representations = {}# Dictionary to store different visualization representations for the object
+        # (initialized with None values for each representation type)
+        
         for rep_type in self.vm_config.representations_available:
             self.representations[rep_type] = None
+        
+        
+        # Additional transformation matrices for the object's visual representation
         self.model_mat = np.identity(4, dtype=np.float32)
         self.trans_mat = np.identity(4, dtype=np.float32)
         
-        self.core_representations = {"picking_dots":None, "picking_text":None}
+        self.core_representations = {"picking_dots":None, "picking_text":None} # Core representation objects
         self.selection_dots_vao = None
         self.selection_dot_buffers = None
         self.picking_dots_vao = None
@@ -111,10 +150,12 @@ class VismolObject:
         
         self.dynamic_bonds  = [] # Pair of atoms, something like: [[0,1,1,2,3,4] , [0,1,1,2], ...]
                                 # Like self.index_bonds but for each frame
-        self.c_alpha_bonds = []
-        self.c_alpha_atoms = []
+        
+        self.c_alpha_bonds = [] # List of pair of atoms defining dynamic bonds for each frame
+        self.c_alpha_atoms = [] # List of pair of atoms defining C-alpha bonds
     
         ''' Cell and Symmetry'''
+        # Cell and Symmetry attributes (not yet defined in the code)
         self.cell_parameters  = None
         self.cell_coordinates = None
         self.cell_indexes     = None
@@ -124,55 +165,85 @@ class VismolObject:
     
     
     def build_core_representations(self):
-        """ Function doc """
+        """
+        Function doc: Builds core representations for the VismolObject.
+
+        Note: The function creates core representation objects for the VismolObject and
+        updates the 'core_representations' dictionary with the created representations.
+        """
+        
+        # Create a PickingDotsRepresentation object and add it to the 'core_representations' dictionary
         self.core_representations["picking_dots"] = PickingDotsRepresentation(self,
                                                     self.vm_session.vm_glcore, active=True,
                                                     indexes=list(self.atoms.keys()))
+        
+        # Create a DashedLinesRepresentation object and add it to the 'core_representations' dictionary
         self.core_representations["dash"] = DashedLinesRepresentation(self, self.vm_session.vm_glcore,
                                                 active=True, indexes=self.index_bonds)
     
     def create_representation(self, rep_type="lines", indexes=None):
-        """ Function doc """
+        """   
+        Function doc: Creates a visualization representation for the VismolObject.
+
+        Parameters:
+        - rep_type: The type of representation to create.
+        - indexes: List of atom indexes or bond indexes based on the representation type (optional).
+    
+        Note: The function creates a new visualization representation object for the VismolObject
+        and updates its internal 'representations' dictionary. It initializes the representation
+        according to the provided 'rep_type' and other relevant parameters.
+        """
+        # Create a DotsRepresentation object and add it to the 'representations' dictionary
         if rep_type == "dots":
             self.representations["dots"] = DotsRepresentation(self, self.vm_session.vm_glcore,
                                                 active=True, indexes=list(self.atoms.keys()))
         elif rep_type == "lines":
+            # Create a LinesRepresentation object and add it to the 'representations' dictionary
             self.representations["lines"] = LinesRepresentation(self, self.vm_session.vm_glcore,
                                                 active=True, indexes=self.index_bonds)
         elif rep_type == "nonbonded":
+            # Create a NonBondedRepresentation object and add it to the 'representations' dictionary
             self.representations["nonbonded"] = NonBondedRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=self.non_bonded_atoms)
         elif rep_type == "impostor":
+            # Create an ImpostorRepresentation object and add it to the 'representations' dictionary
             self.representations["impostor"] = ImpostorRepresentation(self, self.vm_session.vm_glcore,
                                                 active=True, indexes=list(self.atoms.keys()))
         elif rep_type == "sticks":
+            # Create a SticksRepresentation object and add it to the 'representations' dictionary
             self.representations["sticks"] = SticksRepresentation(self, self.vm_session.vm_glcore,
                                                                   active=True, indexes=self.index_bonds)
         elif rep_type == "spheres":
+            # Create a SpheresRepresentation object and add it to the 'representations' dictionary
             self.representations["spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=list(self.atoms.keys()) )
         
         elif rep_type == "picking_spheres":
+            # Create a SpheresRepresentation object with picking mode and add it to the 'representations' dictionary
             self.representations["picking_spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=list(self.atoms.keys()), mode =1 )
         
         elif rep_type == "vdw_spheres":
+            # Create a SpheresRepresentation object with Van der Waals radius and add it to the 'representations' dictionary
             self.representations["vdw_spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
                                                     active=True, indexes=list(self.atoms.keys()), vdw =True)
 
         elif rep_type == "dash":
+            # Create a DashedLinesRepresentation object and add it to the 'representations' dictionary
             self.representations["dash"] = DashedLinesRepresentation(self, self.vm_session.vm_glcore,
                                                 active=True, indexes=self.index_bonds)
         elif rep_type == "ribbons":
+            # Create a SticksRepresentation object with 'ribbons' name and add it to the 'representations' dictionary
             self.representations["ribbons"] = SticksRepresentation(self, self.vm_session.vm_glcore,
                                                                     active=True, indexes=self.index_bonds, name  = 'ribbons')
         elif rep_type == "dynamic":
+            # Create a SticksRepresentation object with 'dynamic' flag and add it to the 'representations' dictionary
             #print(self.dynamic_bonds)
             self.representations["dynamic"] = SticksRepresentation(self, self.vm_session.vm_glcore,
                                                                   active=True, indexes=self.index_bonds, is_dynamic = True)
         
         elif rep_type == "labels":
-            #print(self.dynamic_bonds)
+            # Create a LabelRepresentation object and add it to the 'representations' dictionary
             self.representations["labels"] = LabelRepresentation(vismol_object  = self  ,  
                                                                   vismol_glcore = self.vm_session.vm_glcore , 
                                                                   indexes       = [0,1,2] , 
@@ -180,11 +251,17 @@ class VismolObject:
                                                                   color         = [1, 1, 0, 1])
         
         
+        #elif rep_type == 'cartoon':
+        #    self.representations["cartoon"] =CartoonRepresentation(name = 'cartoon', active = True, 
+        #                                                           rep_type = 'mol', vismol_object = self, 
+        #                                                           vismol_glcore = self.vm_session.vm_glcore, 
+        #                                                           indexes = [])
         
         # elif rep_type == "dotted_lines":
         #     self.representations["dotted_lines"] = LinesRepresentation(self, self.vm_session.vm_glcore,
         #                                                                active=True, indexes=indexes)
         else:
+            # Handle error when an unsupported representation type is provided
             logger.error("Representation {} not implemented".format(rep_type))
             raise NotImplementedError("Representation {} not implemented".format(rep_type))
     
@@ -198,6 +275,20 @@ class VismolObject:
             (2) This method builds the "colors" np array that will 
             be sent to the GPU and which contains the RGB values 
             for each atom of the system.
+
+
+            Parameters:
+            - colors_id_start: The starting value for color IDs, which determines the color scheme for atoms.
+            
+            - do_colors_rainbow: If True, generates a rainbow color scheme based on the atom's position in the atom list.
+                                 If False, the atom colors will be based on the atom's individual color attribute.
+            
+            - do_vdw_dot_sizes: If True, generates Van der Waals dot sizes based on the atom's Van der Waals radius.
+            
+            - do_cov_dot_sizes: If True, generates covalent dot sizes based on the atom's covalent radius.
+
+            Note: The function updates several attributes of the VismolObject, including 'colors', 'color_indexes',
+                  'color_rainbow', 'vdw_dot_sizes', and 'cov_dot_sizes', based on the provided parameters.
         """
         atom_qtty = len(self.atoms)
         half = int(atom_qtty/2)
@@ -257,24 +348,50 @@ class VismolObject:
     def find_bonded_and_nonbonded_atoms(self, selection=None, frame=0, gridsize=0.8,
                                          maxbond=2.4, tolerance=1.4, internal = True):
         """
+        Function doc: Determines bonded and nonbonded atoms based on selection in a VismolObject.
+        
+        Parameters:
+        - selection: A dictionary containing the selected atoms (optional).
+        - frame: Frame number for the atom coordinates (default is 0).
+        - gridsize: Grid size for bond calculation (usually should not be changed, default is 0.8).
+        - maxbond: Size of the maximum bond to be monitored (bonds greater than maxbond may be disregarded, default is 2.4 Å).
+        - tolerance: Safety factor that multiplies the term (ra_cov + rb_cov)**2 (default is 1.4).
+        - internal: If True, calculates the bindings for the object itself (used in the object's genesis).
+                    If False, returns a list of atom_ids representing the bonds between atoms.
+
+        Returns:
+        If internal is True, the function updates the VismolObject's internal attributes:
+        - index_bonds: List of pairs of atom indexes representing the bonded atoms.
+        - bonds: List of Bond objects representing the bonds between atoms.
+        - topology: Dictionary representing the atom topology and connectivity.
+        - Non-bonded interactions and other attributes are also updated.
+
+        If internal is False, the function returns a list of atom_ids representing the bonds between atoms.
+
+        Note: This function calculates bonds between atoms based on their positions and covalent radii.
+        
             Receives a dictionary as a selection:
 
             selection = {'atom_id': atom_object, ...} ()
-
+            
             frame - (frame number)
-
+            
             grid_size - (usually should not be changed. Default is: 0.8)
-
+            
             maxbond - (Size of the maximum bond to be monitored. Bonds greater than "maxbond" 
             may be disregarded. Default is: 2.4 A)
 
             tolerance (Safety factor that multiplies the term (ra_cov + rb_cov)**2. Default is: 1.4)
 
             internal (If True, calculates the bindings for the object itself. Used in the object's 
+            
             genesis. If False, returns a list of atom_ids like  [0,1, # bond  between 0 and 1 
                                                                  1,2, # bond  between 1 and 2
                                                                  0,3] # bond  between 0 and 3 )
+        
+
         """
+        # Check if internal is True and there is already information about contacts.
         if internal:
             if self.index_bonds is not None:
                 logger.critical("It seems that there is already information about "\
@@ -282,6 +399,7 @@ class VismolObject:
                     "can produce serious problems :(")
         
         
+        # Initialize variables and data structures
         initial = time.time()
         atoms_frame_mask = np.zeros(len(self.atoms), bool)
         if self.cov_radii_array is None:
@@ -289,6 +407,7 @@ class VismolObject:
             for i, atom in self.atoms.items():
                 self.cov_radii_array[i] = atom.cov_rad
         
+        # Create a mask to identify atoms in the frame (all atoms if selection is None)
         if selection is None:
             selection = self.atoms
             atoms_frame_mask[:] = True
@@ -297,11 +416,15 @@ class VismolObject:
             for atom in selection.values():
                 atoms_frame_mask[atom.atom_id] = True
         
+        
+        # Extract relevant data for bond calculation
         #cov_rads = self.cov_radii_array[atoms_frame_mask]
         #coords = self.frames[frame][atoms_frame_mask]
         cov_rads = self.cov_radii_array
         coords = self.frames[frame]#[atoms_frame_mask]
         
+        
+        # Generate indexes and grid positions for each atom in the selection
         indexes = []
         gridpos_list = []
         for atom in selection.values():
@@ -309,6 +432,9 @@ class VismolObject:
             gridpos_list.append(atom.get_grid_position(gridsize=gridsize, frame=frame))
         logger.debug("Time used for preparing the atom mask, covalent radii list "\
                      "and grid positions: {}".format(time.time() - initial))
+        
+        
+        # Calculate bonds based on grid positions and covalent radii
         if internal is True:
             initial = time.time()
             self.index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
@@ -320,44 +446,85 @@ class VismolObject:
         Bonds calcultation time : {} seconds""".format(len(selection), gridsize,
                                     len(self.index_bonds), time.time() - initial)
             logger.info(msg)
+            
+            # Create Bond objects and update atom bond lists
             self._bonds_from_pair_of_indexes_list()
+            
+            # Generate non-bonded interactions from bonded atoms
             self._get_non_bonded_from_bonded_list()
             
+            # Generate atom topology from index_bonds
             #bachega's code
             initial = time.time()
             self._generate_topology_from_index_bonds()
             
-            
-            #try:
+            # Define molecules based on the atom topology
             self.define_molecules()
-            #except:
-            #    print('Error: failure when trying to find molecules')
             
             
             final = time.time()
             print('        Defining molecule indexes: ', final - initial)
-            #print ('\n',self.topology, '\n')
+            
+            # Define Calpha backbone atoms
             self.define_Calpha_backbone()
         else:
+            
+            # Calculate bonds based on grid positions and covalent radii and return the results
             index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
                                             cov_rads, gridpos_list, gridsize, maxbond)
             return index_bonds
     
-    def _bonds_from_pair_of_indexes_list(self):
-        """ Function doc 
+    def _bonds_from_pair_of_indexes_list(self, exclude_list = [['H','H']]):
+        """ 
+        Creates Bond objects based on pairs of indexes in self.index_bonds list.
+        The bonds list is populated with the created Bond objects, and each
+        atom involved in a bond is updated with the respective Bond object.
+        
         self.index_bonds = [0,1  , 0,4  ,  1,3  , ...]
         self.bonds = [bond1(obj), bond2(obj), bond3(obj), ...] 
         """
-        assert self.bonds is None
-        self.bonds = []
+        assert self.bonds is None # Ensure the bonds list is not already initialized
+        self.bonds = [] # Initialize an empty list to store the Bond objects
+        
+        new_index_bonds = []
+        # Loop through the self.index_bonds list in pairs
         for i in range(0, len(self.index_bonds)-1, 2):
-            index_i = self.index_bonds[i]
-            index_j = self.index_bonds[i+1]
-            bond = Bond(atom_i=self.atoms[index_i], atom_index_i=index_i,
-                        atom_j=self.atoms[index_j], atom_index_j=index_j)
-            self.bonds.append(bond)
-            self.atoms[index_i].bonds.append(bond)
-            self.atoms[index_j].bonds.append(bond)
+            
+            index_i = self.index_bonds[i]    # Get the first atom's index of the bond
+            index_j = self.index_bonds[i+1]  # Get the second atom's index of the bond
+            
+            is_excluded = False
+            
+            for excluded_bond in exclude_list: 
+                if self.atoms[index_i].symbol in excluded_bond and self.atoms[index_j].symbol in excluded_bond:
+                    is_excluded = True
+            
+            
+            if is_excluded:
+                pass
+            else:
+                new_index_bonds.append(index_i)
+                new_index_bonds.append(index_j)
+            
+                #index_i = self.index_bonds[i]    # Get the first atom's index of the bond
+                #index_j = self.index_bonds[i+1]  # Get the second atom's index of the bond
+                
+                
+                
+                # Create a Bond object with the atoms and their indexes
+                bond = Bond(atom_i=self.atoms[index_i], atom_index_i=index_i,
+                            atom_j=self.atoms[index_j], atom_index_j=index_j)
+                
+                # Add the created Bond object to the bonds list
+                self.bonds.append(bond)
+                
+                # Update the atoms with the created Bond object, indicating their bond connections
+                self.atoms[index_i].bonds.append(bond)
+                self.atoms[index_j].bonds.append(bond)
+        
+         # Convert the index_bonds list to a numpy array of unsigned 32-bit integers
+        self.index_bonds = new_index_bonds
+        #print(self.index_bonds)
         self.index_bonds = np.array(self.index_bonds, dtype=np.uint32)
     
     def _get_non_bonded_from_bonded_list(self):

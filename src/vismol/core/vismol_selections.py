@@ -56,23 +56,52 @@ class VismolViewingSelection:
                     #atom.vm_object.selected_atom_ids.discard(atom.atom_id)
 
     def _build_selected_atoms_coords_and_selected_objects_from_selected_atoms(self):
-        """ Function doc """
+        """
+        Build selected atoms' coordinates and selected objects from selected atoms.
+        
+        Called latter on: selection_function_viewing_set
+        
+        """
         coords = []
+        # Iterate through all VismolObjects in the VismolSession
         for vm_object in self.vm_session.vm_objects_dic.values():
+            # Check if the current frame is within the range of frames in the VismolObject
             if self.vm_session.frame >= vm_object.frames.shape[0]:
                 frame = vm_object.frames.shape[0] - 1
             else:
                 frame = self.vm_session.frame
+            
+            # Iterate through the selected atoms in the VismolPickingSelection
             for atom in self.selected_atoms:
+                # Check if the selected atom belongs to the current VismolObject
                 if atom.vm_object == vm_object:
-                    # coords.append(vm_object.frames[frame][atom.atom_id])
+                    # Add the selected atom's ID to the selected_atom_ids set of the VismolObject
                     vm_object.selected_atom_ids.add(atom.atom_id)
-        # self.selected_coords = np.array(coords, dtype=np.float32)
+
+        # Clear the selected_objects set in the VismolPickingSelection
         self.selected_objects.clear()
-        # self.selected_atom_ids.clear()
+
+        # Iterate through the selected atoms and add their corresponding VismolObjects to the selected_objects set
         for atom in self.selected_atoms:
             self.selected_objects.add(atom.vm_object)
-            # self.selected_atom_ids.add(atom.atom_id)
+
+        
+        #coords = []
+        #for vm_object in self.vm_session.vm_objects_dic.values():
+        #    if self.vm_session.frame >= vm_object.frames.shape[0]:
+        #        frame = vm_object.frames.shape[0] - 1
+        #    else:
+        #        frame = self.vm_session.frame
+        #    for atom in self.selected_atoms:
+        #        if atom.vm_object == vm_object:
+        #            # coords.append(vm_object.frames[frame][atom.atom_id])
+        #            vm_object.selected_atom_ids.add(atom.atom_id)
+        ## self.selected_coords = np.array(coords, dtype=np.float32)
+        #self.selected_objects.clear()
+        ## self.selected_atom_ids.clear()
+        #for atom in self.selected_atoms:
+        #    self.selected_objects.add(atom.vm_object)
+        #    # self.selected_atom_ids.add(atom.atom_id)
     
     def selection_function_viewing_set(self, selected, _type=None, disable=True):
         """ Takes a selected atom and passes it to the appropriate selection function.
@@ -245,63 +274,86 @@ class VismolViewingSelection:
 
 
 class VismolPickingSelection:
-    """ Class doc """
+    """
+             Class to manage picking selections in Vismol.
     
+    Class manages the picking selections, allowing users to select up to 
+    four atoms and calculate distances between selected pairs of atoms. 
+    The selected atoms are stored in the picking_selections_list list, 
+    and their distances are displayed when at least two atoms are selected.
+    
+    """
     def __init__ (self, vismol_session):
-        """ Class initialiser """
-        self.picking_selections_list = [None]*4
+        """ 
+        Initialize the VismolPickingSelection instance.
+
+        Args:
+            vismol_session (VismolSession): Reference to the VismolSession instance.
+        """
+        # Initialize a list to store up to 4 picking selections (selected atoms)
+        self.picking_selections_list = [None] * 4
+
+        # Initialize an empty list to keep track of the selected atoms' indexes
         self.picking_selections_list_index = []
+
+        # Store a reference to the VismolSession instance associated with this selection
         self.vm_session = vismol_session
     
     def selection_function_picking(self, selected):
-        """ Function doc """
+        """Handle picking selections.
+
+        Args:
+            selected: The selected atom object or None to clear the selections.
+        """
         if selected is None:
-            self.picking_selections_list = [None]*len(self.picking_selections_list)
+            # If selected is None, clear the list of picking selections (set all to None)
+            self.picking_selections_list = [None] * len(self.picking_selections_list)
         else:
             if selected not in self.picking_selections_list:
+                # If selected is not in the list, find an empty slot to store the selected atom
                 for i in range(len(self.picking_selections_list)):
-                    if self.picking_selections_list[i] == None:
+                    if self.picking_selections_list[i] is None:
                         self.picking_selections_list[i] = selected
                         selected = None
                         break
                 if selected is not None:
-                    self.picking_selections_list[len(self.picking_selections_list)-1] = selected
+                    # If there are no empty slots, replace the last element with the new selected atom
+                    self.picking_selections_list[len(self.picking_selections_list) - 1] = selected
             else:
+                # If selected is already in the list, remove it by setting the corresponding slot to None
                 for i in range(len(self.picking_selections_list)):
                     if self.picking_selections_list[i] == selected:
                         self.picking_selections_list[i] = None
         
+        # Calculate and display distances between selected atoms
         c = 0
         for atom1 in self.picking_selections_list:
-            for atom2 in self.picking_selections_list[c+1:]:
+            for atom2 in self.picking_selections_list[c + 1:]:
                 if atom1 and atom2:
+                    # Get the current frame number
                     frame = self.vm_session.get_frame()
-                    coords1 = atom1.coords(frame = None)
-                    coords2 = atom2.coords(frame = None)
+
+                    # Get the coordinates of the selected atoms at the current frame (frame=None means current frame)
+                    coords1 = atom1.coords(frame=None)
+                    coords2 = atom2.coords(frame=None)
+
+                    # Calculate the Euclidean distance between the selected atoms
                     dist = np.linalg.norm(coords1 - coords2)
+
+                    # Get the names of the selected atoms
                     name1 = atom1.name
                     name2 = atom2.name
-                    print ("atom",name1, "atom",name2,  dist)
+
+                    # Display the distance between the selected atoms
+                    print("atom", name1, "atom", name2,  dist)
+
             c += 1
-        
+
+        # Extract the selected atoms into separate variables (up to 4 atoms)
         atom1 = self.picking_selections_list[0]
         atom2 = self.picking_selections_list[1]
         atom3 = self.picking_selections_list[2]
         atom4 = self.picking_selections_list[3]
-        
-        '''
-        new_indexes =[]
-        #self.vm_session.vm_geometric_object_dic['picking_spheres'].representations["picking_spheres"].active  = False
-        
-        for index, atom in enumerate(self.picking_selections_list):
-            print (atom, index)
-            if atom is not None:
-                new_indexes.append(index)
-                self.vm_session.vm_glcore.sphere_selection.frames[0][index] = atom.coords(frame = None)
-                self.vm_session.vm_geometric_object_dic['picking_spheres'].representations["picking_spheres"].define_new_indexes_to_vbo(new_indexes)
-                self.vm_session.vm_geometric_object_dic['picking_spheres'].representations["picking_spheres"].was_rep_ind_modified = True
-                self.vm_session.vm_geometric_object_dic['picking_spheres'].representations["picking_spheres"].active = True
-        #'''#
 
         '''
         if atom1 and atom2:

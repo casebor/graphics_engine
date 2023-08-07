@@ -37,12 +37,16 @@ logger = getLogger(__name__)
 class VismolSession():
     """ Class doc """
     
-    def __init__(self, toolkit, widget=None, main_session=None):
+    def __init__(self, toolkit, widget=None, main_session=None, vm_config = None):
         """ Class initialiser """
         self.main_session = None
         self.toolkit = toolkit
         self.frame = 0
-        self.vm_config = VismolConfig(self)
+        if vm_config:
+            self.vm_config = vm_config
+        else:
+            self.vm_config = VismolConfig(self)
+        
         self.vm_objects_dic = {}
         self.atom_dic_id = {}
         self.atom_id_counter = np.uint32(0) # This variable could be replaced by len(self.atom_dic_id)?
@@ -77,16 +81,30 @@ class VismolSession():
     
     def _add_vismol_object(self, vismol_object, show_molecule=True, autocenter=True):
         """ Function doc """
+
+        # Check if the vismol_object's index already exists in the dictionary
         if vismol_object.index in self.vm_objects_dic.keys():
             logger.warning("The VismolObject with id {} already exists. \
                 The data will be overwritten.".format(vismol_object.index))
+
+        # Add the vismol_object to the dictionary with a new index
         self.vm_objects_dic[len(self.vm_objects_dic)] = vismol_object
+
+        # Update the atom_id_counter by adding the number of atoms in the new vismol_object
         self.atom_id_counter += len(vismol_object.atoms)
+
+        # Iterate through the atoms in the vismol_object and add them to the atom_dic_id dictionary
+        # using their unique_id as the key and the atom object as the value.
         for atom in vismol_object.atoms.values():
             self.atom_dic_id[atom.unique_id] = atom
+
+        # If show_molecule is True, create representations for "lines" and "nonbonded" to display the object.
         if show_molecule:
             vismol_object.create_representation(rep_type="lines")
             vismol_object.create_representation(rep_type="nonbonded")
+            vismol_object.create_representation(rep_type="cartoon")
+
+            # If autocenter is True, center the view on the mass center of the vismol_object.
             if autocenter:
                 self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.mass_center)
             else:

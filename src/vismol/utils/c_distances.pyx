@@ -8,6 +8,15 @@ cimport numpy as np
 
 
 cpdef list calculate_grid_offset(gridsize, maxbond=2.6):
+    '''
+    This function calculates the offset for each grid element in the atomic grid. 
+    The grid elements define regions in 3D space within a certain distance from 
+    each atom. The gridsize parameter controls the size of each grid element, 
+    and the maxbond parameter determines the maximum distance within which bonds 
+    are considered. The function returns a list of grid offsets representing 
+    grid elements.
+    '''
+    
     grid_offset_full = []
     borderGrid  = maxbond / gridsize
     borderGrid  = int(borderGrid)
@@ -88,7 +97,12 @@ cpdef list calculate_grid_offset(gridsize, maxbond=2.6):
     return grid_offset_full
 
 cpdef double calculate_sqrt_distance(int i, int j, coords):
-    """ Function doc """
+    """ 
+    This Cython function calculates the squared distance between two atoms 
+    with indices i and j using their coordinates coords. It is used to 
+    calculate the distance between atoms and determine if a bond exists 
+    between them. 
+    """
     # dX              = (coords[i*3  ] - coords[j*3  ])**2
     # dY              = (coords[i*3+1] - coords[j*3+1])**2
     # dZ              = (coords[i*3+2] - coords[j*3+2])**2
@@ -101,6 +115,12 @@ cpdef double calculate_sqrt_distance(int i, int j, coords):
 
 cpdef list get_connections_within_grid_element(list list_of_atoms, coords, cov_rad, double tolerance, gridsize):
     """
+    This function calculates the bonds between atoms within a single 
+    element of the atomic grid. It takes a list of atoms, their coordinates, 
+    covalent radii (cov_rad), a tolerance factor, and the grid size. 
+    It returns a list of pairs of atom indices representing the bonds 
+    within the grid element.
+    
         Calculate the distances and bonds 
         between atoms within a single element 
         of the atomic grid
@@ -168,7 +188,12 @@ cpdef list get_connections_between_grid_elements(list atomic_grid1,
                                                        cov_rad, 
                                                        double  tolerance, 
                                                        gridsize):
-    
+    '''
+    This function calculates the bonds between atoms in two different grid
+    elements. It takes two atomic grids, their coordinates, covalent radii, 
+    a tolerance factor, and the grid size. It returns a list of pairs of atom
+    indices representing the bonds between the two grid elements.
+    '''
     cpdef double r_ij
     cpdef double cov_rad_ij_sqrt
     cpdef int atom_idx_i
@@ -211,6 +236,14 @@ cpdef list get_connections_between_grid_elements(list atomic_grid1,
 
 cpdef dict build_the_atomic_grid ( list indexes     ,
                                          list gridpos_list):
+    
+    '''
+    This function builds the atomic grid by grouping atoms based on their 
+    grid positions. It takes a list of atom indices and their corresponding 
+    grid positions. It returns a dictionary where each key represents a grid 
+    element, and the value is a list of atom indices within that grid element.
+    '''
+    
     cpdef int atom
 
     atomic_grid = {}
@@ -228,9 +261,40 @@ cpdef dict build_the_atomic_grid ( list indexes     ,
 
 cpdef list get_atomic_bonds_from_grid(list indexes, coords, cov_rad, list gridpos_list,
                                       double gridsize, double maxbond):
+    '''
+    function is responsible for calculating the bonds between atoms within a given grid. It takes the following parameters:
+
+    indexes: A list of atom indices.
+    coords:  A list of atom coordinates.
+    cov_rad: A list of covalent radii for each atom.
+    
+    gridpos_list: A list of grid positions that represent the atomic grid.
+    gridsize:     A double representing the grid size.
+    maxbond:      A double representing the maximum bond length.
     
     
-    cpdef double tolerance
+    The function first builds an atomic grid using the build_the_atomic_grid 
+    function, which organizes atoms into grid elements based on their positions. 
+    It then calculates the grid offset using the calculate_grid_offset function. 
+    The grid offset is used to define neighboring grid elements around each 
+    element in the atomic grid.
+
+    The function iterates over each grid element and calculates the bonds 
+    between atoms within that element. If there is more than one atom in 
+    the element, it calls the get_connections_within_grid_element function 
+    to calculate the intra-element bonds. The result is added to the 
+    bonds_pair_of_indexes list.
+
+    Next, the function iterates over neighboring grid elements based on the 
+    grid offset and calculates the bonds between atoms in the current element 
+    and those in the neighboring element. The result is again added to the 
+    bonds_pair_of_indexes list.
+
+    Finally, the function returns the bonds_pair_of_indexes list containing 
+    the pairs of atom indices representing the bonds within the atomic grid.
+    '''
+    
+    cdef double tolerance
     #cpdef double maxbond
     #maxbond   = 3.0
     tolerance = 1.4

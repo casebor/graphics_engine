@@ -1173,10 +1173,10 @@ class VismolGLCore:
     #     self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
     #                                                     shaders_spheres.fragment_shader_spheres)
         
-    # def _compile_shader_cartoon(self):
-    #     """ Function doc """
-    #     self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
-    #                                                 shaders_cartoon.f_shader_triangles)
+    #def _compile_shader_cartoon(self):
+    #    """ Function doc """
+    #    self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
+    #                                                shaders_cartoon.f_shader_triangles)
     
     #----------------------------NOT IMPLEMENTED YET---------------------------#
     # def _dynamic_bonds_shaders(self):

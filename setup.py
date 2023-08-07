@@ -24,9 +24,9 @@ extensions = [
     Extension("vismol.utils.selectors",
               sources=["src/vismol/utils/selectors.pyx"],
               include_dirs=[np.get_include()]),
-    Extension("vismol.utils.cartoon",
-              sources=["src/vismol/utils/cartoon.pyx"],
-              include_dirs=[np.get_include()]),
+    #Extension("vismol.utils.cartoon",
+    #          sources=["src/vismol/utils/cartoon.pyx"],
+    #          include_dirs=[np.get_include()]),
 ]
 
 with open("LICENSE", "r") as f:
