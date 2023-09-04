@@ -47,7 +47,7 @@ class VismolConfig:
                               "ribbon_type": 2,
                               "ribbon_color": 0,
                               "sphere_type": 0,
-                              "sphere_scale": 0.15,
+                              "sphere_scale": 0.20,
                               #"sphere_scale": 0.25,
                               "sphere_quality": 2,
                               "impostor_type": 0,

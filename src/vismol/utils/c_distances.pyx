@@ -152,11 +152,11 @@ cpdef list get_connections_within_grid_element(list list_of_atoms, coords, cov_r
 
     bonds_pair_of_indexes = []
     
-    cpdef double r_ij
-    cpdef int i
-    cpdef int atom_idx_i
-    cpdef int atom_idx_j
-    cpdef double cov_rad_ij_sqrt
+    cdef double r_ij
+    cdef int i
+    cdef int atom_idx_i
+    cdef int atom_idx_j
+    cdef double cov_rad_ij_sqrt
 
     
     for i, atom_idx_i in enumerate(list_of_atoms[:-1]):
@@ -194,12 +194,12 @@ cpdef list get_connections_between_grid_elements(list atomic_grid1,
     a tolerance factor, and the grid size. It returns a list of pairs of atom
     indices representing the bonds between the two grid elements.
     '''
-    cpdef double r_ij
-    cpdef double cov_rad_ij_sqrt
-    cpdef int atom_idx_i
-    cpdef int atom_idx_j
+    cdef double r_ij
+    cdef double cov_rad_ij_sqrt
+    cdef int atom_idx_i
+    cdef int atom_idx_j
 
-    cpdef list bonds_pair_of_indexes
+    cdef list bonds_pair_of_indexes
     bonds_pair_of_indexes = []
     
     
@@ -244,7 +244,7 @@ cpdef dict build_the_atomic_grid ( list indexes     ,
     element, and the value is a list of atom indices within that grid element.
     '''
     
-    cpdef int atom
+    cdef int atom
 
     atomic_grid = {}
     
