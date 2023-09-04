@@ -9,10 +9,10 @@ cimport numpy as np
 
 
 cpdef tuple selection_spherical_expansion (set selected_indexes, set selectable_indexes,  coordinates, float radius ):
-        cpdef float radius_sqr
-        cpdef float dx
-        cpdef float dy
-        cpdef float dz
+        cdef float radius_sqr
+        cdef float dx
+        cdef float dy
+        cdef float dz
         
         radius_sqr = radius**2
         new_selected_indexes   = set()
