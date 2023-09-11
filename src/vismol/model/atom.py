@@ -157,7 +157,7 @@ class Atom:
                     symbol = "C"
             
             elif name[0] == "N":
-                if name[1] == "i":
+                if name[1] == "i" or name[1] == "I":
                     symbol = "Ni"
                 elif name[1] == "a":
                     symbol = "Na"
@@ -191,6 +191,22 @@ class Atom:
                     symbol = "Po"
                 else:
                     symbol = "P" 
+            
+            elif name[0] == "Z":
+                if name[1] == "r":
+                    symbol = "Zr"
+                elif  name[1] == "N":
+                    symbol = "Zn"
+                else:
+                    symbol = "Zn" 
+            
+            elif name[0] == "F":
+                if name[1] == "E":
+                    symbol = "Fe"
+                elif  name[1] == "e":
+                    symbol = "Fe"
+                else:
+                    symbol = "F" 
             
             elif name[0] == "M":
                 if name[1] == "n":

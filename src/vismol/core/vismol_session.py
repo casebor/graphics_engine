@@ -159,7 +159,7 @@ class VismolSession():
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "dynamic":
-                self.define_dynamic_bonds()
+                self.define_dynamic_bonds(selection = selection)
                 for bond in vm_object.bonds:
                     if bond.atom_i.dynamic and bond.atom_j.dynamic:
                         show_hide_indexes.append(bond.atom_index_i)
@@ -275,9 +275,13 @@ class VismolSession():
             self.selection_box_frame.change_sel_type_in_combobox(sel_type)
         self.selections[self.current_selection].selection_mode = sel_type
     
-    def define_dynamic_bonds (self):
+    def define_dynamic_bonds (self, selection = None):
         """ Function doc """
-        selection = self.selections[self.current_selection]
+        if selection:
+            pass
+        else:
+            selection = self.selections[self.current_selection]
+        
         selection_dict = {}
         vobject = None
         for atom in selection.selected_atoms:
