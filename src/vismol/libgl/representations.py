@@ -267,7 +267,9 @@ class PickingDotsRepresentation(Representation):
             GL.glUniform1i(custom_int_location, int(_size))  # Set the integer value to  _size
         else:
             #print("Uniform '_size' not found in shader program.")
-            GL.glPointSize(_size)
+            #print(int(_size))
+            #GL.glPointSize(int(_size+255))
+            GL.glPointSize(int(_size))
         
         GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
@@ -284,7 +286,7 @@ class PickingDotsRepresentation(Representation):
         
         GL.glBindVertexArray(0)
         GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-        GL.glPointSize(1)
+        #GL.glPointSize(1)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
     
