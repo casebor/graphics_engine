@@ -42,6 +42,7 @@ class VismolSession():
         self.main_session = None
         self.toolkit = toolkit
         self.frame = 0
+        
         if vm_config:
             self.vm_config = vm_config
         else:

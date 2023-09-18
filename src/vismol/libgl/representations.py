@@ -251,9 +251,24 @@ class PickingDotsRepresentation(Representation):
         """ Function doc """
         self._check_vao_and_vbos()
         _size = self.vm_session.vm_config.gl_parameters["dot_sel_size"]
+        _size = _size * self.vm_glcore.height / (abs(self.vm_glcore.dist_cam_zrp)) / 2 
         
-        GL.glPointSize(_size * self.vm_glcore.height / (abs(self.vm_glcore.dist_cam_zrp)) / 2)
+
+        #How to pass data to shader on the fly. It's not the most efficient mode, but it's an okay solution in this case.
+        '''
+        Using the "GL.glPointSize(_size)" function did not give 
+        consistent results between different versions of openGL, 
+        or linux distros. The solution, for now, was to pass the 
+        pixel size value directly to the shader.
+        '''
         GL.glUseProgram(self.shader_program)
+        custom_int_location = GL.glGetUniformLocation(self.shader_program, "_size")
+        if custom_int_location != -1:
+            GL.glUniform1i(custom_int_location, int(_size))  # Set the integer value to  _size
+        else:
+            #print("Uniform '_size' not found in shader program.")
+            GL.glPointSize(_size)
+        
         GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.vao)

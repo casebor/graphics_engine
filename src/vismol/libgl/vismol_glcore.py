@@ -1039,8 +1039,16 @@ class VismolGLCore:
     
     def _compile_shader_picking_dots(self):
         """ Function doc """
-        self.core_shader_programs["picking_dots"] = self.load_shaders(shaders_pick.vertex_shader_picking_dots,
-                                                            shaders_pick.fragment_shader_picking_dots)
+        
+        safe =  self.vm_config.gl_parameters["picking_dots_safe"]
+        if safe:
+            self.core_shader_programs["picking_dots"] = self.load_shaders(shaders_pick.vertex_shader_picking_dots_safe,
+                                                                          shaders_pick.fragment_shader_picking_dots_safe)
+        else:
+            self.core_shader_programs["picking_dots"] = self.load_shaders(shaders_pick.vertex_shader_picking_dots,
+                                                                      shaders_pick.fragment_shader_picking_dots)
+        
+
     
     def _compile_shader_dots(self):
         """ Function doc """

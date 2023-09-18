@@ -109,19 +109,122 @@
 #"""
 #
 #
+
+
+'''
+In this modified vertex shader:
+    We calculate the vertices of a square around the input vert_position. The square is centered on vert_position, and we use a small offset (0.1) to define the size of the square.
+    We check whether the current vert_position is inside the square using the insideSquare boolean variable.
+    The color for each vertex is set based on whether it's inside the square. If it's inside, we use the vert_color input attribute; otherwise, we set the color to black (vec3(0.0)).
+    The vertex position is set to vert_position.
+With this modification, the vertex shader creates a square around the input position, and the color of each vertex is determined by whether it's inside the square or not. The fragment shader can remain the same as the one you originally provided because it simply uses the color set in the vertex shader.
+You can use this modified vertex shader along with your existing fragment shader to draw squares based on the input positions and colors.
+'''
+
+
+#vertex_shader_picking_dots_safe = '''
+#version 330
+#precision highp float;
+#precision highp int;
+#
+#uniform mat4 model_mat;
+#uniform mat4 view_mat;
+#uniform mat4 proj_mat;
+#
+#
+#in vec3 vert_coord;
+#in vec3 vert_color;
+#
+#out vec3 frag_color;
+#
+#void main() {
+#    // Define the size of the square
+#    float squareSize = 0.1;
+#
+#    // Calculate the position of the square's vertices
+#    vec3 bottomLeft = vert_coord - vec3(squareSize, squareSize, 0.0);
+#    vec3 bottomRight = vert_coord + vec3(squareSize, -squareSize, 0.0);
+#    vec3 topLeft = vert_coord + vec3(-squareSize, squareSize, 0.0);
+#    vec3 topRight = vert_coord + vec3(squareSize, squareSize, 0.0);
+#
+#    // Set the vertex position and color based on the square's vertices
+#    if (gl_VertexID == 0) {
+#        gl_Position = vec4(bottomLeft, 1.0);
+#        frag_color = vert_color;
+#    }
+#    else if (gl_VertexID == 1) {
+#        gl_Position = vec4(bottomRight, 1.0);
+#        frag_color = vert_color;
+#    }
+#    else if (gl_VertexID == 2) {
+#        gl_Position = vec4(topLeft, 1.0);
+#        frag_color = vert_color;
+#    }
+#    else if (gl_VertexID == 3) {
+#        gl_Position = vec4(topRight, 1.0);
+#        frag_color = vert_color;
+#    }
+#}
+#'''
+
+
+
+vertex_shader_picking_dots_safe = """
+#version 330
+precision highp float; 
+precision highp int;
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 proj_mat;
+
+
+uniform int _size; // Integer uniform
+
+in vec3  vert_coord;
+in vec3  vert_color;
+out vec3 index_color;
+
+void main(){
+    gl_Position  = proj_mat * view_mat * model_mat * vec4(vert_coord, 1.0);
+    gl_PointSize = _size;
+    index_color = vert_color;
+}
+"""
+
+fragment_shader_picking_dots_safe = """
+#version 330
+precision highp float; 
+precision highp int;
+in vec3 index_color;
+
+void main(){
+    float dist = length(gl_PointCoord.xy - vec2(0.5,0.5));
+    if (dist > 0.6)
+        discard;
+    gl_FragColor = vec4(index_color,1.0);
+    //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+}
+
+"""
+
+
+
+
+
+
+
 vertex_shader_picking_dots = """
 #version 330
 precision highp float; 
 precision highp int;
-precision highp float;
 uniform mat4 model_mat;
 uniform mat4 view_mat;
 uniform mat4 proj_mat;
-uniform float vert_ext_linewidth;
+  
+
 
 in vec3  vert_coord;
 in vec3  vert_color;
-varying float frag_ext_linewidth;
 out vec3 index_color;
 
 void main(){
@@ -134,6 +237,7 @@ fragment_shader_picking_dots = """
 #version 330
 precision highp float; 
 precision highp int;
+
 in vec3 index_color;
 
 void main(){
