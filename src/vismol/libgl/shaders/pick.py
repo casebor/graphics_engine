@@ -168,7 +168,7 @@ You can use this modified vertex shader along with your existing fragment shader
 #'''
 
 
-
+'''These are the correct shaders.'''
 vertex_shader_picking_dots_safe = """
 #version 330
 precision highp float; 
@@ -213,6 +213,10 @@ void main(){
 
 
 
+
+'''These shaders are obsolete. We should avoid using the glPointSize 
+function (this function is very old and should not be used in modern openGL)'''
+
 vertex_shader_picking_dots = """
 #version 330
 precision highp float; 
@@ -233,6 +237,7 @@ void main(){
     index_color = vert_color;
 }
 """
+
 fragment_shader_picking_dots = """
 #version 330
 precision highp float; 

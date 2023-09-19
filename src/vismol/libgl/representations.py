@@ -259,7 +259,7 @@ class PickingDotsRepresentation(Representation):
         Using the "GL.glPointSize(_size)" function did not give 
         consistent results between different versions of openGL, 
         or linux distros. The solution, for now, was to pass the 
-        pixel size value directly to the shader.
+        pixel size value directly to the shader code.
         '''
         GL.glUseProgram(self.shader_program)
         custom_int_location = GL.glGetUniformLocation(self.shader_program, "_size")
@@ -268,7 +268,7 @@ class PickingDotsRepresentation(Representation):
         else:
             #print("Uniform '_size' not found in shader program.")
             #print(int(_size))
-            #GL.glPointSize(int(_size+255))
+            #GL.glPointSize(int(_size+256))
             GL.glPointSize(int(_size))
         
         GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
