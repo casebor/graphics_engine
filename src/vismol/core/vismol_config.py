@@ -52,7 +52,7 @@ class VismolConfig:
                               "sphere_quality": 2,
                               "impostor_type": 0,
                               #"sticks_radius": 2.5,
-                              "sticks_radius": 0.5,
+                              "sticks_radius": 0.010,
                               "sticks_color": 0,
                               "sticks_type": 0,
                               "antialias": True,

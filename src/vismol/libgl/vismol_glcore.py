@@ -1095,7 +1095,8 @@ class VismolGLCore:
                                                        shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
     def _compile_shader_ribbons(self):
         """ Function doc """
-        sticks_type = self.vm_config.gl_parameters["ribbon_type"]
+        #sticks_type = self.vm_config.gl_parameters["ribbon_type"]
+        sticks_type = self.vm_config.gl_parameters["sticks_type"]
         self.shader_programs["ribbons"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["vertex_shader"],
                                                    shaders_sticks.shader_type[sticks_type]["fragment_shader"],
                                                    shaders_sticks.shader_type[sticks_type]["geometry_shader"])

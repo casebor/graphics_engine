@@ -487,7 +487,11 @@ class SticksRepresentation(Representation):
     def __init__(self, vismol_object, vismol_glcore, indexes, active=True, is_dynamic = False, name = "sticks"):
         """ Class initialiser """
         super(SticksRepresentation, self).__init__(vismol_object, vismol_glcore, name, active, indexes, is_dynamic)
-
+        if  name == "sticks":
+            self.radius = self.vm_session.vm_config.gl_parameters["sticks_radius"]
+        else:
+            self.radius = self.vm_session.vm_config.gl_parameters["ribbon_width"]
+            
     def _load_camera_pos(self, program):
         xyz_coords = self.vm_glcore.glcamera.get_modelview_position(self.vm_object.model_mat)
         u_campos = GL.glGetUniformLocation(program, "u_campos")
@@ -505,6 +509,11 @@ class SticksRepresentation(Representation):
         self.vm_glcore.load_lights(self.shader_program)
         self._load_camera_pos(self.shader_program)
         GL.glBindVertexArray(self.vao)
+        
+        #radius = self.vm_session.vm_config.gl_parameters["sticks_radius"]
+        custom_int_location = GL.glGetUniformLocation(self.shader_program, "vert_rad")
+        GL.glUniform1f(custom_int_location, self.radius)  # Set the integer value to  _size
+        
         
         if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
@@ -537,6 +546,11 @@ class SticksRepresentation(Representation):
         GL.glEnable(GL.GL_DEPTH_TEST)
         self.vm_glcore.load_matrices(self.sel_shader_program, self.vm_object.model_mat)
         GL.glBindVertexArray(self.sel_vao)
+        
+        #radius = self.vm_session.vm_config.gl_parameters["sticks_radius"]
+        custom_int_location = GL.glGetUniformLocation(self.sel_shader_program, "vert_rad")
+        GL.glUniform1f(custom_int_location, self.radius)
+        
         
         if self.was_sel_coord_modified:
             self._load_coord_vbo(sel_coord_vbo=True)
@@ -695,7 +709,8 @@ class DashedLinesRepresentation(Representation):
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
         
-        #How to pass data to shader on the fly. It's not the most efficient mode, but it's an okay solution in this case.
+        # How to pass data to shader on the fly. It's not the most 
+        # efficient mode, but it's an okay solution in this case.
         color = GL.glGetUniformLocation(self.shader_program, "uniform_color")
         #GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
         color2 = np.array([1.0 ,1.0, 0.0], dtype=np.float32)
