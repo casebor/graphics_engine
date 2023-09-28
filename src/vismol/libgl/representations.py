@@ -491,7 +491,12 @@ class SticksRepresentation(Representation):
             self.radius = self.vm_session.vm_config.gl_parameters["sticks_radius"]
         else:
             self.radius = self.vm_session.vm_config.gl_parameters["ribbon_width"]
-            
+
+    def set_radius (self, radius):
+        """ Function doc """
+        self.radius = radius
+
+
     def _load_camera_pos(self, program):
         xyz_coords = self.vm_glcore.glcamera.get_modelview_position(self.vm_object.model_mat)
         u_campos = GL.glGetUniformLocation(program, "u_campos")
