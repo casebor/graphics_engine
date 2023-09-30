@@ -701,7 +701,7 @@ class DashedLinesRepresentation(Representation):
     def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
         """ Class initialiser """
         super(DashedLinesRepresentation, self).__init__(vismol_object, vismol_glcore, "dash", active, indexes)
-    
+        self.depth_test = False
     def draw_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()
@@ -728,6 +728,13 @@ class DashedLinesRepresentation(Representation):
         GL.glUniform1i(test, test_int)
         '''
         
+        if self.depth_test:
+            pass
+        else:
+            GL.glDisable(GL.GL_DEPTH_TEST)
+        
+        
+        
         if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
             self.was_rep_coord_modified = False
@@ -744,7 +751,7 @@ class DashedLinesRepresentation(Representation):
         self._disable_anti_alias_to_lines()
         GL.glLineWidth(1)
         GL.glUseProgram(0)
-    
+        
     def draw_background_sel_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()
