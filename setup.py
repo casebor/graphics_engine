@@ -56,7 +56,9 @@ setup(
     install_requires=[
         "numpy>=1.20.0",
         "Cython>=0.29.12",
-        "PyOpenGL>=3.1.0"
+        "PyOpenGL>=3.1.0",
+        "PyGObject>=3.46.0",
+        "freetype-py>=2.4.0"
         ],
     classifiers = [
         "Programming Language :: Python :: 3",
