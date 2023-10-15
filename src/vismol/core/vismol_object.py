@@ -660,6 +660,7 @@ class VismolObject:
         #
         for c_index, chain in self.chains.items():
             for r_index, residue in chain.residues.items():
+                residue._is_protein()
                 if residue.is_protein:
                     for a_index, atom in residue.atoms.items():
                         if atom.name == "CA":
