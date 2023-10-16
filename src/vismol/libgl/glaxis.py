@@ -41,7 +41,7 @@ class GLAxis:
         receive no arguments.
     """
     
-    def __init__ (self, cam_pos=np.zeros(3, dtype=np.float32)):
+    def __init__ (self, cam_pos=np.zeros(3, dtype=np.float32), vm_glcore = None ):
         """ For creating a GLAxis object you only need to supply the position
             of your camera or eye as an numpy array of XYZ components.
             The default position for the camera is 0x, 0y, 0z.
@@ -52,6 +52,8 @@ class GLAxis:
         # These coordinates are for a cone with the base at the origen ant pointining
         # towards the positive X axis. To use the data for the other axis, rotate
         # the points :P
+        self.vm_glcore = vm_glcore
+        self.aspect_ratio =  self.vm_glcore.width / self.vm_glcore.height
         a, b, c = 0.0, 0.707107, 1.0
         self.axis_cone = np.array([[ a, a,-c],[ c, a, a],[ a,-b,-b],
                                    [ a,-b,-b],[ c, a, a],[ a,-c, a],
@@ -109,6 +111,7 @@ class GLAxis:
 #version 330
 
 uniform mat4 model_mat;
+//uniform mat4 view_mat;
 
 in vec3 vert_coord;
 in vec3 vert_color;
@@ -119,7 +122,8 @@ out vec3 frag_color;
 out vec3 frag_norm;
 
 void main(){
-    frag_coord = vec3(model_mat * vec4(vert_coord, 1.0));
+    //frag_coord = vec3(view_mat*model_mat * vec4(vert_coord, 1.0));
+    frag_coord = vec3( model_mat * vec4(vert_coord, 1.0));
     frag_norm = mat3(transpose(inverse(model_mat))) * vert_norm;
     frag_color = vert_color;
     gl_Position = vec4(frag_coord, 1.0);
@@ -170,7 +174,7 @@ void main() {
 """
         self.vertex_shader_lines = """
 #version 330
-
+//uniform mat4 view_mat;
 uniform mat4 model_mat;
 
 in vec3 vert_coord;
@@ -180,7 +184,8 @@ out vec3 frag_color;
 
 void main()
 {
-    gl_Position = model_mat * vec4(vert_coord, 1.0);
+    //gl_Position = (view_mat* model_mat * vec4(vert_coord, 1.0));
+    gl_Position = (model_mat * vec4(vert_coord, 1.0));
     frag_color = vert_color;
 }
 """
@@ -196,6 +201,12 @@ void main()
     final_color = vec4(frag_color, 1.0);
 }
 """
+    
+    def aspect_ratio_change (self):
+        """ Function doc """
+        self.new_aspect_ratio = self.vm_glcore.width / self.vm_glcore.height
+        return self.aspect_ratio/self.new_aspect_ratio
+
     
     def initialize_gl(self):
         """ First function, called right after the object creation. Creates the
@@ -388,6 +399,8 @@ void main()
         """ This function load the model matrix of the gizmo, the camera
             position and the light parameters in the cones OpenGL program.
         """
+        #view = GL.glGetUniformLocation(self.gizmo_axis_program, "view_mat")
+        #GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.vm_glcore.glcamera.view_matrix)
         model = GL.glGetUniformLocation(self.gizmo_axis_program, "model_mat")
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
         light_pos = GL.glGetUniformLocation(self.gizmo_axis_program, "my_light.position")
@@ -408,6 +421,9 @@ void main()
         """ Load the model matrix of the gizmo"s lines in the lines OpenGL
             program.
         """
+        #print (self.vm_glcore.glcamera.view_matrix)
+        #view = GL.glGetUniformLocation(self.gl_lines_program, "view_mat")
+        #GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.vm_glcore.glcamera.view_matrix)
         model = GL.glGetUniformLocation(self.gl_lines_program, "model_mat")
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
         return True

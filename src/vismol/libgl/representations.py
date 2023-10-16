@@ -574,7 +574,7 @@ class SticksRepresentation(Representation):
 
 class SpheresRepresentation(Representation):
     """ Class doc """
-    
+    #            self, vismol_object, vismol_glcore, indexes, active=True, is_dynamic = False, name = "sticks"
     def __init__(self, vismol_object, vismol_glcore, indexes, active=True, vdw = False, mode = 0):
         """ Class initialiser """
         if mode == 0:
@@ -698,10 +698,10 @@ class SpheresRepresentation(Representation):
 class DashedLinesRepresentation(Representation):
     """ Class doc """
     
-    def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True, depth_test = False):
         """ Class initialiser """
         super(DashedLinesRepresentation, self).__init__(vismol_object, vismol_glcore, "dash", active, indexes)
-        self.depth_test = False
+        self.depth_test = depth_test
     def draw_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()

@@ -47,7 +47,7 @@ import vismol.utils.matrix_operations as mop
 
 from vismol.core.vismol_object import VismolObject
 from vismol.model.atom import Atom
-
+import math
 logger = getLogger(__name__)
 
 
@@ -84,7 +84,7 @@ class VismolGLCore:
                                  np.array([0,0,10], dtype=np.float32),
                                  self.zero_reference_point)
         self.vm_font = VismolFont(color=[1, 1, 1, 1])
-        self.axis = GLAxis()
+        self.axis = GLAxis(vm_glcore = self)
         self.selection_box = SelectionBox()
         self.parent_widget.set_has_depth_buffer(True)
         self.parent_widget.set_has_alpha(True)
@@ -139,7 +139,7 @@ class VismolGLCore:
                                           self.glcamera.viewport_aspect_ratio,
                                           self.glcamera.z_near, self.glcamera.z_far)
         self.glcamera.set_projection_matrix(_proj_mat)
-    
+        
     def mouse_pressed(self, button_number, mouse_x, mouse_y):
         """ Function doc
         """
@@ -412,6 +412,8 @@ class VismolGLCore:
                 else:
                     self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, np.array([dy, dx, 0.0]))
                 self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
+                #self.axis.model_mat = mop.my_glScalef(self.axis.model_mat, self.axis.zrp)
+                
             # Axis operations, this code only affects the gizmo axis
         return True
     
@@ -995,6 +997,8 @@ class VismolGLCore:
                 text = "#" + str(number)
                 frame = self._get_vismol_object_frame(atom.vm_object)
                 x, y, z = atom.coords(frame)
+                
+
                 point = np.array([x, y, z, 1], dtype=np.float32)
                 point = np.dot(point, self.model_mat)
                 GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font.texture_id)
@@ -1036,7 +1040,40 @@ class VismolGLCore:
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
-    
+        
+         
+        atomlist = self.vm_session.picking_selections.picking_selections_list
+        if atomlist[0] and atomlist[1]:
+            
+            crd1 = atomlist[0].coords(frame)
+            crd2 = atomlist[1].coords(frame)
+            d = ((crd2[0]-crd1[0])**2+ 
+                 (crd2[1]-crd1[1])**2+ 
+                 (crd2[2]-crd1[2])**2)**0.5
+            print('distance #1 - #2: ', d)
+        
+        if atomlist[0] and atomlist[1] and atomlist[2]:
+            crd1 = atomlist[0].coords(frame)
+            crd2 = atomlist[1].coords(frame)
+            crd3 = atomlist[2].coords(frame)
+            
+            v1 = [crd2[0]-crd1[0], 
+                  crd2[1]-crd1[1], 
+                  crd2[2]-crd1[2]]
+            v2 = [crd2[0]-crd3[0], 
+                  crd2[1]-crd3[1], 
+                  crd2[2]-crd3[2]]
+            dot_product = sum(v1[i] * v2[i] for i in range(len(v1)))      
+
+            magnitude_a = math.sqrt(sum(x**2 for x in v1))
+            magnitude_b = math.sqrt(sum(x**2 for x in v2))
+            cosine_theta = dot_product / (magnitude_a * magnitude_b)
+            angle_rad = math.acos(cosine_theta)
+            angle_deg = math.degrees(angle_rad)
+            print(angle_deg)
+
+
+
     def _compile_shader_picking_dots(self):
         """ Function doc """
         
