@@ -239,7 +239,10 @@ class VismolSession():
                 pass
         else:
             self.vm_glcore.updated_coords = False
-    
+        
+        #if self.picking_selection_mode:
+        #    self.picking_selections.print_pk_distances()
+            
     def reverse_frame(self):
         """ Function doc """
         if self.frame - 1 >= 0:
@@ -247,13 +250,19 @@ class VismolSession():
             self.vm_glcore.updated_coords = True
         else:
             self.vm_glcore.updated_coords = False
-    
+        
+        #if self.picking_selection_mode:
+        #    self.picking_selections.print_pk_distances()
+            
     def set_frame(self, frame=0):
         """ Function doc """
         assert frame >= 0
         self.frame = np.uint32(frame)
         self.vm_widget.queue_draw()
-    
+        
+        #if self.picking_selection_mode:
+        #    self.picking_selections.print_pk_distances()
+        
     def get_frame(self):
         """ Function doc """
         return self.frame

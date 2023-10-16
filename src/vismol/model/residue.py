@@ -63,7 +63,7 @@ class Residue:
                 C  = False
                 
                 for index, atom in self.atoms.items():
-                    print (atom.name)
+                    #print (atom.name)
                     if atom.name == "N":
                         N  = True
                     if atom.name == "C":

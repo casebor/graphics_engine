@@ -83,7 +83,10 @@ class VismolGLCore:
                                  self.width / self.height,
                                  np.array([0,0,10], dtype=np.float32),
                                  self.zero_reference_point)
-        self.vm_font = VismolFont(color=[1, 1, 1, 1])
+        
+        self.vm_font        = VismolFont(color=[1, 1, 1, 1])
+        self.vm_font_static = VismolFont(color=[1, 1, 1, 1])
+        
         self.axis = GLAxis(vm_glcore = self)
         self.selection_box = SelectionBox()
         self.parent_widget.set_has_depth_buffer(True)
@@ -977,7 +980,65 @@ class VismolGLCore:
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
 
+    def _draw_distance_labels(self, distance = 0.0):
+        if self.vm_font_static.vao is None:
+            self.vm_font_static.make_freetype_font()
+            self.vm_font_static.make_freetype_texture(self.core_shader_programs["static_freetype"])
+        
+        number     = 1
+        self.chars = 0
+        point      = [0.0, 0.0, 0.0, 1.0]
+        xyz_pos    = []
+        uv_coords  = []
+        
+        self.do_once = True
+        
+        #if self.do_once:
 
+        text = "distance: {}".format(distance) 
+        point = np.array(point, dtype=np.float32)
+        #point = np.dot(point, self.model_mat)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font.texture_id)
+        for i, c in enumerate(text):
+            self.chars += 1
+            c_id = ord(c)
+            x = c_id % 16
+            y = c_id // 16 - 2
+            xyz_pos.append(point[0] + i * self.vm_font.char_width)
+            xyz_pos.append(point[1])
+            xyz_pos.append(point[2])
+            uv_coords.append(x * self.vm_font.text_u)
+            uv_coords.append(y * self.vm_font.text_v)
+            uv_coords.append((x + 1) * self.vm_font.text_u)
+            uv_coords.append((y + 1) * self.vm_font.text_v)
+            number += 1
+        xyz_pos = np.array(xyz_pos, dtype=np.float32)
+        uv_coords = np.array(uv_coords, dtype=np.float32)
+        
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.coord_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize * len(xyz_pos),
+                        xyz_pos, GL.GL_DYNAMIC_DRAW)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.text_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize * len(uv_coords),
+                        uv_coords, GL.GL_DYNAMIC_DRAW)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glUseProgram(self.core_shader_programs["static_freetype"])
+        #self.do_once = False
+        
+        #self.vm_font.load_matrices(self.core_shader_programs["freetype"],
+        #                           self.glcamera.view_matrix,
+        #                           self.glcamera.projection_matrix)
+        #self.vm_font.load_font_params(self.core_shader_programs["freetype"])
+        
+        GL.glBindVertexArray(self.vm_font.vao)
+        GL.glDrawArrays(GL.GL_POINTS, 0, self.chars)
+        GL.glDisable(GL.GL_BLEND)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        #print('aqui')
     
     def _draw_picking_label(self):
         """ This function draws the labels of the atoms selected by the
@@ -1041,36 +1102,59 @@ class VismolGLCore:
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         
-         
+        '''
         atomlist = self.vm_session.picking_selections.picking_selections_list
+        
+        text_d1 = ""
+        text_d2 = ""
+        text_d3 = ""
+        angle_1 = ""
+        # this should be a new function later
         if atomlist[0] and atomlist[1]:
             
             crd1 = atomlist[0].coords(frame)
             crd2 = atomlist[1].coords(frame)
-            d = ((crd2[0]-crd1[0])**2+ 
+            d1 = ((crd2[0]-crd1[0])**2+ 
                  (crd2[1]-crd1[1])**2+ 
                  (crd2[2]-crd1[2])**2)**0.5
-            print('distance #1 - #2: ', d)
-        
-        if atomlist[0] and atomlist[1] and atomlist[2]:
-            crd1 = atomlist[0].coords(frame)
-            crd2 = atomlist[1].coords(frame)
-            crd3 = atomlist[2].coords(frame)
             
-            v1 = [crd2[0]-crd1[0], 
-                  crd2[1]-crd1[1], 
-                  crd2[2]-crd1[2]]
-            v2 = [crd2[0]-crd3[0], 
-                  crd2[1]-crd3[1], 
-                  crd2[2]-crd3[2]]
-            dot_product = sum(v1[i] * v2[i] for i in range(len(v1)))      
+            text_d1 = "dist 1-2: {:7.5f} ".format(d1)
+            
+            
+            if atomlist[2]:
+                #print('distance #1 - #2: ', d)
+                crd3 = atomlist[2].coords(frame)
+                
+                d2 = ((crd2[0]-crd3[0])**2+ 
+                     ( crd2[1]-crd3[1])**2+ 
+                     ( crd2[2]-crd3[2])**2)**0.5
+                
+                text_d2 = "dist 2-3: {:7.5f} ".format(d2)
+                
+                
+                v1 = [crd2[0]-crd1[0], 
+                      crd2[1]-crd1[1], 
+                      crd2[2]-crd1[2]]
+                v2 = [crd2[0]-crd3[0], 
+                      crd2[1]-crd3[1], 
+                      crd2[2]-crd3[2]]
+                dot_product = sum(v1[i] * v2[i] for i in range(len(v1)))  
+                
+                magnitude_a = math.sqrt(sum(x**2 for x in v1))
+                magnitude_b = math.sqrt(sum(x**2 for x in v2))
+                cosine_theta = dot_product / (magnitude_a * magnitude_b)
+                angle_rad = math.acos(cosine_theta)
+                angle_deg = math.degrees(angle_rad)
+                
+                angle_1 = "angle 1-2-3: {:7.5f} ".format(angle_deg)
+                
+        print(text_d1, text_d2, text_d3, angle_1)
+                #print(angle_deg)
+        '''
 
-            magnitude_a = math.sqrt(sum(x**2 for x in v1))
-            magnitude_b = math.sqrt(sum(x**2 for x in v2))
-            cosine_theta = dot_product / (magnitude_a * magnitude_b)
-            angle_rad = math.acos(cosine_theta)
-            angle_deg = math.degrees(angle_rad)
-            print(angle_deg)
+        '''
+        self._draw_distance_labels( distance = d)
+        '''
 
 
 
@@ -1186,6 +1270,13 @@ class VismolGLCore:
         self.core_shader_programs["freetype"] = self.load_shaders(shaders_vm_freetype.vertex_shader_freetype,
                                                          shaders_vm_freetype.fragment_shader_freetype,
                                                          shaders_vm_freetype.geometry_shader_freetype)
+    
+    
+    def _compile_shader_static_freetype(self):
+        """ Function doc """
+        self.core_shader_programs["static_freetype"] = self.load_shaders(shaders_vm_freetype.static_vertex_shader_freetype,
+                                                                         shaders_vm_freetype.static_fragment_shader_freetype,
+                                                                         shaders_vm_freetype.static_geometry_shader_freetype)
     
     
     

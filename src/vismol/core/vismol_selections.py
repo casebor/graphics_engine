@@ -299,6 +299,15 @@ class VismolPickingSelection:
         # Store a reference to the VismolSession instance associated with this selection
         self.vm_session = vismol_session
     
+        self.distance_dict = {
+                              "1-2"        : None,
+                              '2-3'        : None,
+                              '3-4'        : None,
+                              'angle1-2-3' : None,
+                              }
+    
+    
+    
     def selection_function_picking(self, selected):
         """Handle picking selections.
 
@@ -326,28 +335,29 @@ class VismolPickingSelection:
                         self.picking_selections_list[i] = None
         
         # Calculate and display distances between selected atoms
-        c = 0
-        for atom1 in self.picking_selections_list:
-            for atom2 in self.picking_selections_list[c + 1:]:
-                if atom1 and atom2:
-                    # Get the current frame number
-                    frame = self.vm_session.get_frame()
-
-                    # Get the coordinates of the selected atoms at the current frame (frame=None means current frame)
-                    coords1 = atom1.coords(frame=None)
-                    coords2 = atom2.coords(frame=None)
-
-                    # Calculate the Euclidean distance between the selected atoms
-                    dist = np.linalg.norm(coords1 - coords2)
-
-                    # Get the names of the selected atoms
-                    name1 = atom1.name
-                    name2 = atom2.name
-
-                    # Display the distance between the selected atoms
-                    print("atom", name1, "atom", name2,  dist)
-
-            c += 1
+        self.print_pk_distances()
+        #c = 0
+        #for atom1 in self.picking_selections_list:
+        #    for atom2 in self.picking_selections_list[c + 1:]:
+        #        if atom1 and atom2:
+        #            # Get the current frame number
+        #            frame = self.vm_session.get_frame()
+        #
+        #            # Get the coordinates of the selected atoms at the current frame (frame=None means current frame)
+        #            coords1 = atom1.coords(frame=None)
+        #            coords2 = atom2.coords(frame=None)
+        #
+        #            # Calculate the Euclidean distance between the selected atoms
+        #            dist = np.linalg.norm(coords1 - coords2)
+        #
+        #            # Get the names of the selected atoms
+        #            name1 = atom1.name
+        #            name2 = atom2.name
+        #
+        #            # Display the distance between the selected atoms
+        #            print("atom", name1, "atom", name2,  dist)
+        #
+        #    c += 1
 
         # Extract the selected atoms into separate variables (up to 4 atoms)
         atom1 = self.picking_selections_list[0]
@@ -453,3 +463,37 @@ class VismolPickingSelection:
         #self.vobject_picking.create_representation(rep_type = "dash")
         self.vm_session.vm_geometric_object_dic[vobj_label] = self.vobject_picking
         print(self.vm_session.vm_geometric_object_dic)
+
+
+    def print_pk_distances (self):
+        """ Function doc """
+        # Calculate and display distances between selected atoms
+        
+        c = 0
+        text = ''
+        for atom1 in self.picking_selections_list:
+            for atom2 in self.picking_selections_list[c + 1:]:
+                if atom1 and atom2:
+                    # Get the current frame number
+                    frame = self.vm_session.get_frame()
+
+                    # Get the coordinates of the selected atoms at the current frame (frame=None means current frame)
+                    coords1 = atom1.coords(frame=None)
+                    coords2 = atom2.coords(frame=None)
+
+                    # Calculate the Euclidean distance between the selected atoms
+                    dist = np.linalg.norm(coords1 - coords2)
+
+                    # Get the names of the selected atoms
+                    name1 = atom1.name
+                    name2 = atom2.name
+
+                    # Display the distance between the selected atoms
+                    text += ' {}-{}: {:7.5f}  '.format(name1, name2,dist)
+                    #print("atom", name1, "atom", name2,  dist)
+
+            c += 1
+        print(text)
+
+
+
