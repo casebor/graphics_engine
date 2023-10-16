@@ -47,12 +47,36 @@ class Residue:
     
     def _is_protein(self):
         """ Function doc """
-        # is it a protein residue?
-        if self.name in residues_dictionary.keys():
-            self.is_protein = True
         # is it a salvent molecule?
         if self.name in solvent_dictionary.keys():
             self.is_solvent = True
+        
+        
+        else: # is it a protein residue?
+            if self.name in residues_dictionary.keys():
+                self.is_protein = True
+            else:
+                # . If the residue code is not in the dictionary, 
+                #   then check whether the N, CA and C atoms are present
+                N  = False
+                CA = False
+                C  = False
+                
+                for index, atom in self.atoms.items():
+                    print (atom.name)
+                    if atom.name == "N":
+                        N  = True
+                    if atom.name == "C":
+                        CA = True
+                    if atom.name == "C":
+                        C  = True
+                
+                #print('N,CA,C',N,CA, C , self.name)
+                if N == True and CA == True and C == True:
+                    self.is_protein = True
+                    #print('True - N,CA,C',N,CA,C, self.name )
+            
+
     
     def geometry_center(self, frame=0):
         """ Function doc """

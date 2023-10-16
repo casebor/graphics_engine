@@ -167,7 +167,7 @@ uniform mat4 view_mat;
 
 in vec3 vert_coord;
 in vec3 vert_color;
-const float vert_width = 0.10;
+const float vert_width = 0.000510;
 const float antialias_length = 0.058;
 
 out vec3 geom_color;
@@ -469,7 +469,6 @@ void main(){
 }
 """
 '''
-
 
 
 
