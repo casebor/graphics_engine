@@ -471,7 +471,7 @@ class VismolObject:
             
             # Calculate bonds based on grid positions and covalent radii and return the results
             index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
-                                            cov_rads, gridpos_list, gridsize, maxbond)
+                                            cov_rads, gridpos_list, gridsize, maxbond, tolerance)
             return index_bonds
     
     def _bonds_from_pair_of_indexes_list(self, exclude_list = [['H','H']]):

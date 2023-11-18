@@ -167,7 +167,7 @@ cpdef list get_connections_within_grid_element(list list_of_atoms, coords, cov_r
                 # print(atom_idx_i, "@", atom_idx_j, "@", coords)
                 r_ij            = calculate_sqrt_distance(atom_idx_i, atom_idx_j, coords)
                 # r_ij = np.linalg.norm(coords[atom_idx_i] - coords[atom_idx_j])
-                cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*1.4
+                cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*tolerance
                 #cov_rad_ij_sqrt = ( (cov_rad[i] + cov_rad[j] )**2)*1.4
                 
                 #print (atom_idx_i, atom_idx_j,cov_rad[atom_idx_j],cov_rad[atom_idx_j] , r_ij, cov_rad_ij_sqrt)
@@ -222,7 +222,7 @@ cpdef list get_connections_between_grid_elements(list atomic_grid1,
                     r_ij            = calculate_sqrt_distance(atom_idx_i, atom_idx_j, coords)
                     # r_ij = np.linalg.norm(coords[atom_idx_i] - coords[atom_idx_j])
                     #cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*1.4
-                    cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*1.4
+                    cov_rad_ij_sqrt = ( (cov_rad[atom_idx_i] + cov_rad[atom_idx_j] )**2)*tolerance
                     #print (atom_idx_i, atom_idx_j,cov_rad[atom_idx_j],cov_rad[atom_idx_j] , r_ij, cov_rad_ij_sqrt)
                     if r_ij <= cov_rad_ij_sqrt:
                         #bonds_pair_of_indexes.append([atom_idx_i , atom_idx_j])
@@ -260,7 +260,7 @@ cpdef dict build_the_atomic_grid ( list indexes     ,
 
 
 cpdef list get_atomic_bonds_from_grid(list indexes, coords, cov_rad, list gridpos_list,
-                                      double gridsize, double maxbond):
+                                      double gridsize, double maxbond, double tolerance):
     '''
     function is responsible for calculating the bonds between atoms within a given grid. It takes the following parameters:
 
@@ -294,10 +294,10 @@ cpdef list get_atomic_bonds_from_grid(list indexes, coords, cov_rad, list gridpo
     the pairs of atom indices representing the bonds within the atomic grid.
     '''
     
-    cdef double tolerance
-    #cpdef double maxbond
-    #maxbond   = 3.0
-    tolerance = 1.4
+    #cdef double tolerance
+    ##cpdef double maxbond
+    ##maxbond   = 3.0
+    #tolerance = 1.8
     
     atomic_grid = build_the_atomic_grid ( indexes     ,
                                                 gridpos_list)

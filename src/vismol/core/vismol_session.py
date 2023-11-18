@@ -298,10 +298,10 @@ class VismolSession():
             selection_dict[atom.atom_id] = atom
             vobject = atom.vm_object
         
-        
+        tolerance = self.vm_config.gl_parameters['bond_tolerance']
         vobject.dynamic_bonds = []
         for frame in range(len(vobject.frames)):            
-            bonds = vobject.find_bonded_and_nonbonded_atoms(selection=selection_dict, frame=frame, internal = False)
+            bonds = vobject.find_bonded_and_nonbonded_atoms(selection=selection_dict, frame=frame, internal = False, tolerance = tolerance)
             vobject.dynamic_bonds.append(bonds)
             #print(len(bonds), bonds)
         #print(vobject.dynamic_bonds)

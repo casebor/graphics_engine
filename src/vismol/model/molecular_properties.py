@@ -1492,7 +1492,18 @@ class ResidueTypes :
                                     'VAL': 'V', 
                                     'GLU': 'E', 
                                     'TYR': 'Y', 
-                                    'MET': 'M'}
+                                    'MET': 'M',
+                                    
+                                    
+                                    #DNA
+                                    'ADE': 'a',
+                                    'THY': 't',
+                                    'CYT': 'c',
+                                    'GUA': 'u',
+
+
+
+                                    }
 
 
 class AtomTypes:
