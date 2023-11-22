@@ -438,7 +438,7 @@ class VismolObject:
         if internal is True:
             initial = time.time()
             self.index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
-                                            cov_rads, gridpos_list, gridsize, maxbond)
+                                            cov_rads, gridpos_list, gridsize, maxbond, tolerance)
             msg = """Building grid elements  :
         Total number of Atoms   : {}
         Gridsize                : {}
