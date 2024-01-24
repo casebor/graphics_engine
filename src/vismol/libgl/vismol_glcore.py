@@ -157,13 +157,19 @@ class VismolGLCore:
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self._mouse_pos(self.mouse_x, self.mouse_y)
         self.dragging = False
         if left:
-            if self.shift:
+            
+            if  self.ctrl:
+                pass
+                #print(self.shift, self.ctrl)
+            
+            if self.shift and not self.ctrl:
                 self.show_selection_box = True
                 self.selection_box.start = self.get_viewport_pos(mouse_x, mouse_y)
                 self.selection_box.end = self.get_viewport_pos(mouse_x, mouse_y)
                 self.selection_box.update_points()
                 self.selection_box_x = mouse_x
                 self.selection_box_y = self.height - mouse_y
+
         if middle:
             self.picking_x = np.float32(mouse_x)
             self.picking_y = np.float32(mouse_y)
