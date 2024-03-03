@@ -231,7 +231,7 @@ class VismolObject:
         elif rep_type == "dash":
             # Create a DashedLinesRepresentation object and add it to the 'representations' dictionary
             self.representations["dash"] = DashedLinesRepresentation(self, self.vm_session.vm_glcore,
-                                                active=True, indexes=selcf.index_bonds)
+                                                active=True, indexes=self.index_bonds)
         elif rep_type == "ribbons":
             # Create a SticksRepresentation object with 'ribbons' name and add it to the 'representations' dictionary
             self.representations["ribbons"] = SticksRepresentation(self, self.vm_session.vm_glcore,

@@ -7,10 +7,10 @@ vertex_shader_freetype =  """
 
 uniform mat4 view_mat;
 
-//mat4 identityMatrix = mat4(1.0, 0.0, 0.0, 0.0,
-//                           0.0, 1.0, 0.0, 0.0,
-//                           0.0, 0.0, 1.0, 0.0,
-//                           0.0, 0.0, 0.0, 1.0);
+mat4 identityMatrix = mat4(1.0, 0.0, 0.0, 0.0,
+                           0.0, 1.0, 0.0, 0.0,
+                           0.0, 0.0, 1.0, 0.0,
+                           0.0, 0.0, 0.0, 1.0);
 
 
 in vec3 vert_coord;
@@ -96,6 +96,9 @@ fragment_shader_freetype = """
 uniform sampler2D textu;
 uniform vec4 text_color;
 
+//uniform float border_size
+const float border_size = 0.05;
+
 in vec2 frag_text_uv;
 
 out vec4 final_color;
@@ -106,6 +109,65 @@ void main(){
         discard;
     final_color = text_color * sampled;
 }
+
+
+
+//void main() {
+//    // Amostra a textura do caractere
+//    vec4 sampled = texture(textu, frag_text_uv);
+//    
+//    // Verifica se o fragmento está na borda do caractere
+//    float border_distance = fwidth(length(frag_text_uv - 0.5)); // Distância do fragmento ao centro do caractere
+//    float alpha = sampled.a;
+//    float border_alpha = smoothstep(0.5 - border_size, 0.5, border_distance) - smoothstep(0.5, 0.5 + border_size, border_distance);
+//    
+//    // Combina a cor do caractere com a cor da borda preta
+//    vec4 border_color = vec4(0.0, 0.0, 0.0, 1.0); // Cor preta
+//    vec4 final_alpha = mix(sampled, border_color, border_alpha);
+//    
+//    // Combina a cor do caractere com a cor do texto e a cor da borda
+//    final_color = (text_color * final_alpha);
+//}
+
+//void main() {
+//    // Amostra a textura do caractere
+//    vec4 sampled = texture(textu, frag_text_uv);
+//    
+//    // Calcula a dilatação da textura do caractere com a borda preta
+//    float border_distance = fwidth(length(frag_text_uv - 0.5)); // Distância do fragmento ao centro do caractere
+//    float dilated_alpha = 1.0 - smoothstep(0.5 - border_size, 0.5 + border_size, border_distance);
+//    
+//    // Calcula a cor final da borda
+//    vec4 border_color = vec4(0.0, 0.0, 0.0, 1.0); // Cor preta
+//    vec4 border = dilated_alpha * border_color;
+//    
+//    // Calcula a cor final do caractere com a borda preta
+//    vec4 final_alpha = mix(border, sampled, step(0.0, sampled.a));
+//    
+//    // Combina a cor do caractere com a cor do texto e a cor da borda
+//    final_color = text_color * final_alpha;
+//}
+
+//void main(){
+//    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(textu, frag_text_uv).r); // Amostra a cor do texto
+//    if (sampled.a == 0.0) // Se o fragmento for transparente, descartamos
+//        discard;
+//
+//    // Calcula a distância do fragmento ao centro da textura
+//    vec2 center = vec2(0.5, 0.5);
+//    float distance_to_center = distance(frag_text_uv, center);
+//
+//    // Calcula a cor da borda (semi-transparente cinza)
+//    vec4 border_color = vec4(0.5, 0.5, 0.5, 0.5); // Cinza semi-transparente
+//
+//    // Se o fragmento estiver dentro do círculo circunscrito, usa a cor da borda
+//    if (distance_to_center > 0.5 - border_size && distance_to_center < 0.5) {
+//        final_color = border_color;
+//    } else {
+//        final_color = text_color * sampled; // Caso contrário, usa a cor do texto original
+//    }
+//}
+
 """
 
 

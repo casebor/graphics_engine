@@ -29,7 +29,8 @@ from OpenGL import GL
 import os
 import vismol.libgl.glaxis as glaxis
 fontpath = os.path.split(glaxis.__file__)[:-1]
-fontpath = os.path.join(*fontpath, "fonts", "VeraMono.ttf")
+#fontpath = os.path.join(*fontpath, "fonts", "VeraMono.ttf")
+fontpath = os.path.join(*fontpath, "fonts", "Amiko-SemiBold.ttf")
 
 class VismolFont():
     """ VismolFont stores the data created using the freetype python binding
@@ -38,7 +39,7 @@ class VismolFont():
     """
     
     def __init__(self, vismol_object=None, font_file=fontpath, char_res=64,
-                 char_width=0.25, char_height=0.3, color=None):
+                 char_width=0.35, char_height=0.35, color=None):
                             
         """ Class initialiser
         """
@@ -49,7 +50,7 @@ class VismolFont():
         self.char_res = char_res
         self.char_width = char_width
         self.char_height = char_height
-        self.offset = np.array([char_width/2.0, char_height/2.0], dtype=np.float32)
+        self.offset = np.array([char_width/1.5, char_height/1.5], dtype=np.float32)
         self.color = np.array(color, dtype=np.float32)
         self.font_buffer = None
         self.texture_id = None
@@ -74,6 +75,7 @@ class VismolFont():
             descender = max(descender, bitmap.rows-face.glyph.bitmap_top)
         height = ascender+descender
         # Generate texture data
+        #self.font_buffer = np.zeros((height*6, width*16), dtype=np.ubyte)
         self.font_buffer = np.zeros((height*6, width*16), dtype=np.ubyte)
         for j in range(6):
             for i in range(16):

@@ -643,6 +643,7 @@ class SpheresRepresentation(Representation):
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_CULL_FACE)
         GL.glCullFace(GL.GL_BACK)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glUseProgram(self.shader_program)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         self.vm_glcore.load_lights(self.shader_program)
@@ -702,6 +703,7 @@ class DashedLinesRepresentation(Representation):
         """ Class initialiser """
         super(DashedLinesRepresentation, self).__init__(vismol_object, vismol_glcore, "dash", active, indexes)
         self.depth_test = depth_test
+        self.color2 = [1.0 ,1.0, 0.0]
     def draw_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()
@@ -718,7 +720,7 @@ class DashedLinesRepresentation(Representation):
         # efficient mode, but it's an okay solution in this case.
         color = GL.glGetUniformLocation(self.shader_program, "uniform_color")
         #GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
-        color2 = np.array([1.0 ,1.0, 0.0], dtype=np.float32)
+        color2 = np.array(self.color2, dtype=np.float32)
         GL.glUniform3fv(color, 1, color2)
         
         '''

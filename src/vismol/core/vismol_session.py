@@ -56,7 +56,8 @@ class VismolSession():
         self.current_selection = "sel_00"
         self.picking_selections = VMPick(self)
         
-        self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None, "pk3pk4":None}
+        self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None, "pk3pk4":None,
+                                        "pk1": None  , "pk2": None  , "pk3": None  , "pk4": None}
         
         if toolkit == "Gtk_3.0":
             from vismol.gui.vismol_gtkwidget import VismolGTKWidget
@@ -79,7 +80,9 @@ class VismolSession():
             logger.error("Toolkit not defined or syntax error, try 'Gtk_3.0'. Quitting.")
             raise RuntimeError("Toolkit not defined or syntax error, try 'Gtk_3.0'. Quitting.")
             quit()
-    
+        
+        
+        
     def _add_vismol_object(self, vismol_object, show_molecule=True, autocenter=True):
         """ Function doc """
 
@@ -258,8 +261,12 @@ class VismolSession():
         """ Function doc """
         assert frame >= 0
         self.frame = np.uint32(frame)
-        self.vm_widget.queue_draw()
         
+        #self.picking_selections
+        #for 
+        self.picking_selections.update_pki_pkj_rep_coordinates()
+        self.vm_widget.queue_draw()
+        #print('uhuuu')
         #if self.picking_selection_mode:
         #    self.picking_selections.print_pk_distances()
         

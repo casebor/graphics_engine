@@ -125,4 +125,40 @@ void main(){
 
 
 
+#picking_spheres
+vertex_shader_picking_spheres = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 proj_mat;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+in vec3 vert_instance;
+in float vert_radius;
+
+out vec3 frag_color;
+
+void main(){
+    frag_color = vert_color;
+    vec3 offset_coord = vert_coord * vert_radius + vert_instance;
+    gl_Position = proj_mat * view_mat * model_mat * vec4(offset_coord, 1.0);
+}
+"""
+
+fragment_shader_picking_spheres = """
+#version 330
+
+in vec3 frag_color;
+
+out vec4 final_color;
+
+void main(){
+    final_color = vec4(frag_color, 0.5);
+}
+"""
+
+
+
 

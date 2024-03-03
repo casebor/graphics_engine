@@ -165,6 +165,7 @@ void main(){
     
 
     float dist = abs(frag_coord.z);
+    
     if(dist>=fog_start){
         float fog_factor = (fog_end-dist)/(fog_end-fog_start);
         final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
@@ -173,7 +174,7 @@ void main(){
        final_color = vec4(frag_color, 1.0);
     }
 
-
+    final_color = vec4(frag_color, 1.0);
 
     if(  mod( round(line_dot_value * 5*scalar_distance) , 2 )  > 0 )
          discard;

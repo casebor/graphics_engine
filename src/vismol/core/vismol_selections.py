@@ -306,8 +306,26 @@ class VismolPickingSelection:
                               'angle1-2-3' : None,
                               }
     
+        self.vobject_picking = None
     
     
+    
+    
+        pklist = ['pk1pk2', 'pk2pk3', 'pk3pk4']
+        #self.build_pk_objects(pklist)
+    
+        self.xyz1 = None
+        self.xyz2 = None
+        self.xyz3 = None
+        self.xyz4 = None
+        
+        self.dist_pk1_pk2 = None
+        self.dist_pk2_pk3 = None
+        self.dist_pk3_pk4 = None
+        self.mid_point_pk1_pk2 = None
+        self.mid_point_pk2_pk3 = None
+        self.mid_point_pk3_pk4 = None
+        self.pk_scolor = {'pk1':[0,0,0.5], 'pk2':[0,0.5,0.5], 'pk3':[0.5,0,0.5], 'pk4':[0.5,0.5,0]}
     def selection_function_picking(self, selected):
         """Handle picking selections.
 
@@ -336,94 +354,154 @@ class VismolPickingSelection:
         
         # Calculate and display distances between selected atoms
         self.print_pk_distances()
-        #c = 0
-        #for atom1 in self.picking_selections_list:
-        #    for atom2 in self.picking_selections_list[c + 1:]:
-        #        if atom1 and atom2:
-        #            # Get the current frame number
-        #            frame = self.vm_session.get_frame()
-        #
-        #            # Get the coordinates of the selected atoms at the current frame (frame=None means current frame)
-        #            coords1 = atom1.coords(frame=None)
-        #            coords2 = atom2.coords(frame=None)
-        #
-        #            # Calculate the Euclidean distance between the selected atoms
-        #            dist = np.linalg.norm(coords1 - coords2)
-        #
-        #            # Get the names of the selected atoms
-        #            name1 = atom1.name
-        #            name2 = atom2.name
-        #
-        #            # Display the distance between the selected atoms
-        #            print("atom", name1, "atom", name2,  dist)
-        #
-        #    c += 1
 
-        # Extract the selected atoms into separate variables (up to 4 atoms)
         atom1 = self.picking_selections_list[0]
         atom2 = self.picking_selections_list[1]
         atom3 = self.picking_selections_list[2]
         atom4 = self.picking_selections_list[3]
 
-        '''
+        #'''
         if atom1 and atom2:
-            self.refresh_pk1pk2_representations(vobj_label="pk1pk2", atom1=atom1, atom2=atom2)
-            print(self.vm_session.vm_geometric_object_dic["pk1pk2"])
+            self.generate_pki_pkj_representations(vobj_label="pk1pk2", atom1=atom1, atom2=atom2)
             self.vm_session.vm_geometric_object_dic["pk1pk2"].representations["dash"].active = True
+            self.xyz1 = atom1.coords()
+            self.xyz2 = atom2.coords()
+            self.dist_pk1_pk2, self.mid_point_pk1_pk2 = self.get_dist ( self.xyz1, self.xyz2)
+            self.vm_session.vm_geometric_object_dic["pk1pk2"].midpoint = self.mid_point_pk1_pk2
+            self.vm_session.vm_geometric_object_dic["pk1pk2"].dist = self.dist_pk1_pk2
+
             if atom3:
-                xyz1 = atom1.coords()
-                xyz2 = atom2.coords()
-                xyz3 = atom3.coords()
+                self.xyz3 = atom3.coords()
+
                 
-                xyz1 = [ xyz1[0] - xyz2[0], xyz1[1] - xyz2[1],   xyz1[2] - xyz2[2]]
-                xyz3 = [ xyz3[0] - xyz2[0], xyz3[1] - xyz2[1],   xyz3[2] - xyz2[2]]
-                angle = mop.angle(xyz1, xyz3)
-                
-                print ("Angle: ", angle*57.297)
-                text =  "Angle: "+ str( angle*57.297)
-                self.vm_session.main_session.statusbar_main.push(1,text)
+                self.get_angle_pk1_pk2_pk3()
+                print ("Angle: ", self.theta_deg)
+                text =  "Angle: "+ str(self.theta_deg)
+
+
                 if atom4:
-                    xyz4 = atom4.coords()
-                    angle = mop.dihedral(xyz1, xyz2, xyz3, xyz4)
+                    self.xyz4 = atom4.coords()
+                    angle = mop.dihedral(self.xyz1, self.xyz2, self.xyz3, self.xyz4)
                     print ("Dihedral: ", angle*57.297)
-        
         else:
             if self.vm_session.vm_geometric_object_dic["pk1pk2"]:
                 self.vm_session.vm_geometric_object_dic["pk1pk2"].representations["dash"].active = False
+
         if atom2 and atom3:
-            self.refresh_pk1pk2_representations(vobj_label="pk2pk3", atom1=atom2, atom2=atom3)
+            self.xyz2 = atom2.coords()
+            self.xyz3 = atom3.coords()
+            self.generate_pki_pkj_representations(vobj_label="pk2pk3", atom1 = atom2, atom2 = atom3)
             self.vm_session.vm_geometric_object_dic["pk2pk3"].representations["dash"].active = True
+            
+            self.dist_pk2_pk3, self.mid_point_pk2_pk3 =  self.get_dist ( self.xyz2, self.xyz3)
+            self.vm_session.vm_geometric_object_dic["pk2pk3"].midpoint = self.mid_point_pk2_pk3
+            self.vm_session.vm_geometric_object_dic["pk2pk3"].dist = self.dist_pk2_pk3
+            print(self.xyz2,self.xyz3,self.dist_pk2_pk3, self.mid_point_pk2_pk3)
         else:
             if self.vm_session.vm_geometric_object_dic["pk2pk3"]:
                 self.vm_session.vm_geometric_object_dic["pk2pk3"].representations["dash"].active = False
-        
+
         if atom3 and atom4:
-            self.refresh_pk1pk2_representations(vobj_label="pk3pk4", atom1=atom3, atom2=atom4)
+            self.generate_pki_pkj_representations(vobj_label="pk3pk4", atom1=atom3, atom2=atom4)
             self.vm_session.vm_geometric_object_dic["pk3pk4"].representations["dash"].active = True
+            self.dist_pk3_pk4, self.mid_point_pk3_pk4 =  self.get_dist ( self.xyz3, self.xyz4)
+            self.vm_session.vm_geometric_object_dic["pk3pk4"].midpoint = self.mid_point_pk3_pk4
+            self.vm_session.vm_geometric_object_dic["pk3pk4"].dist = self.dist_pk3_pk4
         else:
             if self.vm_session.vm_geometric_object_dic["pk3pk4"]:
                 self.vm_session.vm_geometric_object_dic["pk3pk4"].representations["dash"].active = False
         #'''
+        
+        n = 1
+        for atom in self.picking_selections_list:
+            label = "pk"+str(n)
+            print(label, atom)
+            
+            if atom:
+                
+                self.generate_pk_representations(vobj_label = label, atom = atom)
+            else:
+                if self.vm_session.vm_geometric_object_dic[label]:
+                    self.vm_session.vm_geometric_object_dic[label].representations["picking_spheres"].active = False
+                    print('here')
+                else:
+                    pass
+                pass
+            n+=1
+            
+    def generate_pk_representations (self, vobj_label = "pk1", atom = None):
+        """ Function doc """
+
+        if atom:
+            xyz1 = atom.coords()
+            coords  = np.empty([1, 2, 3], dtype=np.float32)
+            x = np.float32(xyz1[0])
+            y = np.float32(xyz1[1])
+            z = np.float32(xyz1[2])
+            coords[0,0,:] = x, y, z
+            
+            vdw_rad  = atom.vdw_rad 
+            cov_rad  = atom.cov_rad 
+            ball_rad = atom.ball_rad
+            
+            self.vobject_picking = VismolObject(name                  = "pk1", 
+                                                index                 = -1,
+                                                vismol_session        = self.vm_session,
+                                                trajectory            = coords,
+                                                bonds_pair_of_indexes = [])
+            
+            self.vobject_picking.set_model_matrix(self.vm_session.vm_glcore.model_mat)
+            
+            atom = Atom(vismol_object = self.vobject_picking, 
+                         name          ='Br'  , 
+                         index         = 0,
+                         residue       = None , 
+                         chain         = None, 
+                         atom_id       = 0,
+                         occupancy     = 0, 
+                         bfactor       = 0 ,
+                         charge        = 0 )
+            
+            #atom.vdw_rad  = vdw_rad *1.05 #2.3 
+            #atom.cov_rad  = cov_rad *1.05 #2.3 
+            #atom.ball_rad = ball_rad*1.05 #2.3 
+            atom.vdw_rad  = 2.3 
+            atom.cov_rad  = 2.3 
+            atom.ball_rad = 2.3 
+            
+            #color = [1.0,1.0,1.0]
+             
+            color = self.pk_scolor[vobj_label]
+            #color = [1,1,1]
+            atom.color = np.array(color, dtype=np.float32)
+            self.vobject_picking.atoms[0] = atom
+            self.vobject_picking.create_representation(rep_type="picking_spheres")
+            #self.vobject_picking.representations["spheres"].color2 = [0,1,1]
+            self.vm_session.vm_geometric_object_dic[vobj_label] = self.vobject_picking
+            self.vm_session.vm_geometric_object_dic[vobj_label].representations["picking_spheres"].define_new_indexes_to_vbo(range(1))
+            self.vm_session.vm_geometric_object_dic[vobj_label].representations["picking_spheres"].was_rep_ind_modified = True
+            self.vm_session.vm_geometric_object_dic[vobj_label].representations["picking_spheres"].active = True
+
+
     
-    def refresh_pk1pk2_representations(self, vobj_label="pk1pk2", atom1=None, atom2=None):
+    def generate_pki_pkj_representations(self, vobj_label="pk1pk2", atom1=None, atom2=None):
         """ Function doc """
         xyz1 = atom1.coords()
         xyz2 = atom2.coords()
-        frame = np.array(xyz1 + xyz2, dtype=np.float32)
-        
-        #if self.vm_session.vm_geometric_object_dic[vobj_label] is not None:
-        #    self.vm_session.vm_geometric_object_dic[vobj_label].frames = [frame]
-        #    self.vm_session.vm_geometric_object_dic[vobj_label].representations["dash"]._make_gl_vao_and_vbos()
-        #    self.vm_session.vm_geometric_object_dic[vobj_label].active = True
-        #else:
-            #atoms = []
-        frame = np.array(xyz1 + xyz2, dtype=np.float32)
+        frame = np.array([xyz1 , xyz2], dtype=np.float32)
+        #print(frame)
+        #print('')
+        #if self.vobject_picking:
+        #    self.vobject_picking.frames = [frame] 
+        #'''
         self.vobject_picking = VismolObject(name="UNK", index=-1,
                                             vismol_session                 = self.vm_session,
                                             trajectory                     = [frame],
                                             bonds_pair_of_indexes          = [0,1])
+        
+        #self.vobject_picking.set_model_matrix(np.identity(4, dtype=np.float32))
         self.vobject_picking.set_model_matrix(self.vm_session.vm_glcore.model_mat)
-
+        #'''
 
 
 
@@ -449,7 +527,7 @@ class VismolPickingSelection:
                      bfactor       = 0 ,
                      charge        = 0 )
 
-        color = [1,1,0]
+        color = [1,1,1]
         atom1.color = np.array(color, dtype=np.float32)
         atom2.color = np.array(color, dtype=np.float32)
 
@@ -460,9 +538,139 @@ class VismolPickingSelection:
         self.vobject_picking.active = True
         self.vobject_picking.index_bonds = [0,1]
         self.vobject_picking.create_representation(rep_type="dash")
+        self.vobject_picking.representations["dash"].color2 = [0.5,0.5,0.5]
         #self.vobject_picking.create_representation(rep_type = "dash")
         self.vm_session.vm_geometric_object_dic[vobj_label] = self.vobject_picking
-        print(self.vm_session.vm_geometric_object_dic)
+        #print(self.vm_session.vm_geometric_object_dic)
+
+
+    def update_pki_pkj_rep_coordinates (self):
+        """ Function doc """
+        atom1 = self.picking_selections_list[0]
+        atom2 = self.picking_selections_list[1]
+        atom3 = self.picking_selections_list[2]
+        atom4 = self.picking_selections_list[3]
+
+        n = 1
+        for atom in self.picking_selections_list:
+            label = "pk"+str(n)
+            if atom:
+                coords  = np.empty([1, 2, 3], dtype=np.float32)
+                xyz1 = atom.coords()
+                x = np.float32(xyz1[0])
+                y = np.float32(xyz1[1])
+                z = np.float32(xyz1[2])
+                coords[0,0,:] = x, y, z
+                self.vm_session.vm_geometric_object_dic[label].frames = coords
+                self.vm_session.vm_geometric_object_dic[label].representations["picking_spheres"].was_rep_coord_modified = True
+            else:
+                if self.vm_session.vm_geometric_object_dic[label]:
+                    self.vm_session.vm_geometric_object_dic[label].active = False
+                else:
+                    pass
+                pass
+            n+=1
+
+
+        #'''        
+        if atom1 and atom2:
+            self.xyz1 = atom1.coords()
+            self.xyz2 = atom2.coords()
+            coords  = np.empty([1, 2, 3], dtype=np.float32)
+            x = np.float32(self.xyz1[0])
+            y = np.float32(self.xyz1[1])
+            z = np.float32(self.xyz1[2])
+            coords[0,0,:] = x, y, z
+            
+            x = np.float32(self.xyz2[0])
+            y = np.float32(self.xyz2[1])
+            z = np.float32(self.xyz2[2])
+            coords[0,1,:] = x, y, z
+            
+            self.vm_session.vm_geometric_object_dic['pk1pk2'].frames = coords
+            self.vm_session.vm_geometric_object_dic["pk1pk2"].representations["dash"].was_rep_coord_modified = True
+            #self.dist_pk1_pk2 =  ((self.xyz1[0] - self.xyz2[0])**2 + (self.xyz1[1] - self.xyz2[1])**2 + (self.xyz1[2] - self.xyz2[2])**2)**0.5
+            self.dist_pk1_pk2, self.mid_point_pk1_pk2 =  self.get_dist ( self.xyz1, self.xyz2)
+            self.vm_session.vm_geometric_object_dic["pk1pk2"].midpoint = self.mid_point_pk1_pk2
+            self.vm_session.vm_geometric_object_dic["pk1pk2"].dist = self.dist_pk1_pk2
+
+            if atom3:
+                self.xyz3 = atom3.coords()
+                if atom4:
+                    self.xyz4 = atom4.coords()
+
+        else:
+            pass
+
+        if atom2 and atom3:
+            coords  = np.empty([1, 2, 3], dtype=np.float32)
+            x = np.float32(self.xyz2[0])
+            y = np.float32(self.xyz2[1])
+            z = np.float32(self.xyz2[2])
+            coords[0,0,:] = x, y, z
+            
+            x = np.float32(self.xyz3[0])
+            y = np.float32(self.xyz3[1])
+            z = np.float32(self.xyz3[2])
+            coords[0,1,:] = x, y, z
+            self.vm_session.vm_geometric_object_dic['pk2pk3'].frames = coords
+            self.vm_session.vm_geometric_object_dic["pk2pk3"].representations["dash"].was_rep_coord_modified = True
+            self.dist_pk2_pk3, self.mid_point_pk2_pk3 =  self.get_dist(self.xyz2, self.xyz3)
+            self.vm_session.vm_geometric_object_dic["pk2pk3"].midpoint = self.mid_point_pk2_pk3
+            self.vm_session.vm_geometric_object_dic["pk2pk3"].dist = self.dist_pk2_pk3
+
+        else:
+            pass
+        
+        if atom3 and atom4:
+            coords  = np.empty([1, 2, 3], dtype=np.float32)
+            x = np.float32(self.xyz3[0])
+            y = np.float32(self.xyz3[1])
+            z = np.float32(self.xyz3[2])
+            coords[0,0,:] = x, y, z
+            
+            x = np.float32(self.xyz4[0])
+            y = np.float32(self.xyz4[1])
+            z = np.float32(self.xyz4[2])
+            coords[0,1,:] = x, y, z
+            self.vm_session.vm_geometric_object_dic['pk3pk4'].frames = coords
+            self.vm_session.vm_geometric_object_dic["pk3pk4"].representations["dash"].was_rep_coord_modified = True
+            self.dist_pk3_pk4, self.mid_point_pk3_pk4 =  self.get_dist ( self.xyz3, self.xyz4)
+            self.vm_session.vm_geometric_object_dic["pk3pk4"].midpoint = self.mid_point_pk3_pk4
+            self.vm_session.vm_geometric_object_dic["pk3pk4"].dist = self.dist_pk3_pk4
+
+        else:
+            pass
+
+
+    def get_angle_pk1_pk2_pk3 (self):
+        """ Function doc """
+        self.v = [ self.xyz1[0] - self.xyz2[0], self.xyz1[1] - self.xyz2[1],   self.xyz1[2] - self.xyz2[2]]
+        self.w = [ self.xyz3[0] - self.xyz2[0], self.xyz3[1] - self.xyz2[1],   self.xyz3[2] - self.xyz2[2]]
+        #angle = mop.angle(self.xyz1, self.xyz3)
+        
+        v = np.array(self.v)
+        w = np.array(self.w)
+        
+        dot_product = np.dot(v, w)
+        magnitude_v = np.linalg.norm(v)
+        magnitude_w = np.linalg.norm(w)
+        cosine_theta = dot_product / (magnitude_v * magnitude_w)
+        self.theta     = np.arccos(cosine_theta)
+        self.theta_deg = np.degrees(self.theta)
+        return self.theta_deg
+
+    def get_dist (self, xyzi = None, xyzj = None):
+        """ Function doc """
+        mid_point     = [((xyzi[0]+xyzj[0])/2) , (xyzi[1]+xyzj[1])/2 , (xyzi[2]+xyzj[2])/2] 
+        #print(xyzi, xyzj, mid_point)
+        dist_pki_pkj = ((xyzi[0]-xyzj[0])**2 + (xyzi[1]-xyzj[1])**2 + (xyzi[2]-xyzj[2])**2)**0.5
+        
+        return dist_pki_pkj, mid_point
+
+
+
+
 
 
     def print_pk_distances (self):

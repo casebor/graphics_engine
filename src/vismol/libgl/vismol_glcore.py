@@ -86,6 +86,7 @@ class VismolGLCore:
         
         self.vm_font        = VismolFont(color=[1, 1, 1, 1])
         self.vm_font_static = VismolFont(color=[1, 1, 1, 1])
+        self.vm_font_dist   = VismolFont(char_res=264,char_width=0.17, char_height=0.17, color = [1, 1, 1, 1])
         
         self.axis = GLAxis(vm_glcore = self)
         self.selection_box = SelectionBox()
@@ -541,6 +542,12 @@ class VismolGLCore:
             self._draw_labels()
         '''
         
+        #print('\nview matrixes: \n'    , self.vm_session.vm_glcore.glcamera.view_matrix      ) #= self._get_view_matrix(pos)
+        #print('\nprojection_matrix: \n', self.vm_session.vm_glcore.glcamera.projection_matrix) #= self._get_projection_matrix()
+        #print('\ncamera position: \n  ', self.vm_session.vm_glcore.glcamera.get_position()) #= self._get_projection_matrix()
+        
+        
+        
         
         if self.vm_session.picking_selection_mode:
             
@@ -565,15 +572,36 @@ class VismolGLCore:
                         self.vm_session.vm_geometric_object_dic[rep_name].representations[rep_name].draw_representation()
             #'''#
             
-            self._draw_picking_label()
+
+
+            '''
+                               - - -  P I C K I N G   S E L E C T I O N S - - -  
+                                Here is where we will draw the dashed lines
+                 Drawing labels on the fly is not very efficient; however, since there are only a few labels 
+                 to be generated, the impact on performance is minimal.
+            '''
+            #'''
+            '''Two loops are necessary so that the labels are always drawn above the dash lines.'''
+            for geo_object in ["pk1pk2", "pk2pk3", "pk3pk4"]:
+                if self.vm_session.vm_geometric_object_dic[geo_object]:
+                    if self.vm_session.vm_geometric_object_dic[geo_object].representations["dash"].active:
+                        self.vm_session.vm_geometric_object_dic[geo_object].representations["dash"].draw_representation()
             
-            '''Here is where we will draw the dashed lines'''
-            '''#
-            for rep_name in self.vm_session.vm_geometric_object_dic.keys():
-                if self.vm_session.vm_geometric_object_dic[rep_name]:
-                    if self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].active:
-                        self.vm_session.vm_geometric_object_dic[rep_name].representations["dash"].draw_representation()
-            '''#
+            #for geo_object in self.vm_session.vm_geometric_object_dic.keys():
+            for geo_object in ["pk1pk2", "pk2pk3", "pk3pk4"]:
+                if self.vm_session.vm_geometric_object_dic[geo_object]:
+                    if self.vm_session.vm_geometric_object_dic[geo_object].representations["dash"].active:
+                        self._draw_distance_labels(self.vm_session.vm_geometric_object_dic[geo_object])
+            
+            
+            for geo_object in ["pk1", "pk2", "pk3", "pk4"]:
+                if self.vm_session.vm_geometric_object_dic[geo_object]:
+                    if self.vm_session.vm_geometric_object_dic[geo_object].representations["picking_spheres"].active:
+                        self.vm_session.vm_geometric_object_dic[geo_object].representations["picking_spheres"].draw_representation()
+                        #print(geo_object,self.vm_session.vm_geometric_object_dic[geo_object].representations["picking_spheres"].active)
+            self._draw_picking_label()
+            #------------------------------------------------------------------
+            #'''
         
         else:
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
@@ -665,9 +693,6 @@ class VismolGLCore:
         vm_object.frames = PDBFiles.get_coords_from_raw_frames(rawframes, atom_id, vismol_session.vm_config.n_proc)
         '''
 
-
-
-    
     def create_gl_programs(self):
         """ Function doc
         """
@@ -883,7 +908,6 @@ class VismolGLCore:
         proj = GL.glGetUniformLocation(program, "proj_mat")
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
 
-    
     def load_dot_params(self, program):
         """ Function doc
         """
@@ -924,7 +948,6 @@ class VismolGLCore:
         GL.glUniform1fv(a_length, 1, 0.05)
         bck_col = GL.glGetUniformLocation(program, "alias_color")
         GL.glUniform3fv(bck_col, 1, self.bckgrnd_color[:3])
-    
     
     def _draw_labels(self):
         if self.vm_font.vao is None:
@@ -986,66 +1009,126 @@ class VismolGLCore:
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
 
-    def _draw_distance_labels(self, distance = 0.0):
-        if self.vm_font_static.vao is None:
-            self.vm_font_static.make_freetype_font()
-            self.vm_font_static.make_freetype_texture(self.core_shader_programs["static_freetype"])
+    def _draw_distance_labels(self, vm_object):
+        if self.vm_font_dist.vao is None:
+            self.vm_font_dist.make_freetype_font()
+            self.vm_font_dist.make_freetype_texture(self.core_shader_programs["freetype"])
         
-        number     = 1
-        self.chars = 0
-        point      = [0.0, 0.0, 0.0, 1.0]
-        xyz_pos    = []
-        uv_coords  = []
-        
-        self.do_once = True
-        
-        #if self.do_once:
+        number = 1.5
+        chars = 0
+        xyz_pos = []
+        uv_coords = []
+        self.vm_font_dist.char_res    =15
+        #self.vm_font_dist.char_width  = 0.15
+        #self.vm_font_dist.char_height = 0.15
+        text =  '{:.2f}'.format(vm_object.dist)
+        #frame = self._get_vismol_object_frame(atom.vm_object)
+        #x, y, z = atom.coords(frame)
+        x, y, z = vm_object.midpoint[0],vm_object.midpoint[1],vm_object.midpoint[2]
 
-        text = "distance: {}".format(distance) 
-        point = np.array(point, dtype=np.float32)
-        #point = np.dot(point, self.model_mat)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font.texture_id)
+        point = np.array([x, y, z, 1], dtype=np.float32)
+        point = np.dot(point, self.model_mat)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font_dist.texture_id)
         for i, c in enumerate(text):
-            self.chars += 1
+            chars += 1
             c_id = ord(c)
             x = c_id % 16
             y = c_id // 16 - 2
-            xyz_pos.append(point[0] + i * self.vm_font.char_width)
+            xyz_pos.append(point[0] + i * self.vm_font_dist.char_width -0.2) # -0.2 is shift factor to drag the label to center  
             xyz_pos.append(point[1])
             xyz_pos.append(point[2])
-            uv_coords.append(x * self.vm_font.text_u)
-            uv_coords.append(y * self.vm_font.text_v)
-            uv_coords.append((x + 1) * self.vm_font.text_u)
-            uv_coords.append((y + 1) * self.vm_font.text_v)
-            number += 1
+            uv_coords.append(x * self.vm_font_dist.text_u)
+            uv_coords.append(y * self.vm_font_dist.text_v)
+            uv_coords.append((x + 1) * self.vm_font_dist.text_u)
+            uv_coords.append((y + 1) * self.vm_font_dist.text_v)
+        
         xyz_pos = np.array(xyz_pos, dtype=np.float32)
         uv_coords = np.array(uv_coords, dtype=np.float32)
         
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.coord_vbo)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font_dist.coord_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize * len(xyz_pos),
                         xyz_pos, GL.GL_DYNAMIC_DRAW)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font.text_vbo)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font_dist.text_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize * len(uv_coords),
                         uv_coords, GL.GL_DYNAMIC_DRAW)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-        GL.glUseProgram(self.core_shader_programs["static_freetype"])
-        #self.do_once = False
+        GL.glUseProgram(self.core_shader_programs["freetype"])
         
-        #self.vm_font.load_matrices(self.core_shader_programs["freetype"],
-        #                           self.glcamera.view_matrix,
-        #                           self.glcamera.projection_matrix)
-        #self.vm_font.load_font_params(self.core_shader_programs["freetype"])
+        self.vm_font_dist.load_matrices(self.core_shader_programs["freetype"],
+                                   self.glcamera.view_matrix,
+                                   self.glcamera.projection_matrix)
+        self.vm_font_dist.load_font_params(self.core_shader_programs["freetype"])
         
-        GL.glBindVertexArray(self.vm_font.vao)
+        GL.glBindVertexArray(self.vm_font_dist.vao)
+        GL.glDrawArrays(GL.GL_POINTS, 0, chars)
+        GL.glDisable(GL.GL_BLEND)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        
+        '''
+        if self.vm_font_dist_static.vao is None:
+            self.vm_font_dist_static.make_freetype_font()
+            self.vm_font_dist_static.make_freetype_texture(self.core_shader_programs["freetype"])
+        
+        number     = 1
+        self.chars = 0
+        point      = vm_object.midpoint
+        xyz_pos    = []
+        uv_coords  = []
+        
+        
+        
+        self.do_once = True
+        
+        #if self.do_once:
+
+        text = "distance: {}".format(0.0) 
+        point = np.array([point[0],point[1],point[2], 1 ], dtype=np.float32)
+        #point = np.dot(point, self.model_mat)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font_dist.texture_id)
+        for i, c in enumerate(text):
+            self.chars += 1
+            c_id = ord(c)
+            x = c_id % 16
+            y = c_id // 16 - 2
+            xyz_pos.append(point[0] + i * self.vm_font_dist.char_width)
+            xyz_pos.append(point[1])
+            xyz_pos.append(point[2])
+            uv_coords.append(x * self.vm_font_dist.text_u)
+            uv_coords.append(y * self.vm_font_dist.text_v)
+            uv_coords.append((x + 1) * self.vm_font_dist.text_u)
+            uv_coords.append((y + 1) * self.vm_font_dist.text_v)
+            number += 1
+        xyz_pos = np.array(xyz_pos, dtype=np.float32)
+        uv_coords = np.array(uv_coords, dtype=np.float32)
+        
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font_dist.coord_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize * len(xyz_pos),
+                        xyz_pos, GL.GL_DYNAMIC_DRAW)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_font_dist.text_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize * len(uv_coords),
+                        uv_coords, GL.GL_DYNAMIC_DRAW)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glUseProgram(self.core_shader_programs["freetype"])
+        
+        self.vm_font_dist.load_matrices(self.core_shader_programs["freetype"],
+                                   self.glcamera.view_matrix,
+                                   self.glcamera.projection_matrix)
+        self.vm_font_dist.load_font_params(self.core_shader_programs["freetype"])
+        
+        GL.glBindVertexArray(self.vm_font_dist.vao)
         GL.glDrawArrays(GL.GL_POINTS, 0, self.chars)
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         #print('aqui')
-    
+        '''
     def _draw_picking_label(self):
         """ This function draws the labels of the atoms selected by the
             function picking #1 #2 #3 #4
@@ -1074,8 +1157,8 @@ class VismolGLCore:
                     c_id = ord(c)
                     x = c_id % 16
                     y = c_id // 16 - 2
-                    xyz_pos.append(point[0] + i * self.vm_font.char_width)
-                    xyz_pos.append(point[1])
+                    xyz_pos.append(point[0] + i * self.vm_font.char_width -0.075)
+                    xyz_pos.append(point[1]-0.05)
                     xyz_pos.append(point[2])
                     uv_coords.append(x * self.vm_font.text_u)
                     uv_coords.append(y * self.vm_font.text_v)
@@ -1175,8 +1258,6 @@ class VismolGLCore:
             self.core_shader_programs["picking_dots"] = self.load_shaders(shaders_pick.vertex_shader_picking_dots,
                                                                       shaders_pick.fragment_shader_picking_dots)
         
-
-    
     def _compile_shader_dots(self):
         """ Function doc """
         dot_type = self.vm_config.gl_parameters["dot_type"]
@@ -1220,6 +1301,7 @@ class VismolGLCore:
         self.shader_programs["sticks_sel"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["sel_vertex_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
+    
     def _compile_shader_ribbons(self):
         """ Function doc """
         #sticks_type = self.vm_config.gl_parameters["ribbon_type"]
@@ -1230,6 +1312,7 @@ class VismolGLCore:
         self.shader_programs["ribbons_sel"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["sel_vertex_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
                                                        shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
+    
     def _compile_shader_dynamic(self):
         """ Function doc """
         sticks_type = self.vm_config.gl_parameters["sticks_type"]
@@ -1250,10 +1333,15 @@ class VismolGLCore:
     def _compile_shader_picking_spheres(self):
         """ Function doc """
         #print('\npicking_spheres'*10)
-        self.shader_programs["picking_spheres"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
-                                                                    shaders_spheres.sel_fragment_shader_spheres)
-        self.shader_programs["picking_spheres_sel"] = self.load_shaders(shaders_spheres.sel_vertex_shader_spheres,
-                                                                        shaders_spheres.sel_fragment_shader_spheres)
+        #self.shader_programs["picking_spheres"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+        #                                                            shaders_spheres.fragment_shader_spheres)
+        #self.shader_programs["picking_spheres_sel"] = self.load_shaders(shaders_spheres.vertex_shader_picking_spheres,
+        #                                                                shaders_spheres.fragment_shader_picking_spheres)
+        #
+        self.shader_programs["picking_spheres"] = self.load_shaders(shaders_spheres.vertex_shader_picking_spheres,
+                                                                    shaders_spheres.fragment_shader_picking_spheres)
+        self.shader_programs["picking_spheres_sel"] = self.load_shaders(shaders_spheres.vertex_shader_picking_spheres,
+                                                                        shaders_spheres.fragment_shader_picking_spheres)
     
     def _compile_shader_vdw_spheres(self):
         """ Function doc """
@@ -1277,27 +1365,12 @@ class VismolGLCore:
                                                          shaders_vm_freetype.fragment_shader_freetype,
                                                          shaders_vm_freetype.geometry_shader_freetype)
     
-    
     def _compile_shader_static_freetype(self):
         """ Function doc """
         self.core_shader_programs["static_freetype"] = self.load_shaders(shaders_vm_freetype.static_vertex_shader_freetype,
                                                                          shaders_vm_freetype.static_fragment_shader_freetype,
                                                                          shaders_vm_freetype.static_geometry_shader_freetype)
-    
-    
-    
-    
-    
-    # def _compile_shader_ribbon(self):
-    #     """ Function doc """
-    #     line_type = self.vm_config.gl_parameters["ribbon_type"]
-    #     self.shader_programs["ribbon"] = self.load_shaders(shaders_lines.shader_type[line_type]["vertex_shader"],
-    #                                                 shaders_lines.shader_type[line_type]["fragment_shader"],
-    #                                                 shaders_lines.shader_type[line_type]["geometry_shader"])
-    #     self.shader_programs["ribbon_sel"] = self.load_shaders(shaders_lines.shader_type[line_type]["sel_vertex_shader"],
-    #                                                     shaders_lines.shader_type[line_type]["sel_fragment_shader"],
-    #                                                     shaders_lines.shader_type[line_type]["sel_geometry_shader"])
-    
+
     def _compile_shader_impostor(self):
         """ Function doc """
         im_type = self.vm_config.gl_parameters["impostor_type"]
