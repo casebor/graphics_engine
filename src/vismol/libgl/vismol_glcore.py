@@ -1381,13 +1381,13 @@ class VismolGLCore:
                                                         shaders_impostor.shader_type[im_type]["sel_fragment_shader"],
                                                         shaders_impostor.shader_type[im_type]["sel_geometry_shader"])
     
-    # def _compile_shader_surface(self):
-    #     """ Function doc """
-    #     self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_surface,
-    #                                                 shaders_surface.fragment_shader_surface,
-    #                                                 shaders_surface.geometry_shader_surface)
-    #     self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-    #                                                     shaders_spheres.fragment_shader_spheres)
+    def _compile_shader_surface(self):
+        """ Function doc """
+        self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_surface,
+                                                    shaders_surface.fragment_shader_surface,
+                                                    shaders_surface.geometry_shader_surface)
+        self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+                                                        shaders_spheres.fragment_shader_spheres)
         
     #def _compile_shader_cartoon(self):
     #    """ Function doc """

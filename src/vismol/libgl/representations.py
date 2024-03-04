@@ -572,6 +572,14 @@ class SticksRepresentation(Representation):
         GL.glUseProgram(0)
 
 
+class SurfaceRepresentation(Representation):
+    """ Class doc """
+    
+
+    def __init__(self, vismol_object = None, vismol_glcore = None, indexes = None, active=True, vdw = False, mode = 0):
+        self.surface_vertices = sphd.sphere_vertices[self.level]
+
+
 class SpheresRepresentation(Representation):
     """ Class doc """
     #            self, vismol_object, vismol_glcore, indexes, active=True, is_dynamic = False, name = "sticks"
@@ -644,6 +652,7 @@ class SpheresRepresentation(Representation):
         GL.glEnable(GL.GL_CULL_FACE)
         GL.glCullFace(GL.GL_BACK)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glEnable(GL.GL_BLEND)
         GL.glUseProgram(self.shader_program)
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         self.vm_glcore.load_lights(self.shader_program)
