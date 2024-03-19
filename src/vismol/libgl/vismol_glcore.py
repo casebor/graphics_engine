@@ -520,6 +520,9 @@ class VismolGLCore:
                             rep.was_rep_ind_modified = True
                             rep.was_sel_ind_modified = True
         
+        '''
+                           - - -  R E P R E S E N T A T I O N S - - -  
+        '''
         for vm_object in self.vm_session.vm_objects_dic.values():
             if vm_object.active:
                 if vm_object.frames.shape[0] > 0:
@@ -531,49 +534,8 @@ class VismolGLCore:
                             if representation.active:
                                 representation.draw_representation()
                                 
-        # Check if the picking function is active.
-        # Viewing and picking selections cannot be displayed at the same time.
-        
-        
-        '''
-        if self.dragging:
-            pass
-        else:
-            self._draw_labels()
-        '''
-        
-        #print('\nview matrixes: \n'    , self.vm_session.vm_glcore.glcamera.view_matrix      ) #= self._get_view_matrix(pos)
-        #print('\nprojection_matrix: \n', self.vm_session.vm_glcore.glcamera.projection_matrix) #= self._get_projection_matrix()
-        #print('\ncamera position: \n  ', self.vm_session.vm_glcore.glcamera.get_position()) #= self._get_projection_matrix()
-        
-        
-        
         
         if self.vm_session.picking_selection_mode:
-            
-            '''#
-            #------------------------------------------------------------------
-            if self.sphere_selection is not None:
-                pass
-                #self.sphere_selection.representations["spheres"].draw_representation()
-            else:
-                self._create_sphere_selection()  
-                #self.sphere_selection.representations["spheres"].draw_representation()
-            #------------------------------------------------------------------
-            
-            
-            #if self.sphere_selection.representations["picking_spheres"]:
-            #    if self.sphere_selection.representations["picking_spheres"].active:
-            #        self.sphere_selection.representations["picking_spheres"].draw_representation()
-            
-            for rep_name in self.vm_session.vm_geometric_object_dic.keys():
-                if self.vm_session.vm_geometric_object_dic[rep_name]:
-                    if self.vm_session.vm_geometric_object_dic[rep_name].active:
-                        self.vm_session.vm_geometric_object_dic[rep_name].representations[rep_name].draw_representation()
-            #'''#
-            
-
-
             '''
                                - - -  P I C K I N G   S E L E C T I O N S - - -  
                                 Here is where we will draw the dashed lines
@@ -587,29 +549,31 @@ class VismolGLCore:
                     if self.vm_session.vm_geometric_object_dic[geo_object].representations["dash"].active:
                         self.vm_session.vm_geometric_object_dic[geo_object].representations["dash"].draw_representation()
             
-            #for geo_object in self.vm_session.vm_geometric_object_dic.keys():
+            '''                              drawing distance labels                     '''
             for geo_object in ["pk1pk2", "pk2pk3", "pk3pk4"]:
                 if self.vm_session.vm_geometric_object_dic[geo_object]:
                     if self.vm_session.vm_geometric_object_dic[geo_object].representations["dash"].active:
                         self._draw_distance_labels(self.vm_session.vm_geometric_object_dic[geo_object])
             
-            
+            '''                               drawing picking spheres                     '''
             for geo_object in ["pk1", "pk2", "pk3", "pk4"]:
                 if self.vm_session.vm_geometric_object_dic[geo_object]:
                     if self.vm_session.vm_geometric_object_dic[geo_object].representations["picking_spheres"].active:
                         self.vm_session.vm_geometric_object_dic[geo_object].representations["picking_spheres"].draw_representation()
                         #print(geo_object,self.vm_session.vm_geometric_object_dic[geo_object].representations["picking_spheres"].active)
+            '''                               drawing picking labels                     '''
             self._draw_picking_label()
             #------------------------------------------------------------------
             #'''
         
+        
         else:
+            '''                    - - -  V I E W I N G   S E L E C T I O N S - - -                  '''
+            '''                               drawing blues dot selections                           '''
             for vm_object in self.vm_session.selections[self.vm_session.current_selection].selected_objects:
                 # Here are represented the blue dots referring to the atom's selections
                 if vm_object.core_representations["picking_dots"] is None:
                     vm_object.build_core_representations()
-                # _indexes = self.vm_session.selections[self.vm_session.current_selection].selected_atom_ids
-                # vm_object.core_representations["picking_dots"].define_new_indexes_to_vbo(list(_indexes))
                 vm_object.core_representations["picking_dots"].was_rep_ind_modified = True
                 vm_object.core_representations["picking_dots"].define_new_indexes_to_vbo(list(vm_object.selected_atom_ids))
                 vm_object.core_representations["picking_dots"].draw_representation()
@@ -1129,6 +1093,7 @@ class VismolGLCore:
         GL.glUseProgram(0)
         #print('aqui')
         '''
+    
     def _draw_picking_label(self):
         """ This function draws the labels of the atoms selected by the
             function picking #1 #2 #3 #4
@@ -1245,8 +1210,6 @@ class VismolGLCore:
         self._draw_distance_labels( distance = d)
         '''
 
-
-
     def _compile_shader_picking_dots(self):
         """ Function doc """
         
@@ -1275,6 +1238,7 @@ class VismolGLCore:
         self.shader_programs["lines_sel"] = self.load_shaders(shaders_lines.shader_type[line_type]["sel_vertex_shader"],
                                                       shaders_lines.shader_type[line_type]["sel_fragment_shader"],
                                                       shaders_lines.shader_type[line_type]["sel_geometry_shader"])
+        '''
         #sticks_type = self.vm_config.gl_parameters["sticks_type"]
         #self.shader_programs["lines"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["vertex_shader"],
         #                                           shaders_sticks.shader_type[sticks_type]["fragment_shader"],
@@ -1282,7 +1246,8 @@ class VismolGLCore:
         #self.shader_programs["lines_sel"] = self.load_shaders(shaders_sticks.shader_type[sticks_type]["sel_vertex_shader"],
         #                                               shaders_sticks.shader_type[sticks_type]["sel_fragment_shader"],
         #                                               shaders_sticks.shader_type[sticks_type]["sel_geometry_shader"])
-    
+        '''
+        
     def _compile_shader_nonbonded(self):
         """ Function doc """
         self.shader_programs["nonbonded"] = self.load_shaders(shaders_nonbonded.vertex_shader_non_bonded,
@@ -1383,35 +1348,39 @@ class VismolGLCore:
     
     def _compile_shader_surface(self):
         """ Function doc """
-        self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_surface,
-                                                    shaders_surface.fragment_shader_surface,
-                                                    shaders_surface.geometry_shader_surface)
+        #self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_surface,
+        #                                            shaders_surface.fragment_shader_surface,
+        #                                            shaders_surface.geometry_shader_surface)
+        self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_lines,
+                                                    shaders_surface.fragment_shader_lines,
+                                                    shaders_surface.geometry_shader_lines)
         self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
                                                         shaders_spheres.fragment_shader_spheres)
+        '''
+        #def _compile_shader_cartoon(self):
+        #    """ Function doc """
+        #    self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
+        #                                                shaders_cartoon.f_shader_triangles)
         
-    #def _compile_shader_cartoon(self):
-    #    """ Function doc """
-    #    self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
-    #                                                shaders_cartoon.f_shader_triangles)
-    
-    #----------------------------NOT IMPLEMENTED YET---------------------------#
-    # def _dynamic_bonds_shaders(self):
-    #     """ Function doc """
-    #     self.shader_programs["dynamic"] = self.load_shaders(shaders_sticks.vertex_shader_sticks,
-    #                                                 shaders_sticks.fragment_shader_sticks,
-    #                                                 shaders_sticks.geometry_shader_sticks)
-    #     self.shader_programs["dynamic_sel"] = self.load_shaders(shaders_sticks.sel_vertex_shader_sticks,
-    #                                                    shaders_sticks.sel_fragment_shader_sticks,
-    #                                                    shaders_sticks.sel_geometry_shader_sticks)
-    
-    # def _wires_dot_shaders(self):
-    #     """ Function doc """
-    #     self.shader_programs["wires"] = self.load_shaders(shaders_wires.vertex_shader_wires,
-    #                                               shaders_wires.fragment_shader_wires,
-    #                                               shaders_wires.geometry_shader_wires)
-    #     self.shader_programs["wires_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-    #                                                     shaders_spheres.fragment_shader_spheres)
-    #----------------------------NOT IMPLEMENTED YET---------------------------#
+        #----------------------------NOT IMPLEMENTED YET---------------------------#
+        # def _dynamic_bonds_shaders(self):
+        #     """ Function doc """
+        #     self.shader_programs["dynamic"] = self.load_shaders(shaders_sticks.vertex_shader_sticks,
+        #                                                 shaders_sticks.fragment_shader_sticks,
+        #                                                 shaders_sticks.geometry_shader_sticks)
+        #     self.shader_programs["dynamic_sel"] = self.load_shaders(shaders_sticks.sel_vertex_shader_sticks,
+        #                                                    shaders_sticks.sel_fragment_shader_sticks,
+        #                                                    shaders_sticks.sel_geometry_shader_sticks)
+        
+        # def _wires_dot_shaders(self):
+        #     """ Function doc """
+        #     self.shader_programs["wires"] = self.load_shaders(shaders_wires.vertex_shader_wires,
+        #                                               shaders_wires.fragment_shader_wires,
+        #                                               shaders_wires.geometry_shader_wires)
+        #     self.shader_programs["wires_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+        #                                                     shaders_spheres.fragment_shader_spheres)
+        #----------------------------NOT IMPLEMENTED YET---------------------------#
+        #'''
     
     def _safe_frame_coords(self, vismol_object):
         """ Function doc 

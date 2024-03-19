@@ -56,6 +56,12 @@ class VismolSession():
         self.current_selection = "sel_00"
         self.picking_selections = VMPick(self)
         
+        '''
+        vm_geometric_object_dic contains items with specific names that 
+        are used in selection representations
+        
+        see vismol_glcore.py  ->  render function
+        '''
         self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None, "pk3pk4":None,
                                         "pk1": None  , "pk2": None  , "pk3": None  , "pk4": None}
         
@@ -107,6 +113,7 @@ class VismolSession():
             vismol_object.create_representation(rep_type="lines")
             vismol_object.create_representation(rep_type="nonbonded")
             vismol_object.create_representation(rep_type="cartoon")
+            #vismol_object.create_representation(rep_type="surface")
 
             # If autocenter is True, center the view on the mass center of the vismol_object.
             if autocenter:

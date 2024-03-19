@@ -41,6 +41,7 @@ from vismol.libgl.representations import SticksRepresentation
 from vismol.libgl.representations import SpheresRepresentation
 from vismol.libgl.representations import DashedLinesRepresentation
 from vismol.libgl.representations import LabelRepresentation
+from vismol.libgl.representations import SurfaceRepresentation
 # from vismol.libgl.representations import WiresRepresentation
 # from vismol.libgl.representations import RibbonsRepresentation
 import vismol.utils.c_distances as cdist
@@ -249,6 +250,28 @@ class VismolObject:
                                                                   indexes       = [0,1,2] , 
                                                                   labels        = None     , 
                                                                   color         = [1, 1, 0, 1])
+        elif rep_type == "surface":
+            # Create a LabelRepresentation object and add it to the 'representations' dictionary
+            self.representations["surface"] = SurfaceRepresentation(vismol_object = self                      ,
+                                                                    vismol_glcore = self.vm_session.vm_glcore ,  
+                                                                    name          = 'surface'                 ,
+                                                                    active        = True                      ,
+                                                                    indexes       = []                        ,
+                                                                    is_dynamic    = False)  
+            
+            
+            #self.representations["surface"] = SurfaceRepresentation(vismol_object = self  ,
+            #                                                        vismol_glcore = self.vm_session.vm_glcore)
+                                                                    #rep_type      = "mol", 
+                                                                    #vismol_object = self, 
+                                                                    #vm_glcore     = self.vm_session.vm_glcore, 
+                                                                    #indexes       = [])
+            
+            #self.representations["surface"] = SurfaceRepresentation(vismol_object  = self  ,  
+            #                                                      vismol_glcore = self.vm_session.vm_glcore , 
+            #                                                      indexes       = [0,1,2] , 
+            #                                                      labels        = None     , 
+            #                                                      color         = [1, 1, 0, 1])
         
         
         #elif rep_type == 'cartoon':

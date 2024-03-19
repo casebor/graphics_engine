@@ -54,7 +54,6 @@ class VismolViewingSelection:
                 for atom in vm_object.atoms.values():
                     atom.selected = False
                     #atom.vm_object.selected_atom_ids.discard(atom.atom_id)
-
     def _build_selected_atoms_coords_and_selected_objects_from_selected_atoms(self):
         """
         Build selected atoms' coordinates and selected objects from selected atoms.
@@ -326,9 +325,17 @@ class VismolPickingSelection:
         self.mid_point_pk2_pk3 = None
         self.mid_point_pk3_pk4 = None
         self.pk_scolor = {'pk1':[0,0,0.5], 'pk2':[0,0.5,0.5], 'pk3':[0.5,0,0.5], 'pk4':[0.5,0.5,0]}
+    
     def selection_function_picking(self, selected):
         """Handle picking selections.
-
+        
+        Picking selections are dynamic and versatile. They change with 
+        the change of coordinates (change of frames). It is also possible 
+        to relocate part of the selected atoms, for example: in a 
+        selection of four atoms #1 #2 #3 #4, the user can relocate 
+        only selection #3 to a different atom without destroying the 
+        other selections
+        
         Args:
             selected: The selected atom object or None to clear the selections.
         """
@@ -360,7 +367,10 @@ class VismolPickingSelection:
         atom3 = self.picking_selections_list[2]
         atom4 = self.picking_selections_list[3]
 
-        #'''
+        #
+        '''It is necessary to check which atoms are selected (being part 
+        of the list of selected atoms). The solution applied is a bit 
+        brute force, but it works well.'''
         if atom1 and atom2:
             self.generate_pki_pkj_representations(vobj_label="pk1pk2", atom1=atom1, atom2=atom2)
             self.vm_session.vm_geometric_object_dic["pk1pk2"].representations["dash"].active = True
@@ -373,11 +383,9 @@ class VismolPickingSelection:
             if atom3:
                 self.xyz3 = atom3.coords()
 
-                
                 self.get_angle_pk1_pk2_pk3()
                 print ("Angle: ", self.theta_deg)
                 text =  "Angle: "+ str(self.theta_deg)
-
 
                 if atom4:
                     self.xyz4 = atom4.coords()
@@ -482,31 +490,25 @@ class VismolPickingSelection:
             self.vm_session.vm_geometric_object_dic[vobj_label].representations["picking_spheres"].was_rep_ind_modified = True
             self.vm_session.vm_geometric_object_dic[vobj_label].representations["picking_spheres"].active = True
 
-
-    
     def generate_pki_pkj_representations(self, vobj_label="pk1pk2", atom1=None, atom2=None):
         """ Function doc """
         xyz1 = atom1.coords()
         xyz2 = atom2.coords()
         frame = np.array([xyz1 , xyz2], dtype=np.float32)
-        #print(frame)
-        #print('')
-        #if self.vobject_picking:
-        #    self.vobject_picking.frames = [frame] 
-        #'''
+
         self.vobject_picking = VismolObject(name="UNK", index=-1,
                                             vismol_session                 = self.vm_session,
                                             trajectory                     = [frame],
                                             bonds_pair_of_indexes          = [0,1])
         
-        #self.vobject_picking.set_model_matrix(np.identity(4, dtype=np.float32))
+        '''
+        The representation of distances in picking selection is 
+        nothing more than a vismol object containing two 'atoms' with 
+        names "pk"
+        '''
         self.vobject_picking.set_model_matrix(self.vm_session.vm_glcore.model_mat)
         #'''
-
-
-
-
-
+        
         atom1 = Atom(vismol_object = self.vobject_picking, 
                     name          ='pK'  , 
                     index         = 0,
@@ -535,22 +537,31 @@ class VismolPickingSelection:
         self.vobject_picking.atoms[0] = atom1
         self.vobject_picking.atoms[1] = atom2
         self.vobject_picking._generate_color_vectors(-1)
-        self.vobject_picking.active = True
+        
+        self.vobject_picking.active      = True
         self.vobject_picking.index_bonds = [0,1]
+        
         self.vobject_picking.create_representation(rep_type="dash")
         self.vobject_picking.representations["dash"].color2 = [0.5,0.5,0.5]
-        #self.vobject_picking.create_representation(rep_type = "dash")
         self.vm_session.vm_geometric_object_dic[vobj_label] = self.vobject_picking
-        #print(self.vm_session.vm_geometric_object_dic)
-
-
+    
     def update_pki_pkj_rep_coordinates (self):
-        """ Function doc """
+        """   
+        This function updates the coordinates to represent picking 
+        selection distances. This is because picking selections are 
+        dynamic, they change with the change of frames, hence the need 
+        for this function.
+
+        It's not optimized, but it's functional.
+        """
         atom1 = self.picking_selections_list[0]
         atom2 = self.picking_selections_list[1]
         atom3 = self.picking_selections_list[2]
         atom4 = self.picking_selections_list[3]
-
+        
+        '''It is necessary to check which atoms are selected (being part 
+        of the list of selected atoms). The solution applied is a bit 
+        brute force, but it works well.'''
         n = 1
         for atom in self.picking_selections_list:
             label = "pk"+str(n)
@@ -642,7 +653,6 @@ class VismolPickingSelection:
         else:
             pass
 
-
     def get_angle_pk1_pk2_pk3 (self):
         """ Function doc """
         self.v = [ self.xyz1[0] - self.xyz2[0], self.xyz1[1] - self.xyz2[1],   self.xyz1[2] - self.xyz2[2]]
@@ -667,11 +677,6 @@ class VismolPickingSelection:
         dist_pki_pkj = ((xyzi[0]-xyzj[0])**2 + (xyzi[1]-xyzj[1])**2 + (xyzi[2]-xyzj[2])**2)**0.5
         
         return dist_pki_pkj, mid_point
-
-
-
-
-
 
     def print_pk_distances (self):
         """ Function doc """
