@@ -42,6 +42,7 @@ from vismol.libgl.representations import SpheresRepresentation
 from vismol.libgl.representations import DashedLinesRepresentation
 from vismol.libgl.representations import LabelRepresentation
 from vismol.libgl.representations import SurfaceRepresentation
+from vismol.libgl.representations import CartoonRepresentation
 # from vismol.libgl.representations import WiresRepresentation
 # from vismol.libgl.representations import RibbonsRepresentation
 import vismol.utils.c_distances as cdist
@@ -137,7 +138,8 @@ class VismolObject:
         
         for rep_type in self.vm_config.representations_available:
             self.representations[rep_type] = None
-        
+        self.representations['ribbon_sphere'] = None
+        self.representations['stick_spheres'] = None
         
         # Additional transformation matrices for the object's visual representation
         self.model_mat = np.identity(4, dtype=np.float32)
@@ -214,6 +216,12 @@ class VismolObject:
             # Create a SticksRepresentation object and add it to the 'representations' dictionary
             self.representations["sticks"] = SticksRepresentation(self, self.vm_session.vm_glcore,
                                                                   active=True, indexes=self.index_bonds)
+        elif rep_type == 'stick_spheres':
+            # Create a SpheresRepresentation object and add it to the 'representations' dictionary
+            self.representations['stick_spheres'] = SpheresRepresentation(self, self.vm_session.vm_glcore,
+                                                    active=True, indexes=list(self.atoms.keys()), mode = 3)
+                           
+                                                                  
         elif rep_type == "spheres":
             # Create a SpheresRepresentation object and add it to the 'representations' dictionary
             self.representations["spheres"] = SpheresRepresentation(self, self.vm_session.vm_glcore,
@@ -236,7 +244,12 @@ class VismolObject:
         elif rep_type == "ribbons":
             # Create a SticksRepresentation object with 'ribbons' name and add it to the 'representations' dictionary
             self.representations["ribbons"] = SticksRepresentation(self, self.vm_session.vm_glcore,
-                                                                    active=True, indexes=self.index_bonds, name  = 'ribbons')
+                                                                   active=True, indexes=self.index_bonds, name  = 'ribbons')
+        elif rep_type == 'ribbon_sphere':
+            # Create a SpheresRepresentation object and add it to the 'representations' dictionary
+            self.representations['ribbon_sphere'] = SpheresRepresentation(self, self.vm_session.vm_glcore,
+                                                    active=True, indexes=list(self.atoms.keys()), mode = 2  )
+                                                                    
         elif rep_type == "dynamic":
             # Create a SticksRepresentation object with 'dynamic' flag and add it to the 'representations' dictionary
             #print(self.dynamic_bonds)
@@ -274,11 +287,11 @@ class VismolObject:
             #                                                      color         = [1, 1, 0, 1])
         
         
-        #elif rep_type == 'cartoon':
-        #    self.representations["cartoon"] =CartoonRepresentation(name = 'cartoon', active = True, 
-        #                                                           rep_type = 'mol', vismol_object = self, 
-        #                                                           vismol_glcore = self.vm_session.vm_glcore, 
-        #                                                           indexes = [])
+        elif rep_type == 'cartoon':
+            self.representations["cartoon"] =CartoonRepresentation(name = 'cartoon', active = True, 
+                                                                   rep_type = 'mol', vismol_object = self, 
+                                                                   vismol_glcore = self.vm_session.vm_glcore, 
+                                                                   indexes = [])
         
         # elif rep_type == "dotted_lines":
         #     self.representations["dotted_lines"] = LinesRepresentation(self, self.vm_session.vm_glcore,
@@ -368,8 +381,8 @@ class VismolObject:
         else:
             return index_bonds
     
-    def find_bonded_and_nonbonded_atoms(self, selection=None, frame=0, gridsize=0.8,
-                                         maxbond=2.4, tolerance=1.4, internal = True):
+    def find_bonded_and_nonbonded_atoms(self, selection=None, frame=0, gridsize=1.2,
+                                         maxbond=2.4, tolerance=1.4, internal = True, debug = False):
         """
         Function doc: Determines bonded and nonbonded atoms based on selection in a VismolObject.
         
@@ -453,8 +466,10 @@ class VismolObject:
         for atom in selection.values():
             indexes.append(atom.atom_id)
             gridpos_list.append(atom.get_grid_position(gridsize=gridsize, frame=frame))
-        logger.debug("Time used for preparing the atom mask, covalent radii list "\
-                     "and grid positions: {}".format(time.time() - initial))
+        
+        if debug:
+            logger.debug("Time used for preparing the atom mask, covalent radii list "\
+                         "and grid positions: {}".format(time.time() - initial))
         
         
         # Calculate bonds based on grid positions and covalent radii

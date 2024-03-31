@@ -112,7 +112,7 @@ class VismolSession():
         if show_molecule:
             vismol_object.create_representation(rep_type="lines")
             vismol_object.create_representation(rep_type="nonbonded")
-            vismol_object.create_representation(rep_type="cartoon")
+            #vismol_object.create_representation(rep_type="cartoon")
             #vismol_object.create_representation(rep_type="surface")
 
             # If autocenter is True, center the view on the mass center of the vismol_object.
@@ -196,6 +196,17 @@ class VismolSession():
                     if atom.spheres:
                         show_hide_indexes.append(atom.atom_id)
             
+            elif rep_type == "stick_spheres":
+                for bond in vm_object.bonds:
+                    if bond.atom_i.stick_spheres and bond.atom_j.stick_spheres:
+                        show_hide_indexes.append(bond.atom_index_i)
+                        show_hide_indexes.append(bond.atom_index_j)
+                
+                
+                #for atom in vm_object.atoms.values():
+                #    if atom.stick_spheres:
+                #        show_hide_indexes.append(atom.atom_id)
+            
             elif rep_type == "vdw_spheres":
                 for atom in vm_object.atoms.values():
                     if atom.vdw_spheres:
@@ -206,6 +217,11 @@ class VismolSession():
                     if bond.atom_i.ribbons and bond.atom_j.ribbons:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
+            
+            elif rep_type == "ribbon_sphere":
+                for atom in vm_object.atoms.values():
+                    if atom.ribbon_sphere and atom.name=='CA' and atom.residue.is_protein:
+                        show_hide_indexes.append(atom.atom_id)
                 #print('show_hide_indexes',show_hide_indexes)
                 #logger.error("Not implementer for 'ribbon' yet.")
                 #raise NotImplementedError("Not implementer for 'ribbon' yet.")

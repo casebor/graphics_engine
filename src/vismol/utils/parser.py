@@ -27,7 +27,7 @@ import time
 import numpy as np
 from logging import getLogger
 from vismol.utils import AUXFiles
-from vismol.utils import GROFiles
+#from vismol.utils import GROFiles
 from vismol.utils import MOL2Files
 from vismol.utils import PDBFiles
 from vismol.utils import PSFFiles

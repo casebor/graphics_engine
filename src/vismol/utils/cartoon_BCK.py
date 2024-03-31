@@ -352,7 +352,7 @@ def cartoon(visObj, spline_detail=3, SSE_list = []):
     sd = spline_detail
     
     #calphas = np.loadtxt(calphas_file)
-    visObj.get_backbone_indexes()
+    #visObj.get_backbone_indexes()
     
     calphas = []
     for atom in visObj.c_alpha_atoms:
@@ -471,7 +471,7 @@ def calculate_secondary_structure(visObj):
 
     '''
     if visObj.c_alpha_bonds == [] or visObj.c_alpha_atoms == []:
-        visObj.get_backbone_indexes()
+        visObj.define_Calpha_backbone()
     
     for atom in visObj.c_alpha_atoms:
         print(atom.index, atom.name, atom.bonds_indexes, atom.bonds)
@@ -583,7 +583,7 @@ def calculate_secondary_structure(visObj):
             else:
                 SS = 0 
                 SS_char = 'C'
-            print(CA1.resi, CA1.name, CA1.resn, CA1.name, SS, d2i, d3i, d4i, ti,  ai)
+            #print(CA1.resi, CA1.name, CA1.resn, CA1.name, SS, d2i, d3i, d4i, ti,  ai)
             
             SSE_list += SS_char
 

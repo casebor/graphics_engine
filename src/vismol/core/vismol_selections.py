@@ -25,6 +25,7 @@
 import time
 import numpy as np
 from vismol.utils import matrix_operations as mop
+from vismol.model.molecular_properties import solvent_dictionary as SOLV_DICT
 from vismol.core.vismol_object import VismolObject
 from vismol.model.atom import Atom
 
@@ -83,24 +84,6 @@ class VismolViewingSelection:
         # Iterate through the selected atoms and add their corresponding VismolObjects to the selected_objects set
         for atom in self.selected_atoms:
             self.selected_objects.add(atom.vm_object)
-
-        
-        #coords = []
-        #for vm_object in self.vm_session.vm_objects_dic.values():
-        #    if self.vm_session.frame >= vm_object.frames.shape[0]:
-        #        frame = vm_object.frames.shape[0] - 1
-        #    else:
-        #        frame = self.vm_session.frame
-        #    for atom in self.selected_atoms:
-        #        if atom.vm_object == vm_object:
-        #            # coords.append(vm_object.frames[frame][atom.atom_id])
-        #            vm_object.selected_atom_ids.add(atom.atom_id)
-        ## self.selected_coords = np.array(coords, dtype=np.float32)
-        #self.selected_objects.clear()
-        ## self.selected_atom_ids.clear()
-        #for atom in self.selected_atoms:
-        #    self.selected_objects.add(atom.vm_object)
-        #    # self.selected_atom_ids.add(atom.atom_id)
     
     def selection_function_viewing_set(self, selected, _type=None, disable=True):
         """ Takes a selected atom and passes it to the appropriate selection function.
@@ -113,12 +96,22 @@ class VismolViewingSelection:
         else:
             if self.selection_mode == "atom":
                 self.selecting_by_atom(selected, disable)
+            
             elif self.selection_mode == "residue":
                 self.selecting_by_residue(selected, disable)
+            
             elif self.selection_mode == "molecule":
                 self.selecting_by_molecule(selected, disable)
+            
             elif self.selection_mode == "chain":
                 self.selecting_by_chain(selected, disable)
+            
+            elif self.selection_mode == "c-alpha":
+                self.selecting_by_c_alpha_atom(selected, disable)
+            
+            elif self.selection_mode == "solvent":
+                self.selecting_by_solvent(selected, disable)
+            
             else:
                 pass
             self.active = True
@@ -159,6 +152,29 @@ class VismolViewingSelection:
                     self.selected_atoms.add(atom)
                     atom.selected = True
     
+    def selecting_by_c_alpha_atom(self, selected_atoms, disable=True):
+        """ """
+        self._clear_selection_buffer()
+        # if the selected atoms IS in the selected list
+        for selected_atom in selected_atoms:
+            if selected_atom in self.selected_atoms:
+                if disable:
+                    for atom in selected_atom.residue.atoms.values():
+                        if atom.name == 'CA':
+                            self.selected_atoms.discard(atom)
+                            atom.vm_object.selected_atom_ids.discard(atom.atom_id)
+                            atom.selected = False
+                        else:
+                            pass
+            # if the selected atoms is not in the selected list add atom by atom
+            else:
+                for atom in selected_atom.residue.atoms.values():
+                    if atom.name == 'CA':
+                        self.selected_atoms.add(atom)
+                        atom.selected = True
+                    else:
+                        pass
+                        
     def selecting_by_molecule(self, selected_atoms, disable=True):
         """ """
         self._clear_selection_buffer()
@@ -206,7 +222,26 @@ class VismolViewingSelection:
                     for atom in residue.atoms.values():
                         self.selected_atoms.add(atom)
                         atom.selected = True
-    
+
+    def selecting_by_solvent(self, selected_atoms, disable=True):
+        """ """
+        self._clear_selection_buffer()
+        # if the selected atoms IS in the selected list
+        for selected_atom in selected_atoms:
+            if selected_atom in self.selected_atoms:
+                if disable:
+                    if selected_atom.residue.name in SOLV_DICT.keys():
+                        for atom in selected_atom.residue.atoms.values():
+                            self.selected_atoms.discard(atom)
+                            atom.vm_object.selected_atom_ids.discard(atom.atom_id)
+                            atom.selected = False
+            # if the selected atoms is not in the selected list add atom by atom
+            else:
+                if selected_atom.residue.name in SOLV_DICT.keys():
+                    for atom in selected_atom.residue.atoms.values():
+                        self.selected_atoms.add(atom)
+                        atom.selected = True
+
     def selecting_by_vismol_object(self, selected_atom, disable=True):
         """ when disable = True
             If the object selection is disabled, all atoms within the 

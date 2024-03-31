@@ -33,7 +33,8 @@ main_file = os.path.abspath(__file__)
 
 #.This extracts the directory (folder) from the absolute path obtained in the previous step.
 HOME = os.path.dirname(main_file)
-
+HOME = os.path.split(HOME)
+HOME = HOME[0]
 #.Adding GRAPHIC ENGINE LIB
 sys.path.append(os.path.join(HOME,"src/graphics_engine/src"))
 sys.path.append(os.path.join(HOME,"src/"))

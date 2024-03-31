@@ -8,7 +8,7 @@ import numpy as np
 cimport numpy as np
 from logging import getLogger
 from vismol.core.vismol_object import VismolObject
-from vismol.model.molecular_properties import AtomTypes
+#from vismol.model.molecular_properties import AtomTypes
 
 logger = getLogger(__name__)
 

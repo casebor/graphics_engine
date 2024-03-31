@@ -1356,31 +1356,37 @@ class VismolGLCore:
                                                     shaders_surface.geometry_shader_lines)
         self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
                                                         shaders_spheres.fragment_shader_spheres)
-        '''
-        #def _compile_shader_cartoon(self):
-        #    """ Function doc """
-        #    self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
-        #                                                shaders_cartoon.f_shader_triangles)
-        
-        #----------------------------NOT IMPLEMENTED YET---------------------------#
-        # def _dynamic_bonds_shaders(self):
-        #     """ Function doc """
-        #     self.shader_programs["dynamic"] = self.load_shaders(shaders_sticks.vertex_shader_sticks,
-        #                                                 shaders_sticks.fragment_shader_sticks,
-        #                                                 shaders_sticks.geometry_shader_sticks)
-        #     self.shader_programs["dynamic_sel"] = self.load_shaders(shaders_sticks.sel_vertex_shader_sticks,
-        #                                                    shaders_sticks.sel_fragment_shader_sticks,
-        #                                                    shaders_sticks.sel_geometry_shader_sticks)
-        
-        # def _wires_dot_shaders(self):
-        #     """ Function doc """
-        #     self.shader_programs["wires"] = self.load_shaders(shaders_wires.vertex_shader_wires,
-        #                                               shaders_wires.fragment_shader_wires,
-        #                                               shaders_wires.geometry_shader_wires)
-        #     self.shader_programs["wires_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
-        #                                                     shaders_spheres.fragment_shader_spheres)
-        #----------------------------NOT IMPLEMENTED YET---------------------------#
-        #'''
+    '''
+    def _compile_shader_cartoon(self):
+        """ Function doc """
+        self.shader_programs["cartoon"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
+                                                    shaders_cartoon.f_shader_triangles)
+        self.shader_programs["cartoon_sel"] = self.load_shaders(shaders_cartoon.v_shader_triangles,
+                                                    shaders_cartoon.f_shader_triangles)
+    
+    
+    #'''
+    
+    '''
+    #----------------------------NOT IMPLEMENTED YET---------------------------#
+    # def _dynamic_bonds_shaders(self):
+    #     """ Function doc """
+    #     self.shader_programs["dynamic"] = self.load_shaders(shaders_sticks.vertex_shader_sticks,
+    #                                                 shaders_sticks.fragment_shader_sticks,
+    #                                                 shaders_sticks.geometry_shader_sticks)
+    #     self.shader_programs["dynamic_sel"] = self.load_shaders(shaders_sticks.sel_vertex_shader_sticks,
+    #                                                    shaders_sticks.sel_fragment_shader_sticks,
+    #                                                    shaders_sticks.sel_geometry_shader_sticks)
+    
+    # def _wires_dot_shaders(self):
+    #     """ Function doc """
+    #     self.shader_programs["wires"] = self.load_shaders(shaders_wires.vertex_shader_wires,
+    #                                               shaders_wires.fragment_shader_wires,
+    #                                               shaders_wires.geometry_shader_wires)
+    #     self.shader_programs["wires_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+    #                                                     shaders_spheres.fragment_shader_spheres)
+    #----------------------------NOT IMPLEMENTED YET---------------------------#
+    #'''
     
     def _safe_frame_coords(self, vismol_object):
         """ Function doc 
