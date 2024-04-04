@@ -30,7 +30,7 @@ from vismol.model.bond import Bond
 from vismol.model.chain import Chain
 from vismol.model.residue import Residue
 from vismol.model.molecule import Molecule
-from vismol.model.molecular_properties import COLOR_PALETTE
+#from vismol.model.molecular_properties import COLOR_PALETTE
 from vismol.libgl.vismol_font import VismolFont
 from vismol.libgl.representations import DotsRepresentation
 from vismol.libgl.representations import LinesRepresentation
@@ -95,7 +95,7 @@ class VismolObject:
                                   # (set as None if not provided)
         
         if color_palette is None:
-            self.color_palette = COLOR_PALETTE[0] # Default color palette for carbon atoms (0 = green)
+            self.color_palette = self.vm_session.periodic_table.get_color_palette() #None #COLOR_PALETTE[0] # Default color palette for carbon atoms (0 = green)
         else:
             self.color_palette = color_palette #this is an integer num to access the color pick for carbon atoms (0 = green, 1 = purple, ...) 
                                                # Integer number to access the specified color palette

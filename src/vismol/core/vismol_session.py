@@ -26,6 +26,7 @@
 import os
 import numpy as np
 from vismol.utils import parser
+from vismol.utils.elements import PeriodicTable
 from logging import getLogger
 from vismol.core.vismol_config import VismolConfig
 from vismol.core.vismol_selections import VismolPickingSelection as VMPick
@@ -33,8 +34,30 @@ from vismol.core.vismol_selections import VismolViewingSelection as VMSele
 
 logger = getLogger(__name__)
 
-
-class VismolSession():
+class Config:
+    """ Class doc """
+    
+    def __init__ (self):
+        """ Class initialiser """
+        pass
+    def set_pk_sphr_selection_color (self, color, pk = 1):
+        """ Function doc """
+        
+        if pk == 1:
+            self.picking_selections.pk_scolor['pk1'] = color
+        elif pk == 2:
+            self.picking_selections.pk_scolor['pk2'] = color
+        elif pk == 3:
+            self.picking_selections.pk_scolor['pk3'] = color
+        elif pk == 4:
+            self.picking_selections.pk_scolor['pk4'] = color
+        else:
+            return False
+        
+        
+    
+    
+class VismolSession(Config):
     """ Class doc """
     
     def __init__(self, toolkit, widget=None, main_session=None, vm_config = None):
@@ -55,6 +78,9 @@ class VismolSession():
         self.selections = {"sel_00": VMSele(self)}
         self.current_selection = "sel_00"
         self.picking_selections = VMPick(self)
+        
+        self.periodic_table = PeriodicTable()
+        #print(self.periodic_table.elements_by_symbol)
         
         '''
         vm_geometric_object_dic contains items with specific names that 

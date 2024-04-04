@@ -38,6 +38,7 @@ class VismolConfig:
                               "dots_size": 2,
                               "dot_type": 1,
                               "dot_sel_size": 1.5,
+                              "dashed_dist_lines_color" : [0.4, 0.4, 0.4, 1.0],
                               "line_width": 3,
                               "line_width_selection": 80,
                               "line_type": 0,
@@ -71,6 +72,8 @@ class VismolConfig:
                               "bond_tolerance": 1.4,
                               "picking_dots_color": [0.0, 1.0, 1.0],
                               "picking_dots_safe"          : True,
+                              "pk_label_color"             : [1.0, 1.0, 1.0, 1.0],
+                              "pk_dist_label_color"        : [1.0, 1.0, 0.0, 1.0],
                               }
         self.n_proc = 2
         # self.representations_available = {"dots", "lines", "nonbonded", "dotted_lines",

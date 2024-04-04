@@ -916,6 +916,7 @@ class VismolGLCore:
     def _draw_labels(self):
         if self.vm_font.vao is None:
             self.vm_font.make_freetype_font()
+            #self.vm_font.make_freetype_font(self.vm_session.vm_config.gl_parameters["picking_dots_color"])
             self.vm_font.make_freetype_texture(self.core_shader_programs["freetype"])
         number = 1
         self.chars = 0
@@ -975,6 +976,7 @@ class VismolGLCore:
 
     def _draw_distance_labels(self, vm_object):
         if self.vm_font_dist.vao is None:
+            self.vm_font_dist.color = np.array(self.vm_session.vm_config.gl_parameters["pk_dist_label_color"], dtype=np.float32)
             self.vm_font_dist.make_freetype_font()
             self.vm_font_dist.make_freetype_texture(self.core_shader_programs["freetype"])
         
@@ -1099,6 +1101,8 @@ class VismolGLCore:
             function picking #1 #2 #3 #4
         """
         if self.vm_font.vao is None:
+            #self.vm_font.make_freetype_font(color = self.vm_session.vm_config.gl_parameters["picking_dots_color"])
+            self.vm_font.color = np.array(self.vm_session.vm_config.gl_parameters["pk_label_color"], dtype=np.float32)
             self.vm_font.make_freetype_font()
             self.vm_font.make_freetype_texture(self.core_shader_programs["freetype"])
         

@@ -577,7 +577,9 @@ class VismolPickingSelection:
         self.vobject_picking.index_bonds = [0,1]
         
         self.vobject_picking.create_representation(rep_type="dash")
-        self.vobject_picking.representations["dash"].color2 = [0.5,0.5,0.5]
+        #color = [1,1,1]
+        color = self.vm_session.vm_config.gl_parameters["dashed_dist_lines_color"]
+        self.vobject_picking.representations["dash"].color2 = [color[0],color[1],color[2]]
         self.vm_session.vm_geometric_object_dic[vobj_label] = self.vobject_picking
     
     def update_pki_pkj_rep_coordinates (self):
