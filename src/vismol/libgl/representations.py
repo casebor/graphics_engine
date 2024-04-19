@@ -580,7 +580,6 @@ class SticksRepresentation(Representation):
         GL.glUseProgram(0)
 
 
-
 class SpheresRepresentation(Representation):
     """ Class doc """
     #            self, vismol_object, vismol_glcore, indexes, active=True, is_dynamic = False, name = "sticks"
@@ -1472,88 +1471,17 @@ class SurfaceRepresentation(Representation):
     """ Class doc """
     
 
-    def __init__(self, vismol_object, vismol_glcore, name, active, indexes, is_dynamic = False):
+    def __init__(self, vismol_object, vismol_glcore, name, active, indexes, is_dynamic = False, iso_color = [0,1,1], surface_name = None):
     #def __init__(self, vismol_object = None, vismol_glcore = None, indexes = None, active=True, vdw = False, mode = 0):
         super(SurfaceRepresentation, self).__init__(vismol_object, vismol_glcore, name, active , indexes, is_dynamic)
 
-        
-        #self.surface_vertices = sphd.sphere_vertices[self.level]
 
+        self.active    = True
         self.vm_glcore = vismol_glcore
-        self.name =  'surface'
-        from math import exp, sqrt, pi
+        self.name      =  name   
+        self.vismol_object = vismol_object
+        self.surf_name     = surface_name
 
-        from pCore                     import logFile , TestScriptExit_Fail 
-        from pScientific.Arrays        import Array , ArrayPrint                    
-        from pScientific.Geometry3     import Coordinates3 , RegularGrid 
-        from pScientific.Surfaces      import MarchingCubes_Isosurface3D ,STLFileReader 
-
-        #surface = STLFileReader.PathToPolygonalSurface ( '/home/fernando/programs/pDynamo3/examples/pScientific/data/stl/cube.stl', name = 'bola')
-        surface = STLFileReader.PathToPolygonalSurface ( '/home/fernando/programs/pDynamo3/examples/pScientific/data/stl/fch3cl_hf_density.stl', name = 'bola')
-
-        name      = ''
-        normals   = surface.polygonNormals
-        polygons  = surface.polygons
-        vertices  = surface.vertices
-        colors    = []
-        vertices2 = []
-        normals2  = []
-        
-        
-        
-        
-        
-        
-        
-        for p in range ( polygons.rows ):
-            #print ( "facet normal " )
-            for c in range ( 3 ): 
-                normals2.append (normals[p,c])
-            #print ( "\n    outer loop" )
-            for v in polygons[p,:]:
-                #text = "\n        vertex "
-                for c in range ( 3 ): 
-                    vertices2.append(vertices[v,c] )
-                    #text += " {} ".format(vertices[v,c])
-                for rgb in range ( 3 ): 
-                    #vertices2.append(rgb)
-                    colors.append(1.0)
-        
-        
-        #vertices2 = [-0.5, -0.5, 0.5, 
-        #             0.5, -0.5, 0.5,        
-        #             0.5,  0.5, 0.5,        
-        #            -0.5,  0.5, 0.5,        
-        #
-        #            -0.5, -0.5, -0.5,        
-        #             0.5, -0.5, -0.5,        
-        #             0.5,  0.5, -0.5,        
-        #            -0.5,  0.5, -0.5]       
-
-        #colors=    [1.0, 0.0, 0.0,
-        #            0.0, 1.0, 0.0, 
-        #            0.0, 0.0, 1.0, 
-        #            1.0, 1.0, 1.0, 
-        #
-        #             1.0, 0.0, 0.0,
-        #             0.0, 1.0, 0.0,
-        #             0.0, 0.0, 1.0,
-        #             1.0, 1.0, 1.0]
-                     
-        #indices = [0, 1, 2, 2, 3, 0,        
-        #           4, 5, 6, 6, 7, 4,        
-        #           4, 5, 1, 1, 0, 4,        
-        #           6, 7, 3, 3, 2, 6,        
-        #           5, 6, 2, 2, 1, 5,        
-        #           7, 4, 0, 0, 3, 7]
-        print (vertices2)
-        print(range(len(vertices)))
-        self.vertices = np.array(vertices2, dtype=np.float32)
-        self.colors   = np.array(colors, dtype=np.float32)
-        self.indexes  = np.array(range(len(vertices)*3), dtype=np.uint32)
-        #self.indexes  = np.array(indices, dtype=np.uint32)
-        self.active = True
-    
     def _make_gl_representation_vao_and_vbos(self, debug = False):
         """ Function doc """
         if debug:
@@ -1561,12 +1489,38 @@ class SurfaceRepresentation(Representation):
         self.vao       = self._make_gl_vao()
         self.ind_vbo   = self._make_gl_index_buffer(self.indexes)
         self.coord_vbo = self._make_gl_coord_buffer(self.vertices, self.shader_program)
-        self.col_vbo   = self._make_gl_color_buffer(np.zeros(3, dtype=np.float32), self.shader_program, instances=True)
+        #self.col_vbo   = self._make_gl_color_buffer(np.zeros(3, dtype=np.float32), self.shader_program, instances=True)
+        self.col_vbo   = self._make_gl_color_buffer(self.colors, self.shader_program, instances=True)
     
+    def _load_coord_vbo(self, coord_vbo=False, vertices = None):
+        """ This function assigns the coordinates to 
+        be drawn by the function  draw_representation"""
+        frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
+        if coord_vbo:
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.coord_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL.GL_STATIC_DRAW)
+
+    def _load_ind_vbo(self, ind_vbo=False, indexes = None ):
+        """ Function doc """
+ 
+        if ind_vbo:
+            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ind_vbo)
+            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.nbytes, indexes, GL.GL_DYNAMIC_DRAW)
+ 
+    def _load_color_vbo(self, colors):
+        """ This function assigns the colors to
+            be drawn by the function  draw_representation"""
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.col_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.nbytes, colors, GL.GL_STATIC_DRAW)
+
     def draw_background_sel_representation(self):
         pass
+    
     def draw_representation(self):
         """ Function doc """
+        frame_coords, frame = self.vm_glcore._safe_frame_coords(self.vismol_object)
+        self.vertices, self.colors, self.indexes = self.vismol_object.surface_trajectory[frame][self.surf_name]
+        
         self._check_vao_and_vbos()
         GL.glEnable(GL.GL_DEPTH_TEST)
         #GL.glEnable(GL.GL_CULL_FACE)
@@ -1578,6 +1532,13 @@ class SurfaceRepresentation(Representation):
         self.vm_glcore.load_lights(self.shader_program)
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
+        
+        #self.vismol_object
+        
+
+        self._load_coord_vbo( coord_vbo=True, vertices = self.vertices)
+        self._load_ind_vbo  ( ind_vbo = True, indexes = self.indexes)
+        self._load_color_vbo( self.colors)
         
         #if self.was_rep_coord_modified or self.was_rep_ind_modified:
         #    coords, colors, rads = self._coords_colors_rads()
