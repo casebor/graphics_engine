@@ -202,11 +202,18 @@ class VismolGTKWidget(Gtk.GLArea):
         """ Function doc """
         self.vm_session.forward_frame()
         self.queue_draw()
+    def _released_Right(self):
+        """ Function doc """
+        pass
     
     def _pressed_Left(self):
         """ Function doc """
         self.vm_session.reverse_frame()
         self.queue_draw()
+    
+    def _released_Left(self):
+        """ Function doc """
+        pass
     
     def _pressed_Control_L(self):
         """ Function doc """

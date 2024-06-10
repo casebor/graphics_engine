@@ -281,6 +281,7 @@ class VismolSession(Config):
         
     def forward_frame(self):
         """ Function doc """
+        #return 0
         frame = self.frame + 1
         for i, vm_object in enumerate(self.vm_objects_dic.values()):
             if frame < vm_object.frames.shape[0]:
@@ -315,7 +316,7 @@ class VismolSession(Config):
         #for 
         self.picking_selections.update_pki_pkj_rep_coordinates()
         self.vm_widget.queue_draw()
-        #print('uhuuu')
+        print('\n\n\nuhuuu')
         #if self.picking_selection_mode:
         #    self.picking_selections.print_pk_distances()
         
