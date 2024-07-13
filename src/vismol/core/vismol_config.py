@@ -40,7 +40,7 @@ class VismolConfig:
                               "dot_sel_size": 1.5,
                               "line_width": 3,
                               "line_width_selection": 80,
-                              "line_type": 0,
+                              "line_type": 1,
                               "line_color": 0,
                               "ribbon_width": 1000,
                               "ribbon_width_selection": 100,
