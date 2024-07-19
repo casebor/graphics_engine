@@ -68,7 +68,8 @@ class VismolGLCore:
         self.core_shader_programs = {}
         self.representations_available = self.vm_config.representations_available
         self.sphere_selection = None
-    
+        
+        
     def initialize(self):
         """ Enables the buffers and other charasteristics of the OpenGL context.
             sets the initial projection, view and model matrices
@@ -365,6 +366,8 @@ class VismolGLCore:
     
     def _rotate_view(self, dx, dy, x, y):
         """ Function doc """
+        dx =  dx*self.vm_config.gl_parameters['mouse_rotation_sensibility']
+        dy =  dy*self.vm_config.gl_parameters['mouse_rotation_sensibility']
         angle = np.sqrt(dx**2 + dy**2) / (self.width + 1) * 180.0
         if self.shift:
             self.selection_box.end = self.get_viewport_pos(self.mouse_x, self.mouse_y)

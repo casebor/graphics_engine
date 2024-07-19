@@ -57,6 +57,8 @@ class VismolConfig:
                               "sticks_color": 0,
                               "sticks_type": 0,
                               "antialias": True,
+                              "mouse_rotation_sensibility" : 1.5,
+
                               "scroll_step": 0.9,
                               "field_of_view": 10,
                               "light_position": [0, 0, 10.0],
