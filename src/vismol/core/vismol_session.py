@@ -23,6 +23,7 @@
 #  
 #  
 
+
 import os
 import numpy as np
 from vismol.utils import parser
@@ -143,7 +144,7 @@ class VismolSession(Config):
 
             # If autocenter is True, center the view on the mass center of the vismol_object.
             if autocenter:
-                self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.mass_center)
+                self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.geom_center)
             else:
                 self.vm_glcore.queue_draw()
     

@@ -8,7 +8,7 @@ import multiprocessing
 import numpy as np
 cimport numpy as np
 from vismol.core.vismol_object import VismolObject
-from vismol.model.molecular_properties import AtomTypes
+# from vismol.model.molecular_properties import AtomTypes
 
 from pprint import pprint
 
@@ -30,55 +30,56 @@ cpdef load_gro_file(infile=None, gridsize=3, vismol_session=None):
     #-------------------------------------------------------------------------------------------
     #                                P D B     P A R S E R 
     #-------------------------------------------------------------------------------------------
-    at  =  AtomTypes()
-    with open(infile, 'r') as gro_file:
+    return None
+    # at  =  AtomTypes()
+    # with open(infile, 'r') as gro_file:
         
-        grotext = gro_file.readlines()
+    #     grotext = gro_file.readlines()
         
-        atoms, frame = get_atom_info_from_raw_line(grotext, gridsize = 3, at = at)
-        frame = np.array(frame, dtype=np.float32)
-        frames = [frame]
-        #frames = []
-    #    n    = 0 
-    #    atoms = []
-    #    while atoms == []:
-    #        atoms     = get_list_of_atoms_from_rawframe(rawframes[n], gridsize, at =  at)
-    #        n += 1
-    #    
-    #    
-    ##-------------------------------------------------------------------------------------------
-    #
-    name = os.path.basename(infile)
-    vismol_object  = VismolObject(name        = name, 
-                                  atoms       = atoms, 
-                                  vismol_session   = vismol_session, 
-                                  trajectory  = frames,
-                                  auto_find_bonded_and_nonbonded = True)
-    '''
-    #-------------------------------------------------------------------------------------------
-    #                                Bonded and NB lists 
-    #-------------------------------------------------------------------------------------------
+    #     atoms, frame = get_atom_info_from_raw_line(grotext, gridsize = 3, at = at)
+    #     frame = np.array(frame, dtype=np.float32)
+    #     frames = [frame]
+    #     #frames = []
+    # #    n    = 0 
+    # #    atoms = []
+    # #    while atoms == []:
+    # #        atoms     = get_list_of_atoms_from_rawframe(rawframes[n], gridsize, at =  at)
+    # #        n += 1
+    # #    
+    # #    
+    # ##-------------------------------------------------------------------------------------------
+    # #
+    # name = os.path.basename(infile)
+    # vismol_object  = VismolObject(name        = name, 
+    #                               atoms       = atoms, 
+    #                               vismol_session   = vismol_session, 
+    #                               trajectory  = frames,
+    #                               auto_find_bonded_and_nonbonded = True)
+    # '''
+    # #-------------------------------------------------------------------------------------------
+    # #                                Bonded and NB lists 
+    # #-------------------------------------------------------------------------------------------
     
-    #atoms, bonds_full_indices, bonds_pair_of_indices, NB_indices_list = cdist.generete_full_NB_and_Bonded_lists(atoms)
+    # #atoms, bonds_full_indices, bonds_pair_of_indices, NB_indices_list = cdist.generete_full_NB_and_Bonded_lists(atoms)
     
-    #-------------------------------------------------------------------------------------------
-    #print (bonds_pair_of_indices, NB_indices_list )
-    #for atom in atoms:
-    #    pprint (atom[8])
-    #-------------------------------------------------------------------------------------------
-    #                         Building   V I S M O L    O B J
-    #-------------------------------------------------------------------------------------------
+    # #-------------------------------------------------------------------------------------------
+    # #print (bonds_pair_of_indices, NB_indices_list )
+    # #for atom in atoms:
+    # #    pprint (atom[8])
+    # #-------------------------------------------------------------------------------------------
+    # #                         Building   V I S M O L    O B J
+    # #-------------------------------------------------------------------------------------------
 
     
-    #vismol_object.non_bonded_atoms  = NB_indices_list
-    #vismol_object._generate_atomtree_structure()
-    #vismol_object._generate_atom_unique_color_id()
-    #vismol_object.index_bonds       = bonds_full_indices
-    #vismol_object.import_bonds(bonds_pair_of_indices)
-	'''
+    # #vismol_object.non_bonded_atoms  = NB_indices_list
+    # #vismol_object._generate_atomtree_structure()
+    # #vismol_object._generate_atom_unique_color_id()
+    # #vismol_object.index_bonds       = bonds_full_indices
+    # #vismol_object.import_bonds(bonds_pair_of_indices)
+	# '''
 
-    #-------------------------------------------------------------------------------------------
-    return vismol_object
+    # #-------------------------------------------------------------------------------------------
+    # return vismol_object
     
     
     

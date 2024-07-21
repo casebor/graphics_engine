@@ -429,7 +429,7 @@ class VismolGoToAtomWindow2(Gtk.Window):
         '''centering and selecting'''
         frame = self.vm_session.get_frame ()
         res.get_center_of_mass(frame = frame)
-        self.vm_session.glwidget.vm_widget.center_on_coordinates(res.Vobject, res.mass_center)
+        self.vm_session.glwidget.vm_widget.center_on_coordinates(res.Vobject, res.geom_center)
         
         self.vm_session._selection_function (res.atoms[0], _type = 'residue')
         self.vm_session.glwidget.queue_draw()
@@ -480,7 +480,7 @@ class VismolGoToAtomWindow2(Gtk.Window):
                 frame = self.vm_session.get_frame ()
                 res.get_center_of_mass(frame = frame)
                 
-                self.vm_session.glwidget.vm_widget.center_on_coordinates(res.Vobject, res.mass_center)
+                self.vm_session.glwidget.vm_widget.center_on_coordinates(res.Vobject, res.geom_center)
         
                 self.atom_liststore.clear()
                 for atom in res.atoms:

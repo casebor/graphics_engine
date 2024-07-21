@@ -160,7 +160,7 @@ class GtkMainTreeView():
 
         
         if widget == self.builder.get_object('menuitem_center'):
-            self.vismolSession.glwidget.vm_widget.center_on_coordinates(visObj, visObj.mass_center)
+            self.vismolSession.glwidget.vm_widget.center_on_coordinates(visObj, visObj.geom_center)
 
         
         if widget == self.builder.get_object('menu_show_lines'):

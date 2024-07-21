@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
+
+
 import os
 import time
 import multiprocessing
 import numpy as np
 cimport numpy as np
 from logging import getLogger
+from vismol.model.atom import Atom
+from vismol.model.residue import Residue
+from vismol.model.chain import Chain
 from vismol.core.vismol_object import VismolObject
-#from vismol.model.molecular_properties import AtomTypes
+
 
 logger = getLogger(__name__)
 
@@ -20,27 +24,21 @@ cpdef get_list_of_atoms_from_rawframe(raw_frames):
     cdef int index = 1
     for line in pdb_file_lines:
         if line[:4] == "ATOM" or line[:6] == "HETATM":
-            at_index  = index
-            # at_index  = np.int32(line[7:11])
-            at_name   = line[12:16].strip()
-            at_resn   = line[17:20].strip()
-            at_ch     = line[20:22].strip()
-            at_resi   = np.int32(line[22:27])
-            at_occup   = np.float32(line[54:60])
+            at_index = index
+            at_name = line[12:16].strip()
+            at_resn = line[17:20].strip()
+            at_ch = line[20:22].strip()
+            at_resi = np.int32(line[22:27])
+            at_occup = np.float32(line[54:60])
             at_bfactor = np.float32(line[60:66])
-            at_charge  = 0.0
-            # if at_index != index:
-            #     logger.debug("Atom index {} is different from number of atoms in raw_frames".format(at_index))
-            atoms.append({"name"     : at_name,
-                          "resn"     : at_resn,
-                          "chain"    : at_ch,
-                          "resi"     : at_resi,
-                          "occupancy": at_occup,
-                          "bfactor"  : at_bfactor,
-                          "charge"   : at_charge,
-                          "index"    : index})
+            at_charge = 0.0
+            atoms.append({"name": at_name, "resn": at_resn, "chain": at_ch,
+                          "resi": at_resi, "occupancy": at_occup,
+                          "bfactor": at_bfactor, "charge": at_charge,
+                          "index": index})
             index += 1
     return atoms
+
 
 cpdef get_topology(infile):
     """ This function should return the list of tuples with the information of
@@ -57,12 +55,12 @@ cpdef get_topology(infile):
     logger.debug("Time used to parse the topology: {:>8.5f} secs".format(time.time() - initial))
     return atoms_info, raw_frames
 
+
 cpdef _get_frame_coords(frames, atom_qtty):
     """ Function doc """
     cdef int i = 0
     cdef int j = 0
     coords = np.empty([len(frames), atom_qtty, 3], dtype=np.float32)
-    print(coords)
     for frame in frames:
         j = 0
         lines = frame.strip().split("\n")
@@ -74,9 +72,8 @@ cpdef _get_frame_coords(frames, atom_qtty):
                 coords[i,j,:] = x, y, z
                 j += 1
         i += 1
-    print("_get_frame_coords(frames, atom_qtty)")
-    print(coords)
     return coords
+
 
 cpdef _get_ranges(traj_size, batch_size):
     cdef int i = 0
@@ -86,6 +83,7 @@ cpdef _get_ranges(traj_size, batch_size):
         i += batch_size
     ranges.append((i, traj_size))
     return ranges
+
 
 cpdef _get_coords_parallel(raw_frames, traj_size, atom_qtty, n_proc):
     """ Function doc """
@@ -101,6 +99,7 @@ cpdef _get_coords_parallel(raw_frames, traj_size, atom_qtty, n_proc):
         coords = np.vstack((coords, f))
     return coords
 
+
 cpdef get_coords_from_raw_frames(raw_frames, atom_qtty, n_proc):
     """ Here we should focus on parsing the coordinates only
         This method of splitting the file will double the amount of RAM memory
@@ -115,6 +114,7 @@ cpdef get_coords_from_raw_frames(raw_frames, atom_qtty, n_proc):
     coords = _get_coords_parallel(raw_frames, len(raw_frames), atom_qtty, n_proc)
     logger.debug("Time used to parse the coordinates: {:>8.5f} secs".format(time.time() - initial))
     return coords
+
 
 cpdef get_coords_from_file(infile, atom_qtty, n_proc):
     """ Here we should focus on parsing the coordinates only
@@ -137,3 +137,45 @@ cpdef get_coords_from_file(infile, atom_qtty, n_proc):
     coords = _get_coords_parallel(raw_frames, len(raw_frames), atom_qtty, n_proc)
     logger.debug("Time used to parse the coordinates: {:>8.5f} secs".format(time.time() - initial))
     return coords
+
+
+cpdef load_pdb_file(vm_session, infile):
+    vm_object_name = os.path.basename(infile)
+    topology, rawframes = get_topology(infile)
+    vm_object = VismolObject(vm_session, len(vm_session.vm_objects_dic),
+                             name=vm_object_name)
+    unique_id = len(vm_session.atom_dic_id)
+    initial = time.time()
+    atom_id = 0
+    
+    for _atom in topology:
+        if _atom["chain"] not in vm_object.chains.keys():
+            vm_object.chains[_atom["chain"]] = Chain(vm_object, name=_atom["chain"])
+        _chain = vm_object.chains[_atom["chain"]]
+        
+        if _atom["resi"] not in _chain.residues.keys():
+            _r = Residue(vm_object, name=_atom["resn"], index=_atom["resi"],
+                         chain=_chain)
+            vm_object.residues[_atom["resi"]] = _r
+            _chain.residues[_atom["resi"]] = _r
+        _residue = _chain.residues[_atom["resi"]]
+        
+        atom = Atom(vm_object, name=_atom["name"], index=_atom["index"],
+                    residue=_residue, chain=_chain, atom_id=atom_id,
+                    occupancy=_atom["occupancy"], bfactor=_atom["bfactor"],
+                    charge=_atom["charge"])
+        atom.unique_id = unique_id
+        atom._generate_atom_unique_color_id()
+        _residue.atoms[atom_id] = atom
+        vm_object.atoms[atom_id] = atom
+        atom_id += 1
+        unique_id += 1
+    
+    logger.debug("Time used to build the tree: {:>8.5f} secs".format(time.time() - initial))
+    vm_object.frames = get_coords_from_raw_frames(rawframes, atom_id,
+                                                  vm_session.vm_config.n_proc)
+    vm_object.geom_center = np.mean(vm_object.frames[0], axis=0)
+    vm_object.find_bonded_and_nonbonded_atoms()
+    return vm_object
+
+

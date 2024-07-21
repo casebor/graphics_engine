@@ -108,7 +108,7 @@ class Residue:
             sum_y += coord[1]
             sum_z += coord[2]
         
-        self.mass_center = np.array([sum_x / total,
+        self.geom_center = np.array([sum_x / total,
                                      sum_y / total, 
                                      sum_z / total])
     

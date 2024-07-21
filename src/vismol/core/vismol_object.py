@@ -1,113 +1,99 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  vismol_object.py
-#  
-#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
-#  
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#  
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-#  MA 02110-1301, USA.
-#  
-#  
+
 
 import time
 import numpy as np
+from typing import List
 from logging import getLogger
 from vismol.model.atom import Atom
 from vismol.model.bond import Bond
 from vismol.model.chain import Chain
 from vismol.model.residue import Residue
 from vismol.model.molecule import Molecule
-#from vismol.model.molecular_properties import COLOR_PALETTE
 from vismol.libgl.vismol_font import VismolFont
+from vismol.libgl.representations import CartoonRepresentation
+from vismol.libgl.representations import DashedLinesRepresentation
 from vismol.libgl.representations import DotsRepresentation
+from vismol.libgl.representations import ImpostorRepresentation
+from vismol.libgl.representations import LabelRepresentation
 from vismol.libgl.representations import LinesRepresentation
 from vismol.libgl.representations import NonBondedRepresentation
 from vismol.libgl.representations import PickingDotsRepresentation
-from vismol.libgl.representations import ImpostorRepresentation
-from vismol.libgl.representations import SticksRepresentation
 from vismol.libgl.representations import SpheresRepresentation
-from vismol.libgl.representations import DashedLinesRepresentation
-from vismol.libgl.representations import LabelRepresentation
+from vismol.libgl.representations import SticksRepresentation
 from vismol.libgl.representations import SurfaceRepresentation
-from vismol.libgl.representations import CartoonRepresentation
 # from vismol.libgl.representations import WiresRepresentation
 # from vismol.libgl.representations import RibbonsRepresentation
 import vismol.utils.c_distances as cdist
+
 
 logger = getLogger(__name__)
 
 
 class VismolObject:
-    """ Visual Object contains the information necessary for openGL to draw 
-        a model on the screen. Everything that is represented in the graphical 
-        form is stored in the form of a VismolObject.
-        
-        
-        Arguments:
-        - vismol_session: Vismol Session - Necessary to build the "atomtree_structure".
-                          The vismol_session contains the atom_id_counter (self.vm_session.atom_id_counter).
-        - index: Unique index for the VismolObject to find it in self.vm_session.vismol_objects_dic.
-        - name: Label that describes the object (default: "UNK").
-        - active: Boolean flag to enable/disable the object (default: False).
-        - trajectory: A list of coordinates representing the trajectory frames.
-                      Each frame is represented as a list of [x, y, z] coordinates (optional).
-        - color_palette: Integer number to access the color pick for carbon atoms (0 = green, 1 = purple, ...) (optional).
-        - bonds_pair_of_indexes: Pair of atoms used to define bonds, like [1, 3, 1, 17, 3, 4, 4, 20] (optional).
-   
-        
-        Arguments
-        
-        name       = string  - Label that describes the object  
-        atoms      = list of atoms  - [index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch]
-        vismol_session  = Vismol Session - Necessary to build the "atomtree_structure"
-                     vismol_session contains the atom_id_counter (self.vm_session.atom_id_counter)
-        trajectory = A list of coordinates - eg [ [x1,y1,z1, x2,y2,z2...], [x1,y1,z1, x2,y2,z2...]...]
-                     One frame is is required at last.
     """
-    def __init__(self, vismol_session, index, name="UNK", active=False, trajectory=None,
-                 color_palette=None, bonds_pair_of_indexes=None):
-        """ Class initialiser """
-        # References to vismol_session and its configuration
-        self.vm_session = vismol_session
-        self.vm_config = vismol_session.vm_config
-                                   
-                                   # Unique index for the VismolObject to find it in self.vm_session.vismol_objects_dic
-        self.index = index         # import to find vboject in self.vm_session.vismol_objects_dic
-        
+    A VismolObject contains the information necessary for openGL to draw 
+    a model on the screen. Everything that is represented in the graphical 
+    form is stored in the form of a VismolObject.
+    
+    Attributes:
+        vm_session (Vismol Session): Necessary to build the
+                "atomtree_structure". The vismol_session contains the atom id
+                counter (self.vm_session.atom_id_counter).
+        index (int): Unique index for the VismolObject to find it in
+                self.vm_session.vismol_objects_dic.
+        name (str): Label that describes the object (default: "UNK").
+        active (bool): Flag to enable/disable the object (default: False).
+        trajectory (np.Array): An array of coordinates representing the
+                trajectory frames. Each frame is represented as an array of
+                [x, y, z] coordinates (optional). The final array shape is 
+                [frames, atoms, 3].
+        color_palette (int): Number to access the color pick for carbon
+                atoms (0 = green, 1 = purple, ...) (optional).
+        vm_config (VismolConfig): Simple configuration object containing the
+                information needed to represent the Vismol object.
+        editing (bool): Flag to indicate whether or not the object is being
+                modified in the window. This is not the type of editing that
+                changes the structure of the Vismol object, but rather its
+                matrices.
+        geom_center (np.array): A Numpy array containing geometry center of the
+                molecule.
+        vm_font (VismolFont): A VismolFont object used to render text.
+        atoms (Dict): Dictionary to store the atoms with their
+        residues (Dict):
+        chains (Dict):
+        molecules (Dict):
+    """
+    def __init__(self, vm_session: "VismolSession", index: int, name: str="UNK",
+                 active: bool=False, trajectory: np.array=None,
+                 color_palette: int=0):
+        """
+        Args:
+            vm_session (Vismol Session): Necessary to build the
+                    "atomtree_structure". The vismol_session contains the atom id
+                    counter (self.vm_session.atom_id_counter).
+            index (int): Unique index for the VismolObject to find it in
+                    self.vm_session.vismol_objects_dic.
+            name (str): Label that describes the object (default: "UNK").
+            active (bool): Flag to enable/disable the object (default: False).
+            trajectory (np.Array): An array of coordinates representing the
+                    trajectory frames. Each frame is represented as an array of
+                    [x, y, z] coordinates (optional). The final array shape is 
+                    [frames, atoms, 3]
+            color_palette (int): Number to access the color pick for carbon
+                    atoms (0 = green, 1 = purple, ...) (optional).
+        """
+        self.vm_session = vm_session
+        self.index = index
         self.name = name
-        self.active = active       # Boolean flag to enable/disable the object (show and hide) # for "show and hide"   enable/disable
-        
-        self.frames = trajectory  # A list of coordinates representing the trajectory frames
-                                  # Each frame is represented as a list of [x, y, z] coordinates
-                                  # (set as None if not provided)
-        
-        if color_palette is None:
-            self.color_palette = self.vm_session.periodic_table.get_color_palette() #None #COLOR_PALETTE[0] # Default color palette for carbon atoms (0 = green)
-        else:
-            self.color_palette = color_palette #this is an integer num to access the color pick for carbon atoms (0 = green, 1 = purple, ...) 
-                                               # Integer number to access the specified color palette
-        
-                                   
-        self.editing = False       # for translate and rotate  xyz coords
-                                   # Boolean flag for translate and rotate XYZ coordinates 
-        
-        self.mass_center = np.zeros(3, dtype=np.float32)
+        self.active = active
+        self.frames = trajectory
+        self.color_palette = color_palette
+        self.vm_config = vm_session.vm_config
+        self.editing = False
+        self.geom_center = np.zeros(3, dtype=np.float32)
         self.vm_font = VismolFont() # Font object used for visualization
-        self.coords = None          # Set as None for now (not defined in the provided code)
-        
         
         # Dictionaries to store atoms, residues, chains, and molecules with their respective indexes as keys
         self.atoms = {}
