@@ -52,7 +52,7 @@ class VismolViewingSelection:
             pass
         else:
             for vm_object in self.vm_session.vm_objects_dic.values():
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     atom.selected = False
                     #atom.vm_object.selected_atom_ids.discard(atom.atom_id)
     def _build_selected_atoms_coords_and_selected_objects_from_selected_atoms(self):
@@ -66,8 +66,8 @@ class VismolViewingSelection:
         # Iterate through all VismolObjects in the VismolSession
         for vm_object in self.vm_session.vm_objects_dic.values():
             # Check if the current frame is within the range of frames in the VismolObject
-            if self.vm_session.frame >= vm_object.frames.shape[0]:
-                frame = vm_object.frames.shape[0] - 1
+            if self.vm_session.frame >= vm_object.molecule.frames.shape[0]:
+                frame = vm_object.molecule.frames.shape[0] - 1
             else:
                 frame = self.vm_session.frame
             
@@ -571,7 +571,7 @@ class VismolPickingSelection:
 
         self.vobject_picking.atoms[0] = atom1
         self.vobject_picking.atoms[1] = atom2
-        self.vobject_picking._generate_color_vectors(-1)
+        self.vobject_picking.generate_color_vectors(-1)
         
         self.vobject_picking.active      = True
         self.vobject_picking.index_bonds = [0,1]

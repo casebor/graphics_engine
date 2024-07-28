@@ -84,7 +84,7 @@ class Representation:
         logger.debug("building '{}' representation VAO and VBOs".format(self.name))
         self.vao = self._make_gl_vao()
         self.ind_vbo = self._make_gl_index_buffer(self.indexes)
-        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.shader_program)
+        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.molecule.frames[0], self.shader_program)
         self.col_vbo = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
     
     def _make_gl_sel_representation_vao_and_vbos(self):
@@ -92,7 +92,7 @@ class Representation:
         logger.debug("building '{}' background selection VAO and VBOs".format(self.name))
         self.sel_vao = self._make_gl_vao()
         self.sel_ind_vbo = self._make_gl_index_buffer(self.indexes)
-        self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.sel_shader_program)
+        self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.molecule.frames[0], self.sel_shader_program)
         self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
     
     def _make_gl_vao(self):
@@ -242,9 +242,9 @@ class PickingDotsRepresentation(Representation):
         logger.debug("building '{}' representation VAO and VBOs".format(self.name))
         self.vao = self._make_gl_vao()
         self.ind_vbo = self._make_gl_index_buffer(self.indexes)
-        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.shader_program)
-        colors = self.vm_session.vm_config.gl_parameters["picking_dots_color"] * self.vm_object.frames.shape[1]
-        colors = np.array(colors, dtype=np.float32).reshape([self.vm_object.frames.shape[1], 3])
+        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.molecule.frames[0], self.shader_program)
+        colors = self.vm_session.vm_config.gl_parameters["picking_dots_color"] * self.vm_object.molecule.frames.shape[1]
+        colors = np.array(colors, dtype=np.float32).reshape([self.vm_object.molecule.frames.shape[1], 3])
         self.col_vbo = self._make_gl_color_buffer(colors, self.shader_program)
     
     def draw_representation(self):
@@ -536,10 +536,10 @@ class SticksRepresentation(Representation):
         
         #GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         if self.is_dynamic:
-            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.molecule.index_bonds)), GL.GL_UNSIGNED_INT, None)
         else:
             #normal rep
-            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.molecule.index_bonds)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         self._disable_anti_alias_to_lines()
@@ -645,11 +645,11 @@ class SpheresRepresentation(Representation):
         frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
         for i in self.indexes:
             coords.append(frame[i])
-            colors.append(self.vm_object.atoms[i].color)
+            colors.append(self.vm_object.molecule.atoms[i].color)
             if self.mode == 2 or self.mode == 3:
                 rads.append(self.rad)
             else:
-                rads.append(self.vm_object.atoms[i].ball_rad)
+                rads.append(self.vm_object.molecule.atoms[i].ball_rad)
         coords = np.array(coords, dtype=np.float32)
         colors = np.array(colors, dtype=np.float32)
         rads = np.array(rads, dtype=np.float32)
@@ -660,8 +660,8 @@ class SpheresRepresentation(Representation):
         frame, f = self.vm_glcore._safe_frame_coords(self.vm_object)
         for i in self.indexes:
             coords.append(frame[i])
-            colors.append(self.vm_object.atoms[i].color_id)
-            rads.append(self.vm_object.atoms[i].ball_rad)
+            colors.append(self.vm_object.molecule.atoms[i].color_id)
+            rads.append(self.vm_object.molecule.atoms[i].ball_rad)
         coords = np.array(coords, dtype=np.float32)
         colors = np.array(colors, dtype=np.float32)
         rads = np.array(rads, dtype=np.float32)
@@ -830,18 +830,18 @@ class ImpostorRepresentation(Representation):
         logger.debug("building '{}' representation VAO and VBOs".format(self.name))
         self.vao = self._make_gl_vao()
         self.ind_vbo = self._make_gl_index_buffer(self.indexes)
-        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.shader_program)
+        self.coord_vbo = self._make_gl_coord_buffer(self.vm_object.molecule.frames[0], self.shader_program)
         self.col_vbo = self._make_gl_color_buffer(self.vm_object.colors, self.shader_program)
-        self.size_vbo, self.ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
+        self.size_vbo, self.ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.molecule.cov_radii_array, self.shader_program)
     
     def _make_gl_sel_representation_vao_and_vbos(self):
         """ Function doc """
         logger.debug("building '{}' background selection VAO and VBOs".format(self.name))
         self.sel_vao = self._make_gl_vao()
         self.sel_ind_vbo = self._make_gl_index_buffer(self.indexes)
-        self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.frames[0], self.sel_shader_program)
+        self.sel_coord_vbo = self._make_gl_coord_buffer(self.vm_object.molecule.frames[0], self.sel_shader_program)
         self.sel_col_vbo = self._make_gl_color_buffer(self.vm_object.color_indexes, self.sel_shader_program)
-        self.sel_size_vbo, self.sel_ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
+        self.sel_size_vbo, self.sel_ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.molecule.cov_radii_array, self.shader_program)
     
     # def _modified_window_size(self):
     #     ratio = self.vm_glcore.width / self.vm_glcore.height
@@ -1197,7 +1197,7 @@ class LabelRepresentation:
         #for vm_object in self.vm_session.vm_objects_dic.values():
         #for index, atom in vm_object.atoms.items():
         for index in self.indexes:
-            atom = self.vm_object.atoms[index]
+            atom = self.vm_object.molecule.atoms[index]
             
             
             

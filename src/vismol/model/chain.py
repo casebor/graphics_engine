@@ -26,9 +26,10 @@
 class Chain:
     """ Class doc """
     
-    def __init__ (self, vismol_object, name=None, residues=None, label=None):
+    def __init__ (self, vismol_object, name=None, molecule=None, residues=None, label=None):
         """ Class initialiser """
         self.vm_object = vismol_object
+        self.molecule = molecule
         if residues is None:
             self.residues = {}
         else:

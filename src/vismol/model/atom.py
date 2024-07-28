@@ -31,8 +31,8 @@ class Atom:
     
     def __init__(self, vismol_object, name="Xx", index=None, residue=None,
                  chain=None, pos=None, symbol=None, atom_id=None, color=None,
-                 vdw_rad=None, cov_rad=None, ball_rad=None,
-                 occupancy=0.0, bfactor=0.0, charge=0.0, bonds_indexes=None):
+                 vdw_rad=None, cov_rad=None, ball_rad=None, occupancy=0.0,
+                 bfactor=0.0, charge=0.0, bonds_indexes=None, molecule=None):
         """ Class initializer """
         self.vm_object   = vismol_object
         self.vm_session  = vismol_object.vm_session
@@ -42,7 +42,7 @@ class Atom:
         self.index    = index   # - Remember that the "index" attribute refers to the numbering of atoms (it is not a zero base, it starts at 1 for the first atom)
         self.residue  = residue
         self.chain    = chain
-        self.molecule = None
+        self.molecule = molecule
 
         self.pos = pos     # - coordinates of the first frame
         self.unique_id = None
@@ -285,11 +285,11 @@ class Atom:
         if frame is None:
             frame  = self.vm_object.vm_session.frame
             #print (frame, len(self.vm_object.frames))
-            if len(self.vm_object.frames)-1 <= frame:
-                frame = len(self.vm_object.frames)-1
+            if len(self.molecule.frames)-1 <= frame:
+                frame = len(self.molecule.frames)-1
             else:
                 pass
-        return self.vm_object.frames[frame, self.atom_id]
+        return self.molecule.frames[frame, self.atom_id]
     
     def get_grid_position(self, gridsize=3, frame=None):
         """ Function doc """

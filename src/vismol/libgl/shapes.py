@@ -84,7 +84,7 @@ def _make_gl_dots_surface(program, vismol_object):
                                             colors=colors, dot_sizes=None)
     
     vismol_object.dots_surface_vao      = vao
-    vismol_object.dots_surface_buffers  = buffers
+    vismol_object.dots_surface_buffer   = buffers
     return True
 
 def _make_gl_ribbon_lines(program, vismol_object):

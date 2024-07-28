@@ -11,6 +11,7 @@ from logging import getLogger
 from vismol.model.atom import Atom
 from vismol.model.residue import Residue
 from vismol.model.chain import Chain
+from vismol.model.molecule import Molecule
 from vismol.core.vismol_object import VismolObject
 
 
@@ -149,33 +150,37 @@ cpdef load_pdb_file(vm_session, infile):
     atom_id = 0
     
     for _atom in topology:
-        if _atom["chain"] not in vm_object.chains.keys():
-            vm_object.chains[_atom["chain"]] = Chain(vm_object, name=_atom["chain"])
-        _chain = vm_object.chains[_atom["chain"]]
+        if vm_object.molecule is None:
+            vm_object.molecule = Molecule(vm_object)
+        _mol = vm_object.molecule
         
-        if _atom["resi"] not in _chain.residues.keys():
-            _r = Residue(vm_object, name=_atom["resn"], index=_atom["resi"],
-                         chain=_chain)
-            vm_object.residues[_atom["resi"]] = _r
-            _chain.residues[_atom["resi"]] = _r
+        if _atom["chain"] not in _mol.chains:
+            _mol.chains[_atom["chain"]] = Chain(vm_object, name=_atom["chain"],
+                                                molecule=_mol)
+        _chain = _mol.chains[_atom["chain"]]
+        
+        if _atom["resi"] not in _chain.residues:
+            _res = Residue(vm_object, name=_atom["resn"], index=_atom["resi"],
+                           chain=_chain)
+            _chain.residues[_atom["resi"]] = _res
         _residue = _chain.residues[_atom["resi"]]
         
         atom = Atom(vm_object, name=_atom["name"], index=_atom["index"],
                     residue=_residue, chain=_chain, atom_id=atom_id,
                     occupancy=_atom["occupancy"], bfactor=_atom["bfactor"],
-                    charge=_atom["charge"])
+                    charge=_atom["charge"], molecule=_mol)
         atom.unique_id = unique_id
         atom._generate_atom_unique_color_id()
         _residue.atoms[atom_id] = atom
-        vm_object.atoms[atom_id] = atom
+        _mol.atoms[atom_id] = atom
         atom_id += 1
         unique_id += 1
     
     logger.debug("Time used to build the tree: {:>8.5f} secs".format(time.time() - initial))
-    vm_object.frames = get_coords_from_raw_frames(rawframes, atom_id,
-                                                  vm_session.vm_config.n_proc)
-    vm_object.geom_center = np.mean(vm_object.frames[0], axis=0)
-    vm_object.find_bonded_and_nonbonded_atoms()
+    _mol.frames = get_coords_from_raw_frames(rawframes, atom_id,
+                                             vm_session.vm_config.n_proc)
+    _mol.geom_center = np.mean(_mol.frames[0], axis=0)
+    _mol.find_bonded_and_nonbonded_atoms()
     return vm_object
 
 

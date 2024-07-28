@@ -306,7 +306,7 @@ class VismolGLCore:
         if self.ctrl:
             if self.editing_mols:
                 for index, vm_object in self.vm_session.vm_objects_dic.items():
-                    if vm_object.editing:
+                    if vm_object.moving:
                         if up:
                             vm_object.model_mat = mop.my_glTranslatef(vm_object.model_mat, np.array([0.0, 0.0, -self.scroll]))
                         if down:
@@ -315,7 +315,7 @@ class VismolGLCore:
                 for key in self.vm_session.vm_geometric_object_dic.keys():
                     vm_object = self.vm_session.vm_geometric_object_dic[key]
                     if vm_object:
-                        if vm_object.editing:
+                        if vm_object.moving:
                             if up:
                                 vm_object.model_mat = mop.my_glTranslatef(vm_object.model_mat, np.array([0.0, 0.0, -self.scroll]))
                             if down:
@@ -387,13 +387,13 @@ class VismolGLCore:
             
             if self.editing_mols:
                 for index, vm_object in self.vm_session.vm_objects_dic.items():
-                    if vm_object.editing:
+                    if vm_object.moving:
                         vm_object.model_mat = mop.my_glMultiplyMatricesf(vm_object.model_mat, rot_mat)
                 
                 for key in self.vm_session.vm_geometric_object_dic.keys():
                     vm_object = self.vm_session.vm_geometric_object_dic[key]
                     if vm_object:
-                        if vm_object.editing:
+                        if vm_object.moving:
                             vm_object.model_mat = mop.my_glMultiplyMatricesf(vm_object.model_mat, rot_mat)
             else:
                 self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
@@ -436,13 +436,13 @@ class VismolGLCore:
                                      (pz - self.drag_pos_z) * self.glcamera.z_far / 10.0]))
         if self.editing_mols:
             for index, vm_object in self.vm_session.vm_objects_dic.items():
-                if vm_object.editing:
+                if vm_object.moving:
                     vm_object.model_mat = mop.my_glMultiplyMatricesf(vm_object.model_mat, pan_mat)
             
             for key in self.vm_session.vm_geometric_object_dic.keys():
                 vm_object = self.vm_session.vm_geometric_object_dic[key]
                 if vm_object:
-                    if vm_object.editing:
+                    if vm_object.moving:
                         vm_object.model_mat = mop.my_glMultiplyMatricesf(vm_object.model_mat, pan_mat)
         
         else:
@@ -525,7 +525,7 @@ class VismolGLCore:
         '''
         for vm_object in self.vm_session.vm_objects_dic.values():
             if vm_object.active:
-                if vm_object.frames.shape[0] > 0:
+                if vm_object.molecule.frames.shape[0] > 0:
                     #print(vm_object.representations)
                     for representation in vm_object.representations.values():
                         if representation is not None:
@@ -927,7 +927,7 @@ class VismolGLCore:
         
         if self.do_once:
             for vm_object in self.vm_session.vm_objects_dic.values():
-                for index, atom in vm_object.atoms.items():
+                for index, atom in vm_object.molecule.atoms.items():
                     text = atom.residue.name +'/'+ atom.name+'/'+str(atom.index)
                     frame = self._get_vismol_object_frame(atom.vm_object)
                     x, y, z = atom.coords(frame)
@@ -1401,11 +1401,11 @@ class VismolGLCore:
         """
         if self.vm_session.frame < 0:
             self.vm_session.frame = 0
-        if self.vm_session.frame >= vismol_object.frames.shape[0] - 1:
-            frame_coords = vismol_object.frames[vismol_object.frames.shape[0] - 1]
-            frame = vismol_object.frames.shape[0] - 1
+        if self.vm_session.frame >= vismol_object.molecule.frames.shape[0] - 1:
+            frame_coords = vismol_object.molecule.frames[vismol_object.molecule.frames.shape[0] - 1]
+            frame = vismol_object.molecule.frames.shape[0] - 1
         else:
-            frame_coords = vismol_object.frames[self.vm_session.frame]
+            frame_coords = vismol_object.molecule.frames[self.vm_session.frame]
             frame = self.vm_session.frame
         return frame_coords, frame
     
@@ -1413,8 +1413,8 @@ class VismolGLCore:
         """ Function doc """
         if self.vm_session.frame < 0:
             self.vm_session.frame = 0
-        if self.vm_session.frame >= vismol_object.frames.shape[0] - 1:
-            frame = vismol_object.frames.shape[0] - 1
+        if self.vm_session.frame >= vismol_object.molecule.frames.shape[0] - 1:
+            frame = vismol_object.molecule.frames.shape[0] - 1
         else:
             frame = self.vm_session.frame
         return frame

@@ -128,11 +128,11 @@ class VismolSession(Config):
         self.vm_objects_dic[len(self.vm_objects_dic)] = vismol_object
 
         # Update the atom_id_counter by adding the number of atoms in the new vismol_object
-        self.atom_id_counter += len(vismol_object.atoms)
+        self.atom_id_counter += len(vismol_object.molecule.atoms)
 
         # Iterate through the atoms in the vismol_object and add them to the atom_dic_id dictionary
         # using their unique_id as the key and the atom object as the value.
-        for atom in vismol_object.atoms.values():
+        for atom in vismol_object.molecule.atoms.values():
             self.atom_dic_id[atom.unique_id] = atom
 
         # If show_molecule is True, create representations for "lines" and "nonbonded" to display the object.
@@ -144,7 +144,7 @@ class VismolSession(Config):
 
             # If autocenter is True, center the view on the mass center of the vismol_object.
             if autocenter:
-                self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.geom_center)
+                self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.molecule.geom_center)
             else:
                 self.vm_glcore.queue_draw()
     
@@ -152,7 +152,7 @@ class VismolSession(Config):
         """ Probably would be better to join this with _add_vismol_object
         """
         vismol_object, show_molecule = parser.parse_file(self, infile)
-        vismol_object._generate_color_vectors(self.atom_id_counter)
+        vismol_object.generate_color_vectors()
         vismol_object.active = True
         self._add_vismol_object(vismol_object, show_molecule=show_molecule)
     
@@ -179,74 +179,74 @@ class VismolSession(Config):
                 vm_object.create_representation(rep_type = rep_type)
             show_hide_indexes = []
             if rep_type == "lines":
-                for bond in vm_object.bonds:
+                for bond in vm_object.molecule.bonds:
                     if bond.atom_i.lines and bond.atom_j.lines:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "sticks":
-                for bond in vm_object.bonds:
+                for bond in vm_object.molecule.bonds:
                     if bond.atom_i.sticks and bond.atom_j.sticks:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "dash":
-                for bond in vm_object.bonds:
+                for bond in vm_object.molecule.bonds:
                     if bond.atom_i.dash and bond.atom_j.dash:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "dynamic":
                 self.define_dynamic_bonds(selection = selection)
-                for bond in vm_object.bonds:
+                for bond in vm_object.molecule.bonds:
                     if bond.atom_i.dynamic and bond.atom_j.dynamic:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "dots":
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     if atom.dots:
                         show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "nonbonded":
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     if atom.nonbonded:
                         show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "impostor":
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     if atom.impostor:
                         show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "spheres":
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     if atom.spheres:
                         show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "stick_spheres":
-                for bond in vm_object.bonds:
+                for bond in vm_object.molecule.bonds:
                     if bond.atom_i.stick_spheres and bond.atom_j.stick_spheres:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
                 
                 
-                #for atom in vm_object.atoms.values():
+                #for atom in vm_object.molecule.atoms.values():
                 #    if atom.stick_spheres:
                 #        show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "vdw_spheres":
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     if atom.vdw_spheres:
                         show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "ribbons": # add by bachega at 02/02/2023
-                for bond in vm_object.c_alpha_bonds:
+                for bond in vm_object.molecule.c_alpha_bonds:
                     if bond.atom_i.ribbons and bond.atom_j.ribbons:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "ribbon_sphere":
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     if atom.ribbon_sphere and atom.name=='CA' and atom.residue.is_protein:
                         show_hide_indexes.append(atom.atom_id)
                 #print('show_hide_indexes',show_hide_indexes)
@@ -263,7 +263,7 @@ class VismolSession(Config):
                 raise NotImplementedError("Not implementer for 'cartoon' yet.")
             
             elif rep_type == "labels":
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     if atom.labels:
                         show_hide_indexes.append(atom.atom_id)
             
@@ -285,7 +285,7 @@ class VismolSession(Config):
         #return 0
         frame = self.frame + 1
         for i, vm_object in enumerate(self.vm_objects_dic.values()):
-            if frame < vm_object.frames.shape[0]:
+            if frame < vm_object.molecule.frames.shape[0]:
                 self.frame += 1
                 self.vm_glcore.updated_coords = True
                 break
@@ -438,7 +438,7 @@ class VismolSession(Config):
     #     """ Function doc
     #     """
     #     try:
-    #         self.vm_objects_dic[index].editing = not self.vm_objects_dic[index].editing
+    #         self.vm_objects_dic[index].moving = not self.vm_objects_dic[index].moving
     #         self.vm_glcore.queue_draw()
     #     except KeyError:
     #         logger.error("VismolObject with index {} not found".format(index))
@@ -455,7 +455,7 @@ class VismolSession(Config):
         
     #     for atom_index in indexes:
     #         vismol_object.atoms[atom_index].color = color
-    #     vismol_object._generate_color_vectors(do_colors=True, do_colors_idx=False,
+    #     vismol_object.generate_color_vectors(do_colors=True, do_colors_idx=False,
     #                                           do_colors_raindow=False, do_vdw_dot_sizes=False,
     #                                           do_cov_dot_sizes=False)
     #     self.vm_widget.queue_draw()
