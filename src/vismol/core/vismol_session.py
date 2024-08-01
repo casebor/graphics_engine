@@ -1,27 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  vismol_session.py
-#  
-#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
-#  
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#  
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-#  MA 02110-1301, USA.
-#  
-#  
 
 
 import os
@@ -33,7 +11,9 @@ from vismol.core.vismol_config import VismolConfig
 from vismol.core.vismol_selections import VismolPickingSelection as VMPick
 from vismol.core.vismol_selections import VismolViewingSelection as VMSele
 
+
 logger = getLogger(__name__)
+
 
 class Config:
     """ Class doc """
@@ -45,13 +25,13 @@ class Config:
         """ Function doc """
         
         if pk == 1:
-            self.picking_selections.pk_scolor['pk1'] = color
+            self.picking_selections.pk_scolor["pk1"] = color
         elif pk == 2:
-            self.picking_selections.pk_scolor['pk2'] = color
+            self.picking_selections.pk_scolor["pk2"] = color
         elif pk == 3:
-            self.picking_selections.pk_scolor['pk3'] = color
+            self.picking_selections.pk_scolor["pk3"] = color
         elif pk == 4:
-            self.picking_selections.pk_scolor['pk4'] = color
+            self.picking_selections.pk_scolor["pk4"] = color
         else:
             return False
         

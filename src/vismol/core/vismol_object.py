@@ -23,8 +23,6 @@ from vismol.libgl.representations import PickingDotsRepresentation
 from vismol.libgl.representations import SpheresRepresentation
 from vismol.libgl.representations import SticksRepresentation
 from vismol.libgl.representations import SurfaceRepresentation
-# from vismol.libgl.representations import WiresRepresentation
-# from vismol.libgl.representations import RibbonsRepresentation
 
 
 logger = getLogger(__name__)
@@ -69,6 +67,8 @@ class VismolObject:
                 rendering the selections.
         picking_dots_vao (OpenGL.VertexArray): OpenGL obejct necessary for
                 rendering the text in selections.
+        picking_dots_buffer (OpenGL.Buffer): OpenGL obejct necessary for
+                rendering the text in selections.
         colors (np.array): Numpy array containing the color information of all
                 the atoms of the molecule. This usually corresponds to the
                 element color of each atom.
@@ -78,8 +78,6 @@ class VismolObject:
                 color id is unique for a single atom in the whole session.
         colors_rainbow (np.array): Numpy array containing the color coding for
                 atoms in the rainbow scheme.
-        picking_dots_buffer (OpenGL.Buffer): OpenGL obejct necessary for
-                rendering the text in selections.
         dynamic_bonds (List): 
         c_alpha_bonds (List): 
         c_alpha_bonds (List): 

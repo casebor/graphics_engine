@@ -1,68 +1,72 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  vismol_selections.py
-#  
-#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
-#  
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#  
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-#  MA 02110-1301, USA.
-#  
-#  
+
 
 import time
 import numpy as np
+from logging import getLogger
 from vismol.utils import matrix_operations as mop
 from vismol.model.molecular_properties import solvent_dictionary as SOLV_DICT
 from vismol.core.vismol_object import VismolObject
 from vismol.model.atom import Atom
 
 
+logger = getLogger(__name__)
+
+
 class VismolViewingSelection:
-    """ Class doc """
+    """
+    TODO: Add description.
+
+    Attributes:
+        vismol_session (VismolSession): The VismolSession object to which this
+                object belongs.
+        active (bool): Whether or not this object is active.
+        selection_mode (str): The type of selection mode used. Defines how the
+                object are selected in Vismol, it can be atom, residue, chain,
+                molecule. TODO: Add other selection modes?
+        selected_objects (Set): A set of objects selected.
+        selected_atoms (Set): A set of atoms selected. TO_REVIEW
+        selected_atom_ids (Set): A set of atom ids selected. TO_REVIEW
+        selected_coords (np.arra): The coordinates of the geometric center for
+                the objects selected.
+    """
     
-    def __init__(self, vismol_session):
-        """ Class initialiser
+    def __init__(self, vismol_session: "VismolSession"):
         """
+        Args:
+            vismol_session (VismolSession): The VismolSession object to which
+                this object belongs.
+        
+        """
+        self.vm_session = vismol_session
         self.active = False
         self.selection_mode = "residue"
-        self.selected_objects = set() #dic of VisMol objects (obj)
-        self.selected_atoms = set() #List of atoms objects (obj)
-        self.selected_atom_ids = set() #List of atoms ids
-        self.selected_coords = None #coordinate (floats) x y z
-        self.vm_session = vismol_session
+        self.selected_objects = set()
+        self.selected_atoms = set()
+        self.selected_atom_ids = set()
+        self.selected_coords = None
     
-    def _clear_selection_buffer(self):
-        """ If the object selection is disabled,
-            all atoms in the system will be set to False
+    
+    def _clear_selection_buffer(self) -> None:
         """
-        if self.active:
-            pass
-        else:
+        Clears all the atoms selected in the system if this selection is
+        disabled.
+        
+        """
+        if not self.active:
             for vm_object in self.vm_session.vm_objects_dic.values():
                 for atom in vm_object.molecule.atoms.values():
                     atom.selected = False
-                    #atom.vm_object.selected_atom_ids.discard(atom.atom_id)
-    def _build_selected_atoms_coords_and_selected_objects_from_selected_atoms(self):
+    
+    
+    def _build_selected_atoms_coords_and_selected_objects_from_selected_atoms(self) -> None:
         """
         Build selected atoms' coordinates and selected objects from selected atoms.
         
-        Called latter on: selection_function_viewing_set
+        Called latter on selection_function_viewing_set
         
         """
-        coords = []
         # Iterate through all VismolObjects in the VismolSession
         for vm_object in self.vm_session.vm_objects_dic.values():
             # Check if the current frame is within the range of frames in the VismolObject
@@ -489,7 +493,7 @@ class VismolPickingSelection:
             
             self.vobject_picking = VismolObject(name                  = "pk1", 
                                                 index                 = -1,
-                                                vismol_session        = self.vm_session,
+                                                vm_session        = self.vm_session,
                                                 trajectory            = coords,
                                                 bonds_pair_of_indexes = [])
             

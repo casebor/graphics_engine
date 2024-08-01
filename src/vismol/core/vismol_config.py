@@ -7,12 +7,22 @@ import json
 
 
 class VismolConfig:
-    """ Class doc """
+    """
+    Class containing the configuration options for Vismol.
+    TODO: Some configuration options are not implemented yet, but they are used
+    in the code, need to update all the parameters :(
+    
+    Attributes:
+        vm_session (VismolSession): The Vismol session for which this
+                configuration is applied.
+        gl_parameters (Dict): Dictionary of parameters for the OpenGL engine.
+        n_procs (int): Number of cores to use.
+        represetations_available (List): List of represetations available for
+                the session.
+    """
     
     def __init__ (self, vm_session: "VismolSession"):
         """
-        Initialize VismolConfig.
-        
         Args:
             vm_session (VismolSession): The VismolSession object.
         """
@@ -62,13 +72,18 @@ class VismolConfig:
             "vdw_spheres", "picking_spheres", "static_freetype"}
     
     
-    def save_easyhybrid_config(self):
-        """Save the configuration to a JSON file."""
+    def save_easyhybrid_config(self) -> None:
+        """
+        Save the configuration to a JSON file.
+        
+        """
+        os.makedirs(os.path.join(os.environ["HOME"], ".VisMol"), exist_ok=True)
         config_path = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
         with open(config_path, "w") as config_file:
             json.dump(self.gl_parameters, config_file, indent=2)
     
-    def load_easyhybrid_config(self, config_path):
+    
+    def load_easyhybrid_config(self, config_path: str) -> None:
         """
         Load the configuration from a JSON file.
         
