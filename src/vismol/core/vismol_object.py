@@ -111,7 +111,7 @@ class VismolObject:
         
         # Dictionaries to store atoms, residues, chains, and molecules with their respective indexes as keys
         self.atoms = {}
-        self.residues = {}
+        #self.residues = {}
         self.chains = {}
         self.molecules = {}
 
