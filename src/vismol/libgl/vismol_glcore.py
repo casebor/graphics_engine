@@ -68,7 +68,7 @@ class VismolGLCore:
         self.core_shader_programs = {}
         self.representations_available = self.vm_config.representations_available
         self.sphere_selection = None
-        
+        self.info_atom = None #this will be used later in OBJ menu
         
     def initialize(self):
         """ Enables the buffers and other charasteristics of the OpenGL context.
@@ -252,6 +252,7 @@ class VismolGLCore:
                                                                         self.atom_picked.name,
                                                                         self.atom_picked.index,
                                                                         self.atom_picked.symbol)
+                            self.info_atom = self.atom_picked 
                             self.atom_picked = None
                             menu_type = "obj_menu"
                             info = label
