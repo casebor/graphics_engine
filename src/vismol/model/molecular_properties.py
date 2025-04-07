@@ -19,6 +19,7 @@ solvent_dictionary  = {
                        'WAT': 'O', 
                        'SOL': 'O', 
                        'HOH': 'O', 
+                       'H2O': 'O', 
                        }
 
 
