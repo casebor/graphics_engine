@@ -1560,7 +1560,14 @@ class SurfaceRepresentation(Representation):
         GL.glDisable(GL.GL_CULL_FACE)
         GL.glDisable(GL.GL_DEPTH_TEST)
 
-
+    def _check_vao_and_vbos(self):
+        #print(self.name)
+        self.shader_program = self.vm_glcore.shader_programs[self.name]
+        #self.sel_shader_program = self.vm_glcore.shader_programs[self.name + "_sel"]
+        if self.vao is None:
+            self._make_gl_representation_vao_and_vbos()
+        #if self.sel_vao is None:
+        #    self._make_gl_sel_representation_vao_and_vbos()
 
 class CartoonRepresentation(Representation):
     def __init__ (self, name = 'cartoon', active = True, rep_type = 'mol', vismol_object = None, vismol_glcore = None, indexes = []):
