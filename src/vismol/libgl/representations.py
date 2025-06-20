@@ -1554,7 +1554,8 @@ class SurfaceRepresentation(Representation):
         
         #GL.glDrawElementsInstanced(GL.GL_TRIANGLES, self.instances_elemns, GL.GL_UNSIGNED_INT, None, self.elements)
         GL.glDrawElements(GL.GL_LINES, int(len(self.indexes)), GL.GL_UNSIGNED_INT, None)
-        #GL.glDrawElements(GL.GL_TRIANGLES, int(len(self.indexes)*2), GL.GL_UNSIGNED_INT, None)
+        #GL.glDrawElements(GL.GL_TRIANGLES, int(len(self.indexes)), GL.GL_UNSIGNED_INT, None)
+        #GL.glDrawElements(GL.GL_TRIANGLE_STRIP, int(len(self.indexes)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_CULL_FACE)

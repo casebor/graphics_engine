@@ -326,6 +326,7 @@ class VismolSession(Config):
     
     def _selection_function_set(self, selected, _type=None, disable=True):
         """ Function doc """
+        print('selected', selected) 
         if self.picking_selection_mode: # True for picking mode
             if selected:
                 assert len(selected) == 1

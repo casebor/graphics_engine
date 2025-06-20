@@ -165,12 +165,17 @@ class VismolGLCore:
                 #print(self.shift, self.ctrl)
             
             if self.shift and not self.ctrl:
-                self.show_selection_box = True
-                self.selection_box.start = self.get_viewport_pos(mouse_x, mouse_y)
-                self.selection_box.end = self.get_viewport_pos(mouse_x, mouse_y)
-                self.selection_box.update_points()
-                self.selection_box_x = mouse_x
-                self.selection_box_y = self.height - mouse_y
+                #print('picking_selection_mode:',self.vm_session.picking_selection_mode)
+                #
+                if self.vm_session.picking_selection_mode: # bachega 06 / 18 /2025
+                    pass 
+                else: # bachega 06 / 18 /2025
+                    self.show_selection_box = True
+                    self.selection_box.start = self.get_viewport_pos(mouse_x, mouse_y)
+                    self.selection_box.end = self.get_viewport_pos(mouse_x, mouse_y)
+                    self.selection_box.update_points()
+                    self.selection_box_x = mouse_x
+                    self.selection_box_y = self.height - mouse_y
 
         if middle:
             self.picking_x = np.float32(mouse_x)
@@ -370,8 +375,11 @@ class VismolGLCore:
         dy =  dy*self.vm_config.gl_parameters['mouse_rotation_sensibility']
         angle = np.sqrt(dx**2 + dy**2) / (self.width + 1) * 180.0
         if self.shift:
-            self.selection_box.end = self.get_viewport_pos(self.mouse_x, self.mouse_y)
-            self.selection_box.update_points()
+            if self.vm_session.picking_selection_mode:
+                return False
+            else:
+                self.selection_box.end = self.get_viewport_pos(self.mouse_x, self.mouse_y)
+                self.selection_box.update_points()
         
         else:
             if self.ctrl:
@@ -717,7 +725,7 @@ class VismolGLCore:
         return shader
     
     def _selection_box_pick(self):
-        """ Selects a set of atoms from pixels obtained by the selection rectangle.  
+        """ Selects a set of atoms from pixels obtained by the rectangle selection.  
             This function (method) is called in the render method, when the 
             "self.selection_box_picking" attribute is active. 
         
@@ -730,10 +738,13 @@ class VismolGLCore:
         # In GTK, x=0 and y=0 set to upper left corner (unlike openGL input data, 
         # the following lines do the coordinate conversion) 
         
-        selection_box_x2 = self.mouse_x
-        selection_box_y2 = self.height - self.mouse_y
-        selection_box_width  = selection_box_x2 - self.selection_box_x
-        selection_box_height = selection_box_y2 - self.selection_box_y
+        try: # bachega 06 / 18 /2025
+            selection_box_x2 = self.mouse_x
+            selection_box_y2 = self.height - self.mouse_y
+            selection_box_width  = selection_box_x2 - self.selection_box_x
+            selection_box_height = selection_box_y2 - self.selection_box_y
+        except: # bachega 06 / 18 /2025
+            return False
         
         #Looking for the lower left corner of the checkbox
         if selection_box_width > 0 and selection_box_height > 0:
@@ -1358,11 +1369,24 @@ class VismolGLCore:
         #self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_surface,
         #                                            shaders_surface.fragment_shader_surface,
         #                                            shaders_surface.geometry_shader_surface)
+        
+        '''
         self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_lines,
                                                     shaders_surface.fragment_shader_lines,
                                                     shaders_surface.geometry_shader_lines)
         self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
                                                         shaders_spheres.fragment_shader_spheres)
+        #'''
+        
+        self.shader_programs["surface"] = self.load_shaders(shaders_surface.vertex_shader_lines,
+                                                    shaders_surface.fragment_shader_lines,
+                                                    shaders_surface.geometry_shader_lines)
+        self.shader_programs["surface_sel"] = self.load_shaders(shaders_spheres.vertex_shader_spheres,
+                                                        shaders_spheres.fragment_shader_spheres)
+    
+    
+    
+    
     '''
     def _compile_shader_cartoon(self):
         """ Function doc """
