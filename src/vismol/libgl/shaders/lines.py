@@ -4,7 +4,7 @@
 
 vertex_shader_lines   = """
 #version 330
-precision highp float; 
+precision highp float;
 precision highp int;
 
 uniform mat4 model_mat;
@@ -16,14 +16,16 @@ in vec3 vert_color;
 out vec3 geom_color;
 out vec4 geom_coord;
 
-void main(){
+void main() {
+    // Transformação para coordenadas da câmera (view space)
+    vec4 world_pos = model_mat * vec4(vert_coord, 1.0);
+    geom_coord = view_mat * world_pos;
     geom_color = vert_color;
-    geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
 }
 """
 geometry_shader_lines = """
 #version 330
-precision highp float; 
+precision highp float;
 precision highp int;
 
 layout (lines) in;
@@ -37,31 +39,40 @@ in vec4 geom_coord[];
 out vec3 frag_color;
 out vec4 frag_coord;
 
-void main(){
-    vec4 mid_coord = vec4((geom_coord[0].xyz + geom_coord[1].xyz)/2, 1.0);
-    gl_Position = proj_mat * geom_coord[0];
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
+void main() {
+    vec4 p0 = geom_coord[0];
+    vec4 p1 = geom_coord[1];
+    vec4 mid = vec4((p0.xyz + p1.xyz) * 0.5, 1.0);
+
+    vec3 c0 = geom_color[0];
+    vec3 c1 = geom_color[1];
+
+    // Primeiro segmento (p0 -> mid)
+    frag_color = c0;
+    frag_coord = p0;
+    gl_Position = proj_mat * p0;
     EmitVertex();
-    gl_Position = proj_mat * mid_coord;
-    frag_color = geom_color[0];
-    frag_coord = mid_coord;
+
+    frag_coord = mid;
+    gl_Position = proj_mat * mid;
     EmitVertex();
     EndPrimitive();
-    gl_Position = proj_mat * mid_coord;
-    frag_color = geom_color[1];
-    frag_coord = mid_coord;
+
+    // Segundo segmento (mid -> p1)
+    frag_color = c1;
+    frag_coord = mid;
+    gl_Position = proj_mat * mid;
     EmitVertex();
-    gl_Position = proj_mat * geom_coord[1];
-    frag_coord = geom_coord[1];
-    frag_color = geom_color[1];
+
+    frag_coord = p1;
+    gl_Position = proj_mat * p1;
     EmitVertex();
     EndPrimitive();
 }
 """
 fragment_shader_lines = """
-#version 330
-precision highp float; 
+#version 330 core
+precision highp float;
 precision highp int;
 
 uniform vec4 fog_color;
@@ -73,17 +84,20 @@ in vec4 frag_coord;
 
 out vec4 final_color;
 
-void main(){
-    float dist = abs(frag_coord.z);
-    if(dist>=fog_start){
-        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
-        final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
+void main() {
+    float dist = abs(frag_coord.z); // ou length(frag_coord.xyz), se preferir
+
+    // Cálculo do fator de névoa linear
+    float fog_factor = 1.0;
+    if (dist >= fog_start) {
+        fog_factor = clamp((fog_end - dist) / (fog_end - fog_start), 0.0, 1.0);
     }
-    else{
-       final_color = vec4(frag_color, 1.0);
-    }
+
+    // Interpolação linear entre a cor da névoa e a cor do fragmento
+    final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
 }
 """
+
 
 
 ################################## SELECTION ###################################
@@ -167,8 +181,8 @@ uniform mat4 view_mat;
 
 in vec3 vert_coord;
 in vec3 vert_color;
-const float vert_width = 0.000510;
-const float antialias_length = 0.058;
+const float vert_width = 0.01810;
+const float antialias_length = 0.040;
 
 out vec3 geom_color;
 out vec4 geom_coord;
@@ -321,15 +335,10 @@ in vec3 frag_color;
 
 out vec4 final_color;
 
-void main(){
+void main() {
     float dist = abs(frag_coord.z);
-    if(dist>=fog_start){
-        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
-        final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
-    }
-    else{
-       final_color = vec4(frag_color, 1.0);
-    }
+    float fog_factor = smoothstep(fog_end, fog_start, dist);
+    final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
 }
 """
 
