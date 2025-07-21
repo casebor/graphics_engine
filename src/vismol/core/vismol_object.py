@@ -505,11 +505,25 @@ class VismolObject:
             
             # Define Calpha backbone atoms
             self.define_Calpha_backbone()
-        else:
-            
+
+        else:            
             # Calculate bonds based on grid positions and covalent radii and return the results
             index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
                                             cov_rads, gridpos_list, gridsize, maxbond, tolerance)
+            #print (index_bonds)
+            
+            # Dynamic bonds is not working properly for pure QC system
+            #'''
+            bonds = index_bonds
+            new_bonds = []
+            for index in range (0,len(index_bonds), 2):
+                if [bonds[index], bonds[index+1]] in new_bonds or [bonds[index+1], bonds[index]] in new_bonds:
+                    pass
+                else:
+                    new_bonds.append([bonds[index], bonds[index+1]])
+            #print(new_bonds)
+            index_bonds = [item for sublista in new_bonds for item in sublista]
+            #'''
             return index_bonds
     
     def _bonds_from_pair_of_indexes_list(self, exclude_list = [['H','H']]):
@@ -818,7 +832,7 @@ class VismolObject:
             
 
         print('\n\n')
-        print (self.cell_colors)
+        #print (self.cell_colors)
 
 
 

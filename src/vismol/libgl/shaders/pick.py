@@ -190,6 +190,36 @@ void main(){
     index_color = vert_color;
 }
 """
+#fragment_shader_picking_dots_safe ='''
+##version 330 core
+#precision highp float;
+#precision highp int;
+#
+#in vec3 index_color;
+#out vec4 frag_color;
+#
+#void main() {
+#    // Coordenadas do ponto normalizadas de (0,0) a (1,1)
+#    vec2 coord = gl_PointCoord.xy;
+#    float dist = length(coord - vec2(0.5));
+#
+#    // Raio do círculo interno (cor do ponto)
+#    float inner_radius = 0.5;
+#    // Largura do contorno (ajustável)
+#    float border_thickness = 0.08;
+#    float outer_radius = inner_radius + border_thickness;
+#
+#    if (dist > outer_radius) {
+#        discard;
+#    } else if (dist > inner_radius) {
+#        // Região do contorno
+#        frag_color = vec4(0.0, 0.0, 0.0, 1.0); // preto
+#    } else {
+#        // Interior do ponto
+#        frag_color = vec4(index_color, 1.0);
+#    }
+#}
+#'''
 
 fragment_shader_picking_dots_safe = """
 #version 330
@@ -206,8 +236,6 @@ void main(){
 }
 
 """
-
-
 
 
 

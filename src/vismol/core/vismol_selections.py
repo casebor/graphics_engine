@@ -466,7 +466,7 @@ class VismolPickingSelection:
             else:
                 if self.vm_session.vm_geometric_object_dic[label]:
                     self.vm_session.vm_geometric_object_dic[label].representations["picking_spheres"].active = False
-                    print('here')
+                    #print('here')
                 else:
                     pass
                 pass

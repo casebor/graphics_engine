@@ -536,7 +536,10 @@ class SticksRepresentation(Representation):
         
         #GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         if self.is_dynamic:
-            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
+            # it's working  fine for QC and QC/MM but, 
+            # I had to set 'int(len(self.vm_object.index_bonds)+4)' once some bonds wasn't 
+            # properly appearing on the glArea
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)+4), GL.GL_UNSIGNED_INT, None)
         else:
             #normal rep
             GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)), GL.GL_UNSIGNED_INT, None)
@@ -1332,7 +1335,7 @@ class CartoonRepresentation(Representation):
         normals = self.normals2
         indexes = self.indexes2
         
-        print ('len(coords),len(colors), len(normals),len(indexes)', len(coords),len(colors), len(normals),len(indexes)  )
+        #print ('len(coords),len(colors), len(normals),len(indexes)', len(coords),len(colors), len(normals),len(indexes)  )
 
         self._make_gl_representation_vao_and_vbos (indexes    = indexes,
                                                    coords     = coords ,

@@ -171,7 +171,9 @@ class VismolSession(Config):
         """ Function doc """
         if selection is None:
             selection = self.selections[self.current_selection]
-        
+            #print('\n\n\selection.get_selection_info()')
+            #print(selection.get_selection_info())
+            #print('\n\n')
         self._change_attributes_for_atoms(selection.selected_atoms, rep_type, show)
         for vm_object in selection.selected_objects:
             if vm_object.representations[rep_type] is None:
@@ -267,14 +269,14 @@ class VismolSession(Config):
                         show_hide_indexes.append(atom.atom_id)
             
             if len(show_hide_indexes) > 0:
-                print('vm_object.representations[rep_type].active = True')
+                #print('vm_object.representations[rep_type].active = True')
                 vm_object.representations[rep_type].define_new_indexes_to_vbo(show_hide_indexes)
                 vm_object.representations[rep_type].active = True
                 vm_object.representations[rep_type].was_rep_ind_modified = True
                 vm_object.representations[rep_type].was_sel_ind_modified = True
             else:
                 vm_object.representations[rep_type].active = False
-                print('vm_object.representations[rep_type].active = False')
+                #print('vm_object.representations[rep_type].active = False')
 
         self.vm_widget.queue_draw()
         return selection
@@ -316,7 +318,7 @@ class VismolSession(Config):
         #for 
         self.picking_selections.update_pki_pkj_rep_coordinates()
         self.vm_widget.queue_draw()
-        print('\n\n\nuhuuu')
+        #print('\n\n\nuhuuu')
         #if self.picking_selection_mode:
         #    self.picking_selections.print_pk_distances()
         
@@ -326,7 +328,7 @@ class VismolSession(Config):
     
     def _selection_function_set(self, selected, _type=None, disable=True):
         """ Function doc """
-        print('selected', selected) 
+        #print('selected', selected) 
         if self.picking_selection_mode: # True for picking mode
             if selected:
                 assert len(selected) == 1
@@ -359,7 +361,33 @@ class VismolSession(Config):
         tolerance = self.vm_config.gl_parameters['bond_tolerance']
         vobject.dynamic_bonds = []
         for frame in range(len(vobject.frames)):            
-            bonds = vobject.find_bonded_and_nonbonded_atoms(selection=selection_dict, frame=frame, internal = False, tolerance = tolerance)
+            bonds = vobject.find_bonded_and_nonbonded_atoms(selection=selection_dict, 
+                                                            frame=frame, internal = False, 
+                                                            tolerance = tolerance)
+            
+            '''       
+            new_bonds = []
+
+            for index in range (0,len(bonds), 2):
+                print(bonds[index], bonds[index+1])
+                
+                if [bonds[index], bonds[index+1]] in new_bonds or [bonds[index+1], bonds[index]] in new_bonds:
+                    pass
+                else:
+                    new_bonds.append([bonds[index], bonds[index+1]])
+            print(new_bonds)
+            #bonds = []
+            bonds = [item for sublista in new_bonds for item in sublista]
+            #for b in new_bonds:
+            #    bonds.append(b[0], b[1])
+            '''
+            #bonds.append(0)
+            #bonds.append(0)
+            #bonds.append(0)
+            #bonds.append(0)
+            #
+            #print( bonds)
+
             vobject.dynamic_bonds.append(bonds)
             #print(len(bonds), bonds)
         #print(vobject.dynamic_bonds)
