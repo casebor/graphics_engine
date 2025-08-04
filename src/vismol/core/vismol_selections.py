@@ -493,9 +493,9 @@ class VismolPickingSelection:
             
             self.vobject_picking = VismolObject(name                  = "pk1", 
                                                 index                 = -1,
-                                                vm_session        = self.vm_session,
-                                                trajectory            = coords,
-                                                bonds_pair_of_indexes = [])
+                                                vm_session        = self.vm_session)
+                                                # trajectory            = coords,
+                                                # bonds_pair_of_indexes = [])
             
             self.vobject_picking.set_model_matrix(self.vm_session.vm_glcore.model_mat)
             
