@@ -135,7 +135,7 @@ class Molecule:
             frame = self.frames.shape[0] - 1
         return np.mean(self.frames[frame], axis=0)
     
-    def define_bonds_from_external (self, index_bonds = [], internal = True):
+    def define_bonds_from_external(self, index_bonds = [], internal = True):
         """ Function doc """
         if internal is True:
             self.index_bonds = index_bonds
@@ -149,8 +149,8 @@ class Molecule:
         else:
             return index_bonds
     
-    def find_bonded_and_nonbonded_atoms(self, selection=None, frame=0, gridsize=1.2,
-                                         maxbond=2.4, tolerance=1.4, internal = True, debug = False):
+    def build_bonded_and_nonbonded_atoms(self, frame=0, gridsize=1.2,
+                                        maxbond=2.4, tolerance=1.4):
         """
         Function doc: Determines bonded and nonbonded atoms based on selection in a VismolObject.
         
@@ -162,20 +162,20 @@ class Molecule:
         - tolerance: Safety factor that multiplies the term (ra_cov + rb_cov)**2 (default is 1.4).
         - internal: If True, calculates the bindings for the object itself (used in the object's genesis).
                     If False, returns a list of atom_ids representing the bonds between atoms.
-
+        
         Returns:
         If internal is True, the function updates the VismolObject's internal attributes:
         - index_bonds: List of pairs of atom indexes representing the bonded atoms.
         - bonds: List of Bond objects representing the bonds between atoms.
         - topology: Dictionary representing the atom topology and connectivity.
         - Non-bonded interactions and other attributes are also updated.
-
+        
         If internal is False, the function returns a list of atom_ids representing the bonds between atoms.
-
+        
         Note: This function calculates bonds between atoms based on their positions and covalent radii.
         
             Receives a dictionary as a selection:
-
+        
             selection = {'atom_id': atom_object, ...} ()
             
             frame - (frame number)
@@ -184,49 +184,140 @@ class Molecule:
             
             maxbond - (Size of the maximum bond to be monitored. Bonds greater than "maxbond" 
             may be disregarded. Default is: 2.4 A)
-
+        
             tolerance (Safety factor that multiplies the term (ra_cov + rb_cov)**2. Default is: 1.4)
-
+        
             internal (If True, calculates the bindings for the object itself. Used in the object's 
             
             genesis. If False, returns a list of atom_ids like  [0,1, # bond  between 0 and 1 
                                                                  1,2, # bond  between 1 and 2
                                                                  0,3] # bond  between 0 and 3 )
-        
-
         """
         # Check if internal is True and there is already information about contacts.
-        if internal:
-            if self.index_bonds is not None:
-                logger.critical("It seems that there is already information about "\
-                    "the contacts in this VismolObject, trying to override the data "\
-                    "can produce serious problems :(")
-        
+        if self.index_bonds is not None:
+            logger.critical("It seems that there is already information about "\
+                "the contacts in this VismolObject, trying to override the data "\
+                "can produce serious problems :(")
         
         # Initialize variables and data structures
         initial = time.time()
-        atoms_frame_mask = np.zeros(len(self.atoms), bool)
         if self.cov_radii_array is None:
             self.cov_radii_array = np.empty(len(self.atoms), dtype=np.float32)
             for i, atom in self.atoms.items():
                 self.cov_radii_array[i] = atom.cov_rad
         
-        # Create a mask to identify atoms in the frame (all atoms if selection is None)
-        if selection is None:
-            selection = self.atoms
-            atoms_frame_mask[:] = True
-        else:
-            atoms_frame_mask[:] = False
-            for atom in selection.values():
-                atoms_frame_mask[atom.atom_id] = True
+        # Extract relevant data for bond calculation
+        cov_rads = self.cov_radii_array
+        coords = self.frames[frame]
         
+        # Generate indexes and grid positions for each atom in the selection
+        indexes = []
+        gridpos_list = []
+        for atom in self.atoms.values():
+            indexes.append(atom.atom_id)
+            gridpos_list.append(atom.get_grid_position(gridsize=gridsize, frame=frame))
+        logger.debug("Time used for preparing the atom mask, covalent radii list "\
+                         "and grid positions: {}".format(time.time() - initial))
+        
+        # Calculate bonds based on grid positions and covalent radii
+        initial = time.time()
+        self.index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
+                                        cov_rads, gridpos_list, gridsize,
+                                        maxbond, tolerance)
+        msg = """Building grid elements  :
+    Total number of Atoms   : {}
+    Gridsize                : {}
+    Bonds                   : {}
+    Bonds calcultation time : {} seconds""".format(len(self.atoms), gridsize,
+                                len(self.index_bonds), time.time() - initial)
+        logger.info(msg)
+        
+        # Create Bond objects and update atom bond lists
+        self._bonds_from_pair_of_indexes_list()
+        
+        # Generate non-bonded interactions from bonded atoms
+        self._get_non_bonded_from_bonded_list()
+        
+        # Generate atom topology from index_bonds
+        # TODO: bachega's code
+        initial = time.time()
+        self._generate_topology_from_index_bonds()
+        
+        # Define molecules based on the atom topology
+        # self.define_molecules()
+        
+        final = time.time()
+        print('        Defining molecule indexes: ', final - initial)
+        
+        # Define Calpha backbone atoms
+        self.define_Calpha_backbone()
+    
+    def find_bonded_and_nonbonded_atoms(self, selection, frame=0, gridsize=1.2,
+                                        maxbond=2.4, tolerance=1.4):
+        """
+        Function doc: Determines bonded and nonbonded atoms based on selection in a VismolObject.
+        
+        Parameters:
+        - selection: A dictionary containing the selected atoms (optional).
+        - frame: Frame number for the atom coordinates (default is 0).
+        - gridsize: Grid size for bond calculation (usually should not be changed, default is 0.8).
+        - maxbond: Size of the maximum bond to be monitored (bonds greater than maxbond may be disregarded, default is 2.4 Å).
+        - tolerance: Safety factor that multiplies the term (ra_cov + rb_cov)**2 (default is 1.4).
+        - internal: If True, calculates the bindings for the object itself (used in the object's genesis).
+                    If False, returns a list of atom_ids representing the bonds between atoms.
+        
+        Returns:
+        If internal is True, the function updates the VismolObject's internal attributes:
+        - index_bonds: List of pairs of atom indexes representing the bonded atoms.
+        - bonds: List of Bond objects representing the bonds between atoms.
+        - topology: Dictionary representing the atom topology and connectivity.
+        - Non-bonded interactions and other attributes are also updated.
+        
+        If internal is False, the function returns a list of atom_ids representing the bonds between atoms.
+        
+        Note: This function calculates bonds between atoms based on their positions and covalent radii.
+        
+            Receives a dictionary as a selection:
+        
+            selection = {'atom_id': atom_object, ...} ()
+            
+            frame - (frame number)
+            
+            grid_size - (usually should not be changed. Default is: 0.8)
+            
+            maxbond - (Size of the maximum bond to be monitored. Bonds greater than "maxbond" 
+            may be disregarded. Default is: 2.4 A)
+        
+            tolerance (Safety factor that multiplies the term (ra_cov + rb_cov)**2. Default is: 1.4)
+        
+            internal (If True, calculates the bindings for the object itself. Used in the object's 
+            
+            genesis. If False, returns a list of atom_ids like  [0,1, # bond  between 0 and 1 
+                                                                 1,2, # bond  between 1 and 2
+                                                                 0,3] # bond  between 0 and 3 )
+        """
+        # Initialize variables and data structures
+        # initial = time.time()
+        # atoms_frame_mask = np.zeros(len(self.atoms), bool)
+        assert self.cov_radii_array is not None
+            # self.cov_radii_array = np.empty(len(self.atoms), dtype=np.float32)
+            # for i, atom in self.atoms.items():
+            #     self.cov_radii_array[i] = atom.cov_rad
+        
+        # # Create a mask to identify atoms in the frame (all atoms if selection is None)
+        # if selection is None:
+        #     selection = self.atoms
+        #     atoms_frame_mask[:] = True
+        # else:
+        #     atoms_frame_mask[:] = False
+        #     for atom in selection.values():
+        #         atoms_frame_mask[atom.atom_id] = True
         
         # Extract relevant data for bond calculation
         #cov_rads = self.cov_radii_array[atoms_frame_mask]
         #coords = self.frames[frame][atoms_frame_mask]
         cov_rads = self.cov_radii_array
-        coords = self.frames[frame]#[atoms_frame_mask]
-        
+        coords = self.frames[frame]
         
         # Generate indexes and grid positions for each atom in the selection
         indexes = []
@@ -235,50 +326,13 @@ class Molecule:
             indexes.append(atom.atom_id)
             gridpos_list.append(atom.get_grid_position(gridsize=gridsize, frame=frame))
         
-        if debug:
-            logger.debug("Time used for preparing the atom mask, covalent radii list "\
-                         "and grid positions: {}".format(time.time() - initial))
+        # logger.debug("Time used for preparing the atom mask, covalent radii list "\
+        #                  "and grid positions: {}".format(time.time() - initial))
         
-        
-        # Calculate bonds based on grid positions and covalent radii
-        if internal is True:
-            initial = time.time()
-            self.index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
-                                            cov_rads, gridpos_list, gridsize, maxbond, tolerance)
-            msg = """Building grid elements  :
-        Total number of Atoms   : {}
-        Gridsize                : {}
-        Bonds                   : {}
-        Bonds calcultation time : {} seconds""".format(len(selection), gridsize,
-                                    len(self.index_bonds), time.time() - initial)
-            logger.info(msg)
-            
-            # Create Bond objects and update atom bond lists
-            self._bonds_from_pair_of_indexes_list()
-            
-            # Generate non-bonded interactions from bonded atoms
-            self._get_non_bonded_from_bonded_list()
-            
-            # Generate atom topology from index_bonds
-            #bachega's code
-            initial = time.time()
-            self._generate_topology_from_index_bonds()
-            
-            # Define molecules based on the atom topology
-            # self.define_molecules()
-            
-            
-            final = time.time()
-            print('        Defining molecule indexes: ', final - initial)
-            
-            # Define Calpha backbone atoms
-            self.define_Calpha_backbone()
-        else:
-            
-            # Calculate bonds based on grid positions and covalent radii and return the results
-            index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
-                                            cov_rads, gridpos_list, gridsize, maxbond, tolerance)
-            return index_bonds
+        # Calculate bonds based on grid positions and covalent radii and return the results
+        index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords, cov_rads,
+                                    gridpos_list, gridsize, maxbond, tolerance)
+        return index_bonds
     
     def _bonds_from_pair_of_indexes_list(self, exclude_list = [['H','H']]):
         """ 
@@ -289,7 +343,7 @@ class Molecule:
         self.index_bonds = [0,1  , 0,4  ,  1,3  , ...]
         self.bonds = [bond1(obj), bond2(obj), bond3(obj), ...] 
         """
-        assert self.bonds is None # Ensure the bonds list is not already initialized
+        # assert self.bonds is None # Ensure the bonds list is not already initialized
         self.bonds = [] # Initialize an empty list to store the Bond objects
         
         new_index_bonds = []
@@ -335,7 +389,7 @@ class Molecule:
     
     def _get_non_bonded_from_bonded_list(self):
         """ Function doc """
-        assert self.non_bonded_atoms is None
+        # assert self.non_bonded_atoms is None
         bonded_set = set(self.index_bonds)
         self.non_bonded_atoms = []
         for i, atom in self.atoms.items():

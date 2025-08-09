@@ -32,7 +32,7 @@ def _load_aux_file(vm_session: "VismolSession", infile: str) -> "VismolObject":
     
     """
     vm_object = AUXFiles.load_aux_file(vm_session, infile)
-    vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
+    # vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
     return vm_object
 
 
@@ -49,7 +49,7 @@ def _load_gro_file(vm_session: "VismolSession", infile: str) -> "VismolObject":
     
     """
     vm_object = GROFiles.load_gro_file(vm_session, infile)
-    vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
+    # vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
     return vm_object
 
 
@@ -66,7 +66,7 @@ def _load_mol2_file(vm_session: "VismolSession", infile: str) -> "VismolObject":
     
     """
     vm_object = MOL2Files.load_mol2_files(vm_session, infile)
-    vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
+    # vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
     return vm_object
 
 
@@ -83,7 +83,7 @@ def _load_pdb_file(vm_session: "VismolSession", infile: str) -> "VismolObject":
     
     """
     vm_object = PDBFiles.load_pdb_file(vm_session, infile)
-    vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
+    # vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
     return vm_object
 
 
@@ -100,7 +100,7 @@ def _load_psf_file(vm_session: "VismolSession", infile: str) -> "VismolObject":
     
     """
     vm_object = PSFFiles.load_PSF_topology_file(vm_session, infile)
-    vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
+    # vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
     return vm_object
 
 
@@ -117,7 +117,7 @@ def _load_amber_top_file(vm_session: "VismolSession", infile: str) -> "VismolObj
     
     """
     vm_object = AMBERFiles.load_amber_topology_file(vm_session, infile)
-    vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
+    # vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
     return vm_object
 
 
@@ -134,7 +134,7 @@ def _load_xyz_file(vm_session: "VismolSession", infile: str) -> "VismolObject":
     
     """
     vm_object = XYZFiles.load_xyz_file(vm_session, infile)
-    vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
+    # vm_object.set_model_matrix(vm_session.vm_widget.vm_glcore.model_mat)
     return vm_object
 
 

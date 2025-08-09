@@ -1,11 +1,13 @@
-# vismol.toml
-
 [build-system]
-requires = ["setuptools>=40.0"]
+requires = [
+    "setuptools>=40.0",
+    "Cython>=3.1.2",
+    "numpy>=2.0.2",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "vismol"
+name = "Vismol"
 version = "0.0.1"
 authors = [
     { "name" = "Carlos Eduardo Sequeiros Borja", email = "casebor@gmail.com" },
@@ -15,11 +17,13 @@ description = "A molecular viewer library using modern OpenGL"
 readme = "README.md"
 license = { file = "LICENSE" }
 dependencies = [
-    "numpy>=1.20.0",
-    "Cython>=0.29.12",
-    "PyOpenGL>=3.1.0"
+    "numpy>=2.0.2",
+    "Cython>=3.1.2",
+    "PyOpenGL>=3.1.0",
+    "PyGObject>=3.46.0",
+    "freetype-py>=2.5.1"
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -27,5 +31,5 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/casebor/graphics_engines"
-"Bug Tracker" = "https://github.com/casebor/graphics_engines/issues"
+"Homepage" = "https://github.com/casebor/Vismol"
+"Bug Tracker" = "https://github.com/casebor/Vismol/issues"

@@ -183,10 +183,8 @@ def load_amber_topology_file(vm_session: "VismolSession", infile: str, gridsize:
         bonds_pair_of_indexes.append(bond[1])
     
     name = os.path.basename(filename)
-    vm_object  = VismolObject.VismolObject(name = name, atoms = atoms,
-                                           vm_session = vm_session,
-                                           bonds_pair_of_indexes = bonds_pair_of_indexes,
-                                           trajectory = [],
-                                           auto_find_bonded_and_nonbonded = False)
+    vm_object  = VismolObject(name=name, atoms=atoms, vm_session=vm_session,
+                              bonds_pair_of_indexes=bonds_pair_of_indexes,
+                              trajectory=[], auto_find_bonded_and_nonbonded=False)
     return vm_object
 

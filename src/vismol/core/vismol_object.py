@@ -135,12 +135,16 @@ class VismolObject:
         are for the selection dots and the labels.
         
         """
-        self.core_representations["picking_dots"] = PickingDotsRepresentation(self,
-                self.vm_session.vm_glcore, active=True,
-                indexes=list(self.molecule.atoms.keys()))
-        self.core_representations["dash"] = DashedLinesRepresentation(self,
-                self.vm_session.vm_glcore, active=True,
-                indexes=self.molecule.index_bonds)
+        from vismol.gui.vismol_widget_main import VismolWidgetMain
+        if isinstance(self.vm_session.vm_widget, VismolWidgetMain):
+            self.core_representations["picking_dots"] = PickingDotsRepresentation(self,
+                    self.vm_session.vm_glcore, active=True,
+                    indexes=list(self.molecule.atoms.keys()))
+            self.core_representations["dash"] = DashedLinesRepresentation(self,
+                    self.vm_session.vm_glcore, active=True,
+                    indexes=self.molecule.index_bonds)
+        else:
+            print("This is not the main widget")
     
     
     def create_representation(self, indexes: List=None, rep_type: str="lines") -> None:
@@ -251,6 +255,7 @@ class VismolObject:
         self.color_indexes = np.empty([atom_qtty, 3], dtype=np.float32)
         self.colors_rainbow = np.empty([atom_qtty, 3], dtype=np.float32)
         for i, atom in _mol_atoms.items():
+            atom.generate_atom_unique_color_id()
             self.colors[i] = atom.color
             self.color_indexes[i] = atom.color_id
             if i <= 1*quarter:
@@ -273,4 +278,35 @@ class VismolObject:
         
         """
         self.model_mat = np.copy(mat)
+    
+    def add_new_atom(self, atom: Atom, unique_id: int):
+        """ Docs
+        """
+        if self.molecule is None:
+            molecule = Molecule(self, name="Molecule")
+            self.molecule = molecule
+            chain = Chain(self, name="BX", molecule=molecule)
+            molecule.chains[chain.name] = chain
+            residue = Residue(self, name="RX", index=1, chain=chain)
+            chain.residues[residue.index] = residue
+            atom.residue = residue
+            atom.chain = chain
+            atom.molecule = molecule
+            residue.atoms[atom.atom_id] = atom
+            molecule.atoms[atom.atom_id] = atom
+            molecule.frames = np.zeros([1,1,3], dtype=np.float32)
+            molecule.frames[0,0] = atom.pos
+            molecule.build_bonded_and_nonbonded_atoms()
+        else:
+            residue = self.molecule.chains["BX"].residues[1]
+            atom.residue = residue
+            atom.chain = self.molecule.chains["BX"]
+            atom.molecule = self.molecule
+            residue.atoms[atom.atom_id] = atom
+            self.molecule.atoms[atom.atom_id] = atom
+            frame = np.vstack((self.molecule.frames[0], np.array([atom.pos])))
+            self.molecule.frames = np.empty([1, frame.shape[0], 3], dtype=np.float32)
+            self.molecule.frames[0] = frame
+            self.molecule.cov_radii_array = None
+            self.molecule.build_bonded_and_nonbonded_atoms()
     

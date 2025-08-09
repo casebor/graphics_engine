@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  Copyright 2021 Carlos Eduardo Sequeiros Borja <carseq@amu.edu.pl>
-#  
+
 
 import numpy as np
 import vismol.utils.matrix_operations as mop

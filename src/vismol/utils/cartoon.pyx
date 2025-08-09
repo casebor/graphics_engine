@@ -1,10 +1,7 @@
-#!python
-#cython: language_level=3
 #!/usr/bin/env python3
+#cython: language_level=3
 # -*- coding: utf-8 -*-
-#
-#  Copyright 2022 Carlos Eduardo Sequeiros Borja <carseq@amu.edu.pl>
-#  
+
 
 cimport numpy
 import cython

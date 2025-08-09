@@ -1,28 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  glcamera.py
-#  
-#  Copyright 2016 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
-#  
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#  
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-#  MA 02110-1301, USA.
-#  
-#  
 
-import math
+
 import numpy as np
 import vismol.utils.matrix_operations as mop
 from logging import getLogger
@@ -142,7 +121,7 @@ class GLCamera():
     
     def get_modelview_position(self, model_matrix):
         modelview = mop.my_glMultiplyMatricesf(model_matrix, self.view_matrix)
-        crd_xyz = -1 * np.mat(modelview[:3,:3]) * np.mat(modelview[3,:3]).T
+        crd_xyz = -1 * np.asmatrix(modelview[:3,:3]) * np.asmatrix(modelview[3,:3]).T
         return crd_xyz.A1
     
     def _normalize_angles(self):
@@ -173,8 +152,8 @@ class GLCamera():
                position[2]!=target[2])
         direction = target - position
         direction /= np.linalg.norm(direction)
-        self.vertical_angle = -math.asin(direction[1])*180/math.pi
-        self.horizontal_angle = -(math.atan2(-direction[0], -direction[2])*180/math.pi)
+        self.vertical_angle = -np.arcsin(direction[1])*180/np.pi
+        self.horizontal_angle = -(np.arctan2(-direction[0], -direction[2])*180/np.pi)
         self._normalize_angles()
         return True
     
@@ -235,10 +214,10 @@ class GLCamera():
                 True
         """
         self.fog_end = self.z_far
-        self.fog_start = self.fog_end - self.min_zfar 
+        self.fog_start = self.fog_end - self.min_zfar
         return True
     
-    def print_parms(self):
+    def print_params(self):
         """ Prints camera parameters in the terminal. Method created only for
             debugging purposes. It will come out in the final distribution?
         """

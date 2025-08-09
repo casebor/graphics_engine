@@ -1,26 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  atom.py
-#  
-#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
-#  
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#  
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-#  MA 02110-1301, USA.
-#  
-#  
+
 
 import numpy as np
 #from vismol.model.molecular_properties import ATOM_TYPES
@@ -52,6 +32,7 @@ class Atom:
             self.symbol = self._get_symbol()
         else:
             self.symbol = symbol
+        # TODO: What is the difference between index and atom_id?
         self.atom_id = atom_id
         
         if color is None:
@@ -229,12 +210,12 @@ class Atom:
         """
         try:
             color = self.vm_object.color_palette[self.name]
+            # print(self.symbol, "Atom", color)
         except KeyError:
-            # #print(self.symbol, "Atom")
             color = self.vm_object.color_palette[self.symbol]
         return np.array(color, dtype=np.float32)
     
-    def _generate_atom_unique_color_id(self):
+    def generate_atom_unique_color_id(self):
         ATOM_TYPES = self.vm_session.periodic_table.elements_by_symbol
         """ Function doc """
         r = (self.unique_id & 0x000000FF) >> 0

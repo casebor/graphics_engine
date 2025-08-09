@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#cython: language_level=3
 # -*- coding: utf-8 -*-
 
 
@@ -41,7 +42,7 @@ cpdef get_list_of_atoms_from_rawframe(raw_frames):
     return atoms
 
 
-cpdef get_topology(infile):
+cpdef get_atoms_info_and_frames(infile):
     """ This function should return the list of tuples with the information of
         the atoms in the PDB file
     """
@@ -142,17 +143,19 @@ cpdef get_coords_from_file(infile, atom_qtty, n_proc):
 
 cpdef load_pdb_file(vm_session, infile):
     vm_object_name = os.path.basename(infile)
-    topology, rawframes = get_topology(infile)
-    vm_object = VismolObject(vm_session, len(vm_session.vm_objects_dic),
+    atoms_info, rawframes = get_atoms_info_and_frames(infile)
+    vm_object = VismolObject(vm_session, index=len(vm_session.vm_objects_dic),
                              name=vm_object_name)
+    vm_object.molecule = Molecule(vm_object)
+    _mol = vm_object.molecule
     unique_id = len(vm_session.atom_dic_id)
     initial = time.time()
     atom_id = 0
     
-    for _atom in topology:
-        if vm_object.molecule is None:
-            vm_object.molecule = Molecule(vm_object)
-        _mol = vm_object.molecule
+    for _atom in atoms_info:
+        # if vm_object.molecule is None:
+        #     vm_object.molecule = Molecule(vm_object)
+        # _mol = vm_object.molecule
         
         if _atom["chain"] not in _mol.chains:
             _mol.chains[_atom["chain"]] = Chain(vm_object, name=_atom["chain"],
@@ -170,7 +173,7 @@ cpdef load_pdb_file(vm_session, infile):
                     occupancy=_atom["occupancy"], bfactor=_atom["bfactor"],
                     charge=_atom["charge"], molecule=_mol)
         atom.unique_id = unique_id
-        atom._generate_atom_unique_color_id()
+        # atom._generate_atom_unique_color_id()
         _residue.atoms[atom_id] = atom
         _mol.atoms[atom_id] = atom
         atom_id += 1
@@ -180,7 +183,5 @@ cpdef load_pdb_file(vm_session, infile):
     _mol.frames = get_coords_from_raw_frames(rawframes, atom_id,
                                              vm_session.vm_config.n_proc)
     _mol.geom_center = np.mean(_mol.frames[0], axis=0)
-    _mol.find_bonded_and_nonbonded_atoms()
+    _mol.build_bonded_and_nonbonded_atoms()
     return vm_object
-
-

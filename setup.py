@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  Copyright 2021 Carlos Eduardo Sequeiros Borja <carseq@amu.edu.pl>
-#  
+
 
 import numpy as np
 from Cython.Build import cythonize
 from setuptools import setup, Extension, find_packages
+
 
 extensions = [
     Extension("vismol.utils.matrix_operations",
@@ -33,16 +32,13 @@ with open("LICENSE", "r") as f:
     license = f.read()
 
 setup(
-    name="vismol",
-    version=__import__("src").__version__,
+    name="Vismol",
     description="Python molecular viewer library",
-    url="https://github.com/casebor/graphics_engines",
+    url="https://github.com/casebor/Vismol",
     project_urls={
-        "Source": "https://github.com/casebor/graphics_engines"
+        "Source": "https://github.com/casebor/Vismol"
         },
-    python_requires=">=3.7",
-    author=__import__("src").__author__,
-    author_email=__import__("src").__mail__,
+    python_requires=">=3.9",
     license=license,
     package_dir={"": "src"},
     packages=find_packages(where="src"),
@@ -52,17 +48,10 @@ setup(
         # "gui": ["gtk_widgets/*.glade"],
         # "libgl": ["fonts/*.ttf"],
     },
-    scripts=["scripts/vismol_simple.py"],
-    install_requires=[
-        "numpy>=1.20.0",
-        "Cython>=0.29.12",
-        "PyOpenGL>=3.1.0",
-        "PyGObject>=3.46.0",
-        "freetype-py>=2.4.0"
-        ],
+    scripts=["scripts/Vismol_simple.py"],
     classifiers = [
         "Programming Language :: Python :: 3",
-        "License :: Creative Commons Attribution-NonCommercial 4.0",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: Unix",
         "Intended Audience :: Science/Research"
         ],

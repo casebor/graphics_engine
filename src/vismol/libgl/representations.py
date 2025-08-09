@@ -1,27 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  representations.py
-#  
-#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
-#  
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#  
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-#  MA 02110-1301, USA.
-#  
-#  
+
 
 import ctypes
 import numpy as np
@@ -43,9 +22,7 @@ class Representation:
         self.active = active
         self.indexes = np.array(indexes, dtype=np.uint32)
         self.elements = np.uint32(self.indexes.shape[0])
-        
         self.is_dynamic = is_dynamic
-        
         self.was_rep_modified = False
         self.was_sel_modified = False
         self.was_col_modified = False
@@ -71,7 +48,6 @@ class Representation:
         self.sel_shader_program = None
     
     def _check_vao_and_vbos(self):
-        #print(self.name)
         self.shader_program = self.vm_glcore.shader_programs[self.name]
         self.sel_shader_program = self.vm_glcore.shader_programs[self.name + "_sel"]
         if self.vao is None:
@@ -223,6 +199,42 @@ class Representation:
         """ Function doc """
         self.indexes = np.array(input_indexes, dtype=np.uint32)
         self.elements = np.uint32(self.indexes.shape[0])
+    
+    def delete_vbo_vao(self):
+        def _delete_buffer(buffer):
+            print("Trying to delete buffer:", buffer)
+            if buffer is not None and buffer != 0:
+                print("Deleting buffer:", buffer)
+                GL.glDeleteBuffers(1, [buffer])
+                buffer = 0
+            else:
+                print("Not Deleted:", buffer)
+                pass
+            if GL.glGetError != GL.GL_NO_ERROR:
+                logger.critical("OpenGL Error while deleting buffers: %s", GL.glGetError)
+        _delete_buffer(self.vao)
+        _delete_buffer(self.ind_vbo)
+        _delete_buffer(self.coord_vbo)
+        _delete_buffer(self.col_vbo)
+        _delete_buffer(self.size_vbo)
+        _delete_buffer(self.sel_vao)
+        _delete_buffer(self.sel_ind_vbo)
+        _delete_buffer(self.sel_coord_vbo)
+        _delete_buffer(self.sel_col_vbo)
+        _delete_buffer(self.sel_size_vbo)
+    
+    def print_vbo_vao(self):
+        print("self.vao", self.vao)
+        print("self.ind_vbo", self.ind_vbo)
+        print("self.coord_vbo", self.coord_vbo)
+        print("self.col_vbo", self.col_vbo)
+        print("self.size_vbo", self.size_vbo)
+        print("self.sel_vao", self.sel_vao)
+        print("self.sel_ind_vbo", self.sel_ind_vbo)
+        print("self.sel_coord_vbo", self.sel_coord_vbo)
+        print("self.sel_col_vbo", self.sel_col_vbo)
+        print("self.sel_size_vbo", self.sel_size_vbo)
+    
 
 
 class PickingDotsRepresentation(Representation):
@@ -266,8 +278,6 @@ class PickingDotsRepresentation(Representation):
         if custom_int_location != -1:
             GL.glUniform1i(custom_int_location, int(_size))  # Set the integer value to  _size
         else:
-            #print("Uniform '_size' not found in shader program.")
-            #print(int(_size))
             #GL.glPointSize(int(_size+256))
             GL.glPointSize(int(_size))
         
@@ -492,7 +502,6 @@ class SticksRepresentation(Representation):
             self.spheres = None
         else:
             self.radius = self.vm_session.vm_config.gl_parameters["ribbon_width"]
-            #print(set(indexes))
             self.spheres = SpheresRepresentation(vismol_object, vismol_glcore,
                                             active=True, indexes=list(vismol_object.atoms.keys()))
             
@@ -508,7 +517,7 @@ class SticksRepresentation(Representation):
     
     def draw_representation(self):
         """ Function doc """
-        self._check_vao_and_vbos ()
+        self._check_vao_and_vbos()
         self._enable_anti_alias_to_lines()
         GL.glEnable(GL.GL_CULL_FACE)
         GL.glCullFace(GL.GL_BACK)
@@ -535,6 +544,7 @@ class SticksRepresentation(Representation):
             self.was_col_modified = False
         
         #GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        # TODO: Why is this necessary if both lines are the same?
         if self.is_dynamic:
             GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.molecule.index_bonds)), GL.GL_UNSIGNED_INT, None)
         else:
@@ -546,11 +556,9 @@ class SticksRepresentation(Representation):
         GL.glDisable(GL.GL_CULL_FACE)
         GL.glUseProgram(0)
         GL.glLineWidth(1)
-        #print(self.spheres)
         #if self.spheres:
         #    self.spheres.draw_representation()
-        #    print(self.spheres.sphere_indexes)
-            
+    
     def draw_background_sel_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()
@@ -583,17 +591,17 @@ class SticksRepresentation(Representation):
 class SpheresRepresentation(Representation):
     """ Class doc """
     #            self, vismol_object, vismol_glcore, indexes, active=True, is_dynamic = False, name = "sticks"
-    def __init__(self, vismol_object, vismol_glcore, indexes, active=True, vdw = False, mode = 0):
+    def __init__(self, vismol_object, vismol_glcore, indexes, active=True, vdw=False, mode=0):
         """ Class initialiser """
         self.mode = mode
         if self.mode == 0 or self.mode == 2 or self.mode == 3:
             super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, "spheres", active, indexes)
         elif self.mode ==1:
             super(SpheresRepresentation, self).__init__(vismol_object, vismol_glcore, "picking_spheres", active, indexes)
-        
-        
         else:
             pass
+        
+        
         import vismol.utils.sphere_data as sphd
         
         if self.mode == 2:
@@ -614,7 +622,7 @@ class SpheresRepresentation(Representation):
             self.scale = self.vm_session.vm_config.gl_parameters["sphere_scale"]
         
         if vdw:
-            self.sphere_vertices = sphd.sphere_vertices[self.level] 
+            self.sphere_vertices = sphd.sphere_vertices[self.level]
         else:
             self.sphere_vertices = sphd.sphere_vertices[self.level]* self.scale
         self.sphere_indexes = sphd.sphere_triangles[self.level]
@@ -699,8 +707,7 @@ class SpheresRepresentation(Representation):
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_CULL_FACE)
         GL.glDisable(GL.GL_DEPTH_TEST)
-        #print('aqui', self.sphere_indexes)
-
+    
     def draw_background_sel_representation(self):
         """ Function doc """
         
@@ -868,7 +875,6 @@ class ImpostorRepresentation(Representation):
         self._load_camera_pos(self.shader_program)
         GL.glBindVertexArray(self.vao)
         # pm = self.vm_glcore.glcamera.projection_matrix
-        # print(pm[0,0] * pm[1,1], "fov")
         
         if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
@@ -967,7 +973,6 @@ class CellLineRepresentation:
         self.sel_shader_program = None
     
     def _check_vao_and_vbos(self):
-        #print(self.name)
         self.shader_program = self.vm_glcore.shader_programs[self.name]
         #self.sel_shader_program = self.vm_glcore.shader_programs[self.name + "_sel"]
         if self.vao is None:
@@ -1332,7 +1337,6 @@ class CartoonRepresentation(Representation):
         normals = self.normals2
         indexes = self.indexes2
         
-        print ('len(coords),len(colors), len(normals),len(indexes)', len(coords),len(colors), len(normals),len(indexes)  )
 
         self._make_gl_representation_vao_and_vbos (indexes    = indexes,
                                                    coords     = coords ,
@@ -1407,7 +1411,6 @@ class CartoonRepresentation(Representation):
         
         GL.glUseProgram(self.shader_program )
         
-        #print (self.vm_object.model_mat,view)
         
         m_normal = np.array(np.matrix(np.dot(view, self.vm_object.model_mat)).I.T)
         
@@ -1425,7 +1428,6 @@ class CartoonRepresentation(Representation):
         
         
         """
-        #print ("DotsRepresentation")
         height = self.vm_glcore.height
         
         GL.glUseProgram(self.shader_program)
@@ -1450,7 +1452,6 @@ class CartoonRepresentation(Representation):
             #GL.glDrawElements(GL.GL_LINE_LOOP, int(len(self.coords2)), GL.GL_UNSIGNED_INT, None)
             #GL.glDrawElements(GL.GL_LINE_STRIP, int(len(self.indexes2)), GL.GL_UNSIGNED_INT, None)
             
-            #print("int(len(self.indexes2))", int(len(self.indexes2)))
             GL.glDrawElements(GL.GL_TRIANGLES, int(len(self.indexes2)), GL.GL_UNSIGNED_INT, None)
             #GL.glDrawElements(GL.GL_TRIANGLES, 54060, GL.GL_UNSIGNED_INT, None)
         
@@ -1571,7 +1572,7 @@ class CartoonRepresentation(Representation):
         self.vm_object          = vismol_object
         self.vm_glcore          = vismol_glcore
         
-        # representation 	
+        # representation
         self.vao            = None
         self.ind_vbo        = None
         self.coord_vbo      = None
@@ -1635,7 +1636,6 @@ class CartoonRepresentation(Representation):
         normals = self.normals2
         indexes = self.indexes2
         
-        print ('len(coords),len(colors), len(normals),len(indexes)', len(coords),len(colors), len(normals),len(indexes)  )
 
         self._make_gl_representation_vao_and_vbos (indexes    = indexes,
                                                    coords     = coords ,
@@ -1708,7 +1708,6 @@ class CartoonRepresentation(Representation):
         
         GL.glUseProgram(self.shader_program )
         
-        #print (self.vm_object.model_mat,view)
         
         m_normal = np.array(np.matrix(np.dot(view, self.vm_object.model_mat)).I.T)
         
@@ -1726,7 +1725,6 @@ class CartoonRepresentation(Representation):
         
         
         #"""
-        ##print ("DotsRepresentation")
         #height = self.vm_glcore.height
         #
         #GL.glUseProgram(self.shader_program)
@@ -1751,7 +1749,6 @@ class CartoonRepresentation(Representation):
         #    #GL.glDrawElements(GL.GL_LINE_LOOP, int(len(self.coords2)), GL.GL_UNSIGNED_INT, None)
         #    #GL.glDrawElements(GL.GL_LINE_STRIP, int(len(self.indexes2)), GL.GL_UNSIGNED_INT, None)
         #    
-        #    #print("int(len(self.indexes2))", int(len(self.indexes2)))
         #    GL.glDrawElements(GL.GL_TRIANGLES, int(len(self.indexes2)), GL.GL_UNSIGNED_INT, None)
         #    #GL.glDrawElements(GL.GL_TRIANGLES, 54060, GL.GL_UNSIGNED_INT, None)
         #
@@ -2085,7 +2082,6 @@ class SurfaceRepresentation(Representation):
             line2 = line.split()
             
             if len(line2) == 6:
-                #print (line2)
                 self.coords2.append(float(line2[0]))
                 self.coords2.append(float(line2[1]))
                 self.coords2.append(float(line2[2]))
@@ -2168,7 +2164,6 @@ class SurfaceRepresentation(Representation):
         #indexes = range(0, len(self.coords2))     
         #indexes = np.array(indexes, dtype=np.uint32)
         indexes = np.array(self.indexes2, dtype=np.uint32)
-        #print (indexes)
 
 
         self._make_gl_representation_vao_and_vbos (indexes    = indexes,
@@ -2209,7 +2204,6 @@ class SurfaceRepresentation(Representation):
         
         GL.glUseProgram(self.shader_program )
         
-        #print (self.vm_object.model_mat,view)
         
         m_normal = np.array(np.matrix(np.dot(view, self.vm_object.model_mat)).I.T)
         
@@ -2227,7 +2221,6 @@ class SurfaceRepresentation(Representation):
         
         
         """
-        #print ("DotsRepresentation")
         height = self.vm_glcore.height
         
         GL.glUseProgram(self.shader_program)
@@ -2395,7 +2388,6 @@ class LabelRepresentation:
             self.vm_object.vm_font.make_freetype_texture(self.vm_glcore.freetype_program)
         
         if self.chars == 0:
-            print("self._build_buffer()")
             self._build_buffer()
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vm_object.vm_font.vbos[0])
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.xyz_pos.itemsize*len(self.xyz_pos), self.xyz_pos, GL.GL_DYNAMIC_DRAW)
@@ -2429,11 +2421,6 @@ class LabelRepresentation:
                 self.uv_coords.append(y*self.vm_object.vm_font.text_v)
                 self.uv_coords.append((x+1)*self.vm_object.vm_font.text_u)
                 self.uv_coords.append((y+1)*self.vm_object.vm_font.text_v)
-            #print(texto)
-        #print("xyz_pos  ",len(self.xyz_pos))
-        #print("uv_coords",len(self.uv_coords))
-        #print("atoms    ",len(self.vm_object.atoms))
-        #print("chars    ",self.chars)
         
         self.xyz_pos   = np.array(self.xyz_pos  , np.float32)
         self.uv_coords = np.array(self.uv_coords, np.float32)

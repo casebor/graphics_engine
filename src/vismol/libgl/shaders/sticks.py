@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
+
+
 vertex_shader_ribbon_stick = """
 #version 330
 precision highp float; 

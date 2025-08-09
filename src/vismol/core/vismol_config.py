@@ -21,12 +21,12 @@ class VismolConfig:
                 the session.
     """
     
-    def __init__ (self, vm_session: "VismolSession"):
+    def __init__ (self, builder: bool=False):
         """
         Args:
             vm_session (VismolSession): The VismolSession object.
         """
-        self.vm_session = vm_session
+        # self.vm_session = vm_session
         self.gl_parameters = {"antialias": True,
                               "background_color": [0.0, 0.0, 0.0, 1.0],
                               "bond_tolerance": 1.4,
@@ -67,9 +67,12 @@ class VismolConfig:
                               "sticks_radius": 0.10,
                               "sticks_type": 0}
         self.n_proc = 2
-        self.representations_available = {"dots", "lines", "nonbonded",
-            "impostor","dash", "sticks", "spheres", "ribbons", "dynamic",
-            "vdw_spheres", "picking_spheres", "static_freetype"}
+        if builder:
+            self.representations_available = {"spheres"}
+        else:
+            self.representations_available = {"dots", "lines", "nonbonded",
+                "impostor","dash", "sticks", "spheres", "ribbons", "dynamic",
+                "vdw_spheres", "picking_spheres", "static_freetype"}
     
     
     def save_easyhybrid_config(self) -> None:
@@ -77,8 +80,8 @@ class VismolConfig:
         Save the configuration to a JSON file.
         
         """
-        os.makedirs(os.path.join(os.environ["HOME"], ".VisMol"), exist_ok=True)
-        config_path = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
+        os.makedirs(os.path.join(os.environ["HOME"], ".Vismol"), exist_ok=True)
+        config_path = os.path.join(os.environ["HOME"], ".Vismol", "VismolConfig.json")
         with open(config_path, "w") as config_file:
             json.dump(self.gl_parameters, config_file, indent=2)
     
@@ -91,6 +94,6 @@ class VismolConfig:
             config_path (str): Path to the configuration file.
         """
         if not os.path.isfile(config_path):
-          config_path = os.path.join(os.environ["HOME"], ".VisMol", "VismolConfig.json")
+          config_path = os.path.join(os.environ["HOME"], ".Vismol", "VismolConfig.json")
         with open(config_path, "r") as config_file:
             self.gl_parameters = json.load(config_file)

@@ -1,32 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-#  vismol_font.py
-#  
-#  Copyright 2022 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
-#  
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#  
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-#  MA 02110-1301, USA.
-#  
-#  
 
+
+import os
+import ctypes
 import numpy as np
 import freetype as ft
-import ctypes
 from OpenGL import GL
-import os
 import vismol.libgl.glaxis as glaxis
 fontpath = os.path.split(glaxis.__file__)[:-1]
 #fontpath = os.path.join(*fontpath, "fonts", "VeraMono.ttf")
@@ -162,6 +142,7 @@ class VismolFont():
         print(self.vao, "vao")
         print(self.text_vbo, "text_vbo")
         print(self.coord_vbo, "coord_vbo")
+        print("#############################################")
     
     
     def set_dimensions (self, width, height ):
