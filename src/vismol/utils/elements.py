@@ -136,9 +136,9 @@ class PeriodicTable:
                                     'pK' : [ 0  , 'dummy_atom'    , [1.0000 , 1.0000 , 0.0000] ,   0      ,   1.000000 , 0.000000 , 1.000 ] ,
                                     }
         
-        self.__define_atomic_number_dictionary()
+        self._define_atomic_number_dictionary()
         
-    def __define_atomic_number_dictionary (self):
+    def _define_atomic_number_dictionary(self):
         """ Function doc """
         self.elements_by_number = {}
         
@@ -146,7 +146,7 @@ class PeriodicTable:
             atomic_num = self.elements_by_symbol[symbol][0]
             self.elements_by_number[atomic_num] = symbol
         
-    def get_color_palette (self, custom = {"C":[0.0 ,0.5 ,0.0]}):
+    def get_color_palette(self, custom = {"C":[0.0 ,0.5 ,0.0]}):
         """ Function doc """
         color_palette = {}
         for symbol in self.elements_by_symbol.keys():

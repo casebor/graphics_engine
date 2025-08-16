@@ -4,25 +4,26 @@
 
 import time
 import numpy as np
-from typing import List
 from logging import getLogger
 from vismol.model.atom import Atom
 from vismol.model.bond import Bond
 from vismol.model.chain import Chain
 from vismol.model.residue import Residue
 from vismol.model.molecule import Molecule
+from vismol.model.topology import Topology
 from vismol.libgl.vismol_font import VismolFont
-from vismol.libgl.representations import CartoonRepresentation
-from vismol.libgl.representations import DashedLinesRepresentation
 from vismol.libgl.representations import DotsRepresentation
-from vismol.libgl.representations import ImpostorRepresentation
 from vismol.libgl.representations import LabelRepresentation
 from vismol.libgl.representations import LinesRepresentation
-from vismol.libgl.representations import NonBondedRepresentation
-from vismol.libgl.representations import PickingDotsRepresentation
-from vismol.libgl.representations import SpheresRepresentation
 from vismol.libgl.representations import SticksRepresentation
+from vismol.libgl.representations import CartoonRepresentation
+from vismol.libgl.representations import SpheresRepresentation
 from vismol.libgl.representations import SurfaceRepresentation
+from vismol.libgl.representations import ImpostorRepresentation
+from vismol.libgl.representations import NonBondedRepresentation
+from vismol.libgl.representations import DashedLinesRepresentation
+from vismol.libgl.representations import PickingDotsRepresentation
+import vismol.utils.molecular_operations as molop
 
 
 logger = getLogger(__name__)
@@ -78,31 +79,31 @@ class VismolObject:
                 color id is unique for a single atom in the whole session.
         colors_rainbow (np.array): Numpy array containing the color coding for
                 atoms in the rainbow scheme.
-        dynamic_bonds (List): 
-        c_alpha_bonds (List): 
-        c_alpha_bonds (List): 
+        dynamic_bonds (list): 
+        c_alpha_bonds (list): 
+        c_alpha_bonds (list): 
     """
-    def __init__(self, vm_session: "VismolSession", index: int, name: str="UNK",
-                 active: bool=False, color_palette: int=0):
+    def __init__(self, vismol_session: "VismolSession", index: int, name: str="UNK",
+                 active: bool=False):
         """
         Args:
-            vm_session (Vismol Session): Necessary to build the
+            vismol_session (Vismol Session): Necessary to build the
                     "atomtree_structure". The vismol_session contains the atom id
-                    counter (self.vm_session.atom_id_counter).
+                    counter (self.vismol_session.atom_id_counter).
             index (int): Unique index for the VismolObject to find it in
-                    self.vm_session.vismol_objects_dic.
+                    self.vismol_session.vismol_objects_dic.
             name (str): Label that describes the object (default: "UNK").
             active (bool): Flag to enable/disable the object (default: False).
             color_palette (int): Number to access the color pick for carbon
                     atoms (0 = green, 1 = purple, ...) (optional).
         """
-        self.vm_session = vm_session
+        self.vm_session = vismol_session
         self.index = index
         self.name = name
         self.active = active
         self.color_palette = self.vm_session.periodic_table.get_color_palette()
-        
-        self.vm_config = vm_session.vm_config
+        self.vm_config = self.vm_session.vm_config
+        # TODO: this attribute is not being used anywhere
         self.moving = False
         self.vm_font = VismolFont()
         self.molecule = None
@@ -110,24 +111,35 @@ class VismolObject:
         self.representations = {}
         for rep_type in self.vm_config.representations_available:
             self.representations[rep_type] = None
+        # TODO: Why are these three representations not included in the
+        #       configuration file?
         self.representations["ribbon_sphere"] = None
         self.representations["stick_spheres"] = None
         self.representations["labels"] = None
         self.model_mat = np.identity(4, dtype=np.float32)
+        # TODO: The name of this attribute is a bit confusing, better change it
         self.core_representations = {"picking_dots":None, "picking_text":None}
-        self.selection_dots_vao = None
-        self.selection_dot_buffer = None
-        self.picking_dots_vao = None
-        self.picking_dot_buffer = None
+        # TODO: What is the difference between these colors?
+        #       Improve the naming or add an explanation as comment
         self.colors = None
         self.color_indexes = None
         self.colors_rainbow = None
-        
+        # TODO: We should create the topology in the parser and here only use it,
+        #       not define it. Should this be in the molecule instead of here?
+        #       This can be only a dictionary of unbonded, single, double,
+        #       triple bonds and aromatic. Probable better make a new class?
+        #       {"unbonded": [at1, at5, at32, ...],
+        #        "single": [[at2, at3], [at7, at8], ...],
+        #        "double": [[at2, at4], [at7, at9], ...],
+        #        "triple": [[at11, at13], [at21, at29], ...],
+        #        "aromatic": [[at22, at23, at24, at25, at26, at27], ...]}
+        self.topology = None
+        # TODO: This can be outside topology since it is more for visualization
         self.dynamic_bonds  = [] # Pair of atoms, something like: [[0,1,1,2,3,4] , [0,1,1,2], ...]
                                 # Like self.index_bonds but for each frame
-        self.c_alpha_bonds = [] # List of pair of atoms defining dynamic bonds for each frame
-        self.c_alpha_atoms = [] # List of pair of atoms defining C-alpha bonds
-    
+        # TODO: Should these two be inside the topology?
+        self.c_alpha_bonds = [] # list of pair of atoms defining dynamic bonds for each frame
+        self.c_alpha_atoms = [] # list of pair of atoms defining C-alpha bonds
     
     def build_core_representations(self) -> None:
         """
@@ -142,21 +154,22 @@ class VismolObject:
                     indexes=list(self.molecule.atoms.keys()))
             self.core_representations["dash"] = DashedLinesRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
-                    indexes=self.molecule.index_bonds)
+                    indexes=self.molecule.topology.bonds_pair_of_indexes)
         else:
-            print("This is not the main widget")
+            logger.info("Function build_core_representations should be called "\
+                "only within a VismolWidgetMain instance")
     
     
-    def create_representation(self, indexes: List=None, rep_type: str="lines") -> None:
+    def create_representation(self, indexes: list=None, rep_type: str="lines") -> None:
         """
         Note: The function creates a new visualization representation object
         for the VismolObject and updates its internal representations dictionary.
         It initializes the representation according to the provided rep_type
-        and indexes List.
+        and indexes list.
         
         Args:
             rep_type (str): The type of representation to create.
-            indexes (List): List of atom indexes or bond indexes based on 
+            indexes (list): list of atom indexes or bond indexes based on 
                     the representation type.
         
         Raises:
@@ -171,11 +184,12 @@ class VismolObject:
         elif rep_type == "lines":
             self.representations["lines"] = LinesRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
-                    indexes=self.molecule.index_bonds)
+                    indexes=self.molecule.topology.bonds_pair_of_indexes)
+                    # indexes=self.molecule.index_bonds)
         elif rep_type == "nonbonded":
             self.representations["nonbonded"] = NonBondedRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
-                    indexes=self.molecule.non_bonded_atoms)
+                    indexes=self.molecule.topology.non_bonded_atoms)
         elif rep_type == "impostor":
             self.representations["impostor"] = ImpostorRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
@@ -183,7 +197,7 @@ class VismolObject:
         elif rep_type == "sticks":
             self.representations["sticks"] = SticksRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
-                    indexes=self.molecule.index_bonds)
+                    indexes=self.molecule.topology.bonds_pair_of_indexes)
         elif rep_type == "stick_spheres":
             self.representations["stick_spheres"] = SpheresRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
@@ -203,11 +217,11 @@ class VismolObject:
         elif rep_type == "dash":
             self.representations["dash"] = DashedLinesRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
-                    indexes=self.molecule.index_bonds)
+                    indexes=self.molecule.topology.bonds_pair_of_indexes)
         elif rep_type == "ribbons":
             self.representations["ribbons"] = SticksRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
-                    indexes=self.molecule.index_bonds, name="ribbons")
+                    indexes=self.molecule.topology.bonds_pair_of_indexes, name="ribbons")
         elif rep_type == "ribbon_sphere":
             self.representations["ribbon_sphere"] = SpheresRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
@@ -215,7 +229,7 @@ class VismolObject:
         elif rep_type == "dynamic":
             self.representations["dynamic"] = SticksRepresentation(self,
                     self.vm_session.vm_glcore, active=True,
-                    indexes=self.molecule.index_bonds, is_dynamic=True)
+                    indexes=self.molecule.topology.bonds_pair_of_indexes, is_dynamic=True)
         elif rep_type == "labels":
             self.representations["labels"] = LabelRepresentation(self,
                     self.vm_session.vm_glcore, indexes=[0,1,2], labels=None,
@@ -232,7 +246,6 @@ class VismolObject:
             logger.error("Representation {} not implemented".format(rep_type))
             raise NotImplementedError("Representation {} not implemented".format(rep_type))
     
-    
     def generate_color_vectors(self) -> None:
         """
         This method generates and collect the color information for the atoms
@@ -243,8 +256,8 @@ class VismolObject:
         in the whole Vismol session.
         
         """
-        _mol_atoms = self.molecule.atoms
-        atom_qtty = len(_mol_atoms)
+        mol_atoms = self.molecule.atoms
+        atom_qtty = len(mol_atoms)
         half = int(atom_qtty/2)
         quarter = int(atom_qtty/4)
         color_step = 1.0/(atom_qtty/4.0)
@@ -254,7 +267,7 @@ class VismolObject:
         self.colors = np.empty([atom_qtty, 3], dtype=np.float32)
         self.color_indexes = np.empty([atom_qtty, 3], dtype=np.float32)
         self.colors_rainbow = np.empty([atom_qtty, 3], dtype=np.float32)
-        for i, atom in _mol_atoms.items():
+        for i, atom in mol_atoms.items():
             atom.generate_atom_unique_color_id()
             self.colors[i] = atom.color
             self.color_indexes[i] = atom.color_id
@@ -271,19 +284,20 @@ class VismolObject:
                 self.colors_rainbow[i,:] = red, green, blue
                 green -= color_step
     
-    
-    def set_model_matrix(self, mat: np.array) -> None:
+    def set_model_matrix(self, in_mat: np.array) -> None:
         """
         Updates the model matrix with a copy of the numpy array provided.
         
         """
-        self.model_mat = np.copy(mat)
+        self.model_mat = np.copy(in_mat)
     
-    def add_new_atom(self, atom: Atom, unique_id: int):
+    def add_new_atom(self, atom: Atom, unique_id: int) -> None:
         """ Docs
         """
         if self.molecule is None:
             molecule = Molecule(self, name="Molecule")
+            topo = Topology(molecule=molecule)
+            molecule.topology = topo
             self.molecule = molecule
             chain = Chain(self, name="BX", molecule=molecule)
             molecule.chains[chain.name] = chain
@@ -295,8 +309,19 @@ class VismolObject:
             residue.atoms[atom.atom_id] = atom
             molecule.atoms[atom.atom_id] = atom
             molecule.frames = np.zeros([1,1,3], dtype=np.float32)
-            molecule.frames[0,0] = atom.pos
-            molecule.build_bonded_and_nonbonded_atoms()
+            molecule.frames[0,0] = atom.coords
+            molecule.cov_radii_array = np.array([atom.cov_rad], dtype=np.float32)
+            index_bonds = molop.get_bond_pairs(molecule=molecule,
+                                atom_ids=np.array([atom.atom_id], dtype=np.int32),
+                                cov_radii_array=np.array([atom.cov_rad], dtype=np.float32),
+                                gridsize=1.2, maxbond=2.4, tolerance=1.4)
+            bonds_from_pairs = molop.bonds_from_pair_of_indexes_list(molecule=molecule,
+                                                    index_bonds=index_bonds)
+            topo.bonds_pair_of_indexes = bonds_from_pairs
+            nonbonded_atoms = molop.get_non_bonded_from_bonded_list(molecule=molecule,
+                                                            index_bonds=bonds_from_pairs)
+            topo.non_bonded_atoms = nonbonded_atoms
+            
         else:
             residue = self.molecule.chains["BX"].residues[1]
             atom.residue = residue
@@ -304,9 +329,18 @@ class VismolObject:
             atom.molecule = self.molecule
             residue.atoms[atom.atom_id] = atom
             self.molecule.atoms[atom.atom_id] = atom
-            frame = np.vstack((self.molecule.frames[0], np.array([atom.pos])))
+            frame = np.vstack((self.molecule.frames[0], np.array([atom.coords])))
             self.molecule.frames = np.empty([1, frame.shape[0], 3], dtype=np.float32)
             self.molecule.frames[0] = frame
-            self.molecule.cov_radii_array = None
-            self.molecule.build_bonded_and_nonbonded_atoms()
+            self.molecule.cov_radii_array = np.hstack((self.molecule.cov_radii_array, atom.cov_rad))
+            index_bonds = molop.get_bond_pairs(molecule=self.molecule,
+                                atom_ids=np.array(list(self.molecule.atoms.keys()), dtype=np.int32),
+                                cov_radii_array=self.molecule.cov_radii_array,
+                                gridsize=1.2, maxbond=2.4, tolerance=1.4)
+            bonds_from_pairs = molop.bonds_from_pair_of_indexes_list(molecule=self.molecule,
+                                                    index_bonds=index_bonds)
+            self.molecule.topology.bonds_pair_of_indexes = bonds_from_pairs
+            nonbonded_atoms = molop.get_non_bonded_from_bonded_list(molecule=self.molecule,
+                                                            index_bonds=bonds_from_pairs)
+            self.molecule.topology.non_bonded_atoms = nonbonded_atoms
     

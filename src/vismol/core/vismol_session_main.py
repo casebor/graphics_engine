@@ -15,31 +15,6 @@ from vismol.core.vismol_selections import VismolViewingSelection as VMSele
 logger = getLogger(__name__)
 
 
-class Config:
-    """
-    The Config class 
-    """
-    
-    def __init__ (self):
-        """ Class initialiser """
-        pass
-    def set_pk_sphr_selection_color (self, color, pk = 1):
-        """ Function doc """
-        
-        if pk == 1:
-            self.picking_selections.pk_scolor["pk1"] = color
-        elif pk == 2:
-            self.picking_selections.pk_scolor["pk2"] = color
-        elif pk == 3:
-            self.picking_selections.pk_scolor["pk3"] = color
-        elif pk == 4:
-            self.picking_selections.pk_scolor["pk4"] = color
-        else:
-            return False
-        
-        
-    
-    
 class VismolSessionMain(VismolSession):
     """
     The VismolSessionMain class acts as a bridge between Vismol objects containing
@@ -83,7 +58,7 @@ class VismolSessionMain(VismolSession):
                 a VismolWidgetMain object.
     """
     
-    def __init__(self, vismol_widget: "VismolGTKWidget"=None, vismol_config: "VismolConfig"=None):
+    def __init__(self, vismol_widget: "VismolGTKWidget", vismol_config: "VismolConfig"):
         """
         Args:
             toolkit (str): The window manager library employed to build the GUI.
@@ -98,93 +73,102 @@ class VismolSessionMain(VismolSession):
         """
         
         super(VismolSessionMain, self).__init__(vismol_widget, vismol_config)
-        # if vm_config:
-        #     self.vm_config = vm_config
-        # else:
-        #     self.vm_config = VismolConfig()
-        
-        # self.toolkit = toolkit
-        # if toolkit == "Gtk_3.0":
-        #     from vismol.gui.vismol_widget_main import VismolWidgetMain
-        #     # TODO: The following three lines should be improved. Right now
-        #     #       there is a cyclic dependency between VismolWidgetMain,
-        #     #       VismolGLMain and VismolSession. This approach is working
-        #     #       now, but it may cause problems in future versions :(
-        #     self.vm_widget = VismolWidgetMain(self.vm_config)
-        #     self.vm_widget.vm_session = self
-        #     self.vm_widget.vm_glcore.vm_session = self
-        
-        #     self.selection_box_frame = None
-        #     self.vm_glcore = self.vm_widget.vm_glcore
-        #     self.vm_glcore.queue_draw()
-        # elif toolkit == "Qt5":
-        #     self.vm_widget = None
-        #     logger.error("Not implemented yet for Qt5 :(")
-        #     raise NotImplementedError("Not implemented yet for Qt5 :(")
-        #     exit(1)
-        # else:
-        #     self.vm_widget = None
-        #     logger.error("Toolkit not defined or syntax error, try 'Gtk_3.0'. Quitting.")
-        #     raise RuntimeError("Toolkit not defined or syntax error, try 'Gtk_3.0'. Quitting.")
-        #     exit(1)
-        
-        # TODO: Add support for Qt5? This parameter is only used for the
-        #       center_on_coordinates function in VismolGLMain class.
-        # self.toolkit = "Gtk_3.0"
-        # self.vm_config = vismol_config
-        # self.vm_widget = vismol_widget
-        # self.selection_box_frame = None
-        # self.vm_glcore = self.vm_widget.vm_glcore
-        # self.vm_glcore.queue_draw()
-        # self.frame = 0
-        # self.vm_objects_dic = {}
-        # self.atom_dic_id = {}
-        # self.atom_id_counter = np.uint32(0)
         self.picking_selection_mode = False
-        self.selections = {"sel_00": VMSele(self)}
+        self.selections = dict({"sel_00": VMSele(self)})
         self.current_selection = "sel_00"
         self.picking_selections = VMPick(self)
-        # self.periodic_table = PeriodicTable()
-        self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None,
-                "pk3pk4":None, "pk1":None, "pk2":None, "pk3":None, "pk4":None}
+        self.vm_geometric_object_dic = {"pk1":None, "pk2":None, "pk3":None,
+                    "pk4":None, "pk1pk2":None, "pk2pk3":None, "pk3pk4":None}
     
-    def _add_vismol_object(self, vm_object, show_molecule=True, autocenter=True):
+    def _add_vismol_object(self, vismol_object: "VismolObject",
+                           show_molecule: bool=True,
+                           autocenter: bool=True) -> None:
         """ Function doc """
         
         # Check if the vismol_object's index already exists in the dictionary
-        if vm_object.index in self.vm_objects_dic.keys():
+        if vismol_object.index in self.vm_objects_dic.keys():
             logger.warning("The VismolObject with id {} already exists. \
-                The data will be overwritten.".format(vm_object.index))
+                The data will be overwritten.".format(vismol_object.index))
         
         # Add the vismol_object to the dictionary with a new index
-        self.vm_objects_dic[len(self.vm_objects_dic)] = vm_object
+        self.vm_objects_dic[len(self.vm_objects_dic)] = vismol_object
         
         # Update the atom_id_counter by adding the number of atoms in the new vismol_object
         # TODO: Is this really necessary? The number of atoms can be obtained
         #       from the atom_dictionary 'self.atom_dic_id'
-        self.atom_id_counter += len(vm_object.molecule.atoms)
+        self.atom_id_counter += len(vismol_object.molecule.atoms)
         
         # Iterate through the atoms in the vismol_object and add them to the atom_dic_id dictionary
         # using their unique_id as the key and the atom object as the value.
-        for atom in vm_object.molecule.atoms.values():
+        for atom in vismol_object.molecule.atoms.values():
             self.atom_dic_id[atom.unique_id] = atom
         
         # If show_molecule is True, create representations for "lines" and "nonbonded" to display the object.
         if show_molecule:
-            vm_object.create_representation(rep_type="lines")
-            vm_object.create_representation(rep_type="nonbonded")
+            vismol_object.create_representation(rep_type="lines")
+            vismol_object.create_representation(rep_type="nonbonded")
             # TODO: Add support for cartoon representation
-            # vm_object.create_representation(rep_type="cartoon")
+            # vismol_object.create_representation(rep_type="cartoon")
             # TODO: Add support for surfae representation
-            # vm_object.create_representation(rep_type="surface")
+            # vismol_object.create_representation(rep_type="surface")
             
             # If autocenter is True, center the view on the mass center of the vismol_object.
             if autocenter:
-                self.vm_glcore.center_on_coordinates(vm_object, vm_object.molecule.geom_center)
+                self.vm_glcore.center_on_coordinates(vismol_object, vismol_object.molecule.get_geometry_center())
             else:
                 self.vm_glcore.queue_draw()
     
-    def load_molecule(self, infile):
+    def _selection_function_set(self, selected: set, disable: bool=True) -> None:
+        """ Function doc """
+        # TODO: the selected parameter should be an integer, since it is
+        #       only one ID. Discuss it with Bachega
+        if self.picking_selection_mode: # True for picking mode
+            if selected:
+                assert len(selected) == 1
+                selected = list(selected)[0]
+                self.picking_selections.selection_function_picking(selected)
+            else:
+                self.picking_selections.selection_function_picking(None)
+        else: # False for viewing mode
+            self.selections[self.current_selection].selection_function_viewing_set(selected, disable)
+    
+    def define_dynamic_bonds(self, vmv_selection: VMSele=None) -> None:
+        """ Function doc """
+        if vmv_selection:
+            pass
+        else:
+            vmv_selection = self.selections[self.current_selection]
+        
+        selection_dict = {}
+        vm_object = None
+        for atom in vmv_selection.selected_atoms:
+            selection_dict[atom.atom_id] = atom
+            vm_object = atom.vm_object
+        
+        tolerance = self.vm_config.gl_parameters['bond_tolerance']
+        vm_object.dynamic_bonds = []
+        for frame in range(len(vm_object.frames)):            
+            bonds = vm_object.build_bonded_and_nonbonded_atoms(selection=selection_dict, frame=frame, tolerance = tolerance)
+            vm_object.dynamic_bonds.append(bonds)
+    
+    def forward_frame(self) -> None:
+        """ Function doc """
+        frame = self.frame + 1
+        for i, vm_object in enumerate(self.vm_objects_dic.values()):
+            if frame < vm_object.molecule.frames.shape[0]:
+                self.frame += 1
+                self.vm_glcore.updated_coords = True
+                break
+            else:
+                pass
+        else:
+            self.vm_glcore.updated_coords = False
+    
+    def get_frame(self) -> int:
+        """ Function doc """
+        return self.frame
+    
+    def load_molecule(self, infile: str) -> None:
         """ Probably would be better to join this with _add_vismol_object
         """
         vm_object, show_molecule = parser.parse_file(self, infile)
@@ -194,49 +178,53 @@ class VismolSessionMain(VismolSession):
         vm_object.active = True
         self._add_vismol_object(vm_object, show_molecule=show_molecule)
     
-    # def _change_attributes_for_atoms(self, atoms, rep_type, show):
-    #     """ Function doc """
-    #     for atom in atoms:
-    #         try:
-    #             if show:
-    #                 setattr(atom, rep_type, True)
-    #             else:
-    #                 setattr(atom, rep_type, False)
-    #         except AttributeError as ae:
-    #             logger.error("Representation of type {} not implemented".format(rep_type))
-    #             logger.error(ae)
-    
-    def show_or_hide(self, rep_type="lines", selection=None, show=True):
+    def reverse_frame(self) -> None:
         """ Function doc """
-        if selection is None:
-            selection = self.selections[self.current_selection]
+        if self.frame - 1 >= 0:
+            self.frame -= 1
+            self.vm_glcore.updated_coords = True
+        else:
+            self.vm_glcore.updated_coords = False
+    
+    def set_frame(self, frame: int=0) -> None:
+        """ Function doc """
+        assert frame >= 0
+        self.frame = np.uint32(frame)
+        self.picking_selections.update_pki_pkj_rep_coordinates()
+        self.vm_widget.queue_draw()
+    
+    def show_or_hide(self, rep_type: str="lines", vmv_selection: VMSele=None,
+                     show: bool=True) -> VMSele:
+        """ Function doc """
+        if vmv_selection is None:
+            vmv_selection = self.selections[self.current_selection]
         
-        self._change_attributes_for_atoms(selection.selected_atoms, rep_type, show)
-        for vm_object in selection.selected_objects:
+        self._change_attributes_for_atoms(vmv_selection.selected_atoms, rep_type, show)
+        for vm_object in vmv_selection.selected_objects:
             if vm_object.representations[rep_type] is None:
                 vm_object.create_representation(rep_type = rep_type)
             show_hide_indexes = []
             if rep_type == "lines":
-                for bond in vm_object.molecule.bonds:
+                for bond in vm_object.molecule.topology.bonds:
                     if bond.atom_i.lines and bond.atom_j.lines:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "sticks":
-                for bond in vm_object.molecule.bonds:
+                for bond in vm_object.molecule.topology.bonds:
                     if bond.atom_i.sticks and bond.atom_j.sticks:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "dash":
-                for bond in vm_object.molecule.bonds:
+                for bond in vm_object.molecule.topology.bonds:
                     if bond.atom_i.dash and bond.atom_j.dash:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
             
             elif rep_type == "dynamic":
-                self.define_dynamic_bonds(selection = selection)
-                for bond in vm_object.molecule.bonds:
+                self.define_dynamic_bonds(selection = vmv_selection)
+                for bond in vm_object.molecule.topology.bonds:
                     if bond.atom_i.dynamic and bond.atom_j.dynamic:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
@@ -262,7 +250,7 @@ class VismolSessionMain(VismolSession):
                         show_hide_indexes.append(atom.atom_id)
             
             elif rep_type == "stick_spheres":
-                for bond in vm_object.molecule.bonds:
+                for bond in vm_object.molecule.topology.bonds:
                     if bond.atom_i.stick_spheres and bond.atom_j.stick_spheres:
                         show_hide_indexes.append(bond.atom_index_i)
                         show_hide_indexes.append(bond.atom_index_j)
@@ -287,10 +275,6 @@ class VismolSessionMain(VismolSession):
                 for atom in vm_object.molecule.atoms.values():
                     if atom.ribbon_sphere and atom.name=='CA' and atom.residue.is_protein:
                         show_hide_indexes.append(atom.atom_id)
-                #print('show_hide_indexes',show_hide_indexes)
-                #logger.error("Not implementer for 'ribbon' yet.")
-                #raise NotImplementedError("Not implementer for 'ribbon' yet.")
-            
             
             elif rep_type == "surface":
                 logger.error("Not implementer for 'surface' yet.")
@@ -306,203 +290,21 @@ class VismolSessionMain(VismolSession):
                         show_hide_indexes.append(atom.atom_id)
             
             if len(show_hide_indexes) > 0:
-                print('vm_object.representations[rep_type].active = True')
+                # print('vm_object.representations[rep_type].active = True')
                 vm_object.representations[rep_type].define_new_indexes_to_vbo(show_hide_indexes)
                 vm_object.representations[rep_type].active = True
                 vm_object.representations[rep_type].was_rep_ind_modified = True
                 vm_object.representations[rep_type].was_sel_ind_modified = True
             else:
                 vm_object.representations[rep_type].active = False
-                print('vm_object.representations[rep_type].active = False')
+                # print('vm_object.representations[rep_type].active = False')
         
         self.vm_widget.queue_draw()
-        return selection
+        return vmv_selection
     
-    def forward_frame(self):
-        """ Function doc """
-        #return 0
-        frame = self.frame + 1
-        for i, vm_object in enumerate(self.vm_objects_dic.values()):
-            if frame < vm_object.molecule.frames.shape[0]:
-                self.frame += 1
-                self.vm_glcore.updated_coords = True
-                break
-            else:
-                pass
-        else:
-            self.vm_glcore.updated_coords = False
-        
-        #if self.picking_selection_mode:
-        #    self.picking_selections.print_pk_distances()
-    
-    def reverse_frame(self):
-        """ Function doc """
-        if self.frame - 1 >= 0:
-            self.frame -= 1
-            self.vm_glcore.updated_coords = True
-        else:
-            self.vm_glcore.updated_coords = False
-        
-        #if self.picking_selection_mode:
-        #    self.picking_selections.print_pk_distances()
-    
-    def set_frame(self, frame=0):
-        """ Function doc """
-        assert frame >= 0
-        self.frame = np.uint32(frame)
-        
-        #self.picking_selections
-        #for 
-        self.picking_selections.update_pki_pkj_rep_coordinates()
-        self.vm_widget.queue_draw()
-        print('\n\n\nuhuuu')
-        #if self.picking_selection_mode:
-        #    self.picking_selections.print_pk_distances()
-    
-    def get_frame(self):
-        """ Function doc """
-        return self.frame
-    
-    def _selection_function_set(self, selected, _type=None, disable=True):
-        """ Function doc """
-        if self.picking_selection_mode: # True for picking mode
-            if selected:
-                assert len(selected) == 1
-                selected = list(selected)[0]
-                self.picking_selections.selection_function_picking(selected)
-            else:
-                self.picking_selections.selection_function_picking(None)
-        else: # False for viewing mode
-            self.selections[self.current_selection].selection_function_viewing_set(selected, _type, disable)
-    
-    def viewing_selection_mode(self, sel_type="atom"):
+    def viewing_selection_mode(self, sel_type: str="atom") -> None:
         """ Function doc """
         if self.selection_box_frame:
             self.selection_box_frame.change_sel_type_in_combobox(sel_type)
         self.selections[self.current_selection].selection_mode = sel_type
-    
-    def define_dynamic_bonds(self, selection = None):
-        """ Function doc """
-        if selection:
-            pass
-        else:
-            selection = self.selections[self.current_selection]
-        
-        selection_dict = {}
-        vobject = None
-        for atom in selection.selected_atoms:
-            selection_dict[atom.atom_id] = atom
-            vobject = atom.vm_object
-        
-        tolerance = self.vm_config.gl_parameters['bond_tolerance']
-        vobject.dynamic_bonds = []
-        for frame in range(len(vobject.frames)):            
-            bonds = vobject.build_bonded_and_nonbonded_atoms(selection=selection_dict, frame=frame, tolerance = tolerance)
-            vobject.dynamic_bonds.append(bonds)
-            #print(len(bonds), bonds)
-        #print(vobject.dynamic_bonds)
-
-    # def hide_axes (self):
-    #     """ Function doc """
-    #     self.vm_glcore.show_axis = False
-    # def show_axes (self):
-    #     """ Function doc """
-    #     self.vm_glcore.show_axis = True
-
-        
-    
-    # def delete_vismol_object_by_index(self, index):
-    #     """ Function doc
-    #     """
-    #     try:
-    #         vm_object = self.vm_objects_dic.pop(index)
-    #     except KeyError:
-    #         logger.warning("VismolObject with index {} not found".format(index))
-    #         return None
-    #     return vm_object
-    
-    # def select(self, vismol_object=None, indexes=None, sele=None):
-    #     """ Function doc """
-    #     if vismol_object is None:
-    #         vismol_object = self.vm_objects[-1]
-        
-    #     if sele is None:
-    #         sele = self.current_selection
-        
-    #     if indexes == "all":
-    #         self.selections[sele].selecting_by_indexes(vismol_object=vismol_object,
-    #                                                    indexes=range(0, int(len(vismol_object.atoms)/2)))
-    #     self.vm_widget.queue_draw()
-    
-    # def disable_by_index(self, index):
-    #     """ When the variable "dictionary" is active, the function accesses 
-    #         a vismol object through the dictionary "self.vm_objects_dic". 
-    #         Each vismol object has a unique access key (int), which, in 
-    #         easyhybrid, is generated in the method: add_vismol_object.
-            
-    #         In the vismol interface the enable_by_index/disable_by_index methods
-    #         access the vismol objects by their position in the "self.vm_objects" 
-    #         list (this is because when an object is deleted in the vismol 
-    #         interface, the treeview"s liststore is rewritten)
-    #     """
-    #     try:
-    #         self.vm_objects_dic[index].active = False
-    #         self.vm_glcore.queue_draw()
-    #     except KeyError:
-    #         logger.error("VismolObject with index {} not found".format(index))
-    #         return False
-    #     return True
-    
-    # def enable_by_index(self, index):
-    #     """ When the variable "dictionary" is active, the function accesses 
-    #         a vismol object through the dictionary "self.vm_objects_dic". 
-    #         Each vismol object has a unique access key (int), which, in 
-    #         easyhybrid, is generated in the method: add_vismol_object.
-            
-    #         In the vismol interface the enable_by_index/disable_by_index methods
-    #         access the vismol objects by their position in the "self.vm_objects" 
-    #         list (this is because when an object is deleted in the vismol 
-    #         interface, the treeview"s liststore is rewritten)
-    #     """
-    #     try:
-    #         self.vm_objects_dic[index].active = True
-    #         self.vm_glcore.queue_draw()
-    #     except KeyError:
-    #         logger.error("VismolObject with index {} not found".format(index))
-    #         return False
-    #     return True
-    
-    # def edit_by_index(self, index):
-    #     """ Function doc
-    #     """
-    #     try:
-    #         self.vm_objects_dic[index].moving = not self.vm_objects_dic[index].moving
-    #         self.vm_glcore.queue_draw()
-    #     except KeyError:
-    #         logger.error("VismolObject with index {} not found".format(index))
-    #         return False
-    #     return True
-    
-    # def set_color_by_index(self, vismol_object, indexes=None, color=None):
-    #     """ NOT SURE WHAT THIS FUNCTION DOES
-    #     """
-    #     if indexes is None:
-    #         indexes = []
-    #     if color is None:
-    #         color = np.array([0.9, 0.9, 0.9], dtype=np.float32)
-        
-    #     for atom_index in indexes:
-    #         vismol_object.atoms[atom_index].color = color
-    #     vismol_object.generate_color_vectors(do_colors=True, do_colors_idx=False,
-    #                                           do_colors_raindow=False, do_vdw_dot_sizes=False,
-    #                                           do_cov_dot_sizes=False)
-    #     self.vm_widget.queue_draw()
-    #     for rep  in vismol_object.representations.keys():
-    #         if vismol_object.representations[rep]:
-    #             vismol_object.representations[rep]._set_colors_to_buffer()
-    #             # try:
-    #             #     vismol_object.representations[rep]._set_colors_to_buffer()
-    #             # except:
-    #             #     print('"VisMol/vModel/Representations.py, line 123, in _set_colors_to_buffer GL.glBindBuffer(GL.GL_ARRAY_BUFFER, ctypes.ArgumentError: argument 2: <class "TypeError">: wrong type"')
-    #     return True
     

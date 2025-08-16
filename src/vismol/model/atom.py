@@ -10,7 +10,7 @@ class Atom:
     """ Class doc """
     
     def __init__(self, vismol_object, name="Xx", index=None, residue=None,
-                 chain=None, pos=None, symbol=None, atom_id=None, color=None,
+                 chain=None, coords=None, symbol=None, atom_id=None, color=None,
                  vdw_rad=None, cov_rad=None, ball_rad=None, occupancy=0.0,
                  bfactor=0.0, charge=0.0, bonds_indexes=None, molecule=None):
         """ Class initializer """
@@ -23,9 +23,12 @@ class Atom:
         self.residue  = residue
         self.chain    = chain
         self.molecule = molecule
-
-        self.pos = pos     # - coordinates of the first frame
+        # TODO: This variable should not exist, since we use the frames coordinates
+        #       I only use this variable for the builder, but maybe there is a
+        #       better way to do this
+        self.coords = coords     # - coordinates of the first frame
         self.unique_id = None
+        self.altloc = None
         
         # self.symbol = self._get_symbol(self.name) if (symbol is None) else symbol
         if symbol is None:
@@ -59,10 +62,12 @@ class Atom:
         self.occupancy = occupancy
         self.bfactor = bfactor
         self.charge = charge
+        # TODO: What is the difference between bonds and bonds_indexes?
         if bonds_indexes is None:
             self.bonds_indexes = []
         else:
             self.bonds_indexes = bonds_indexes
+        self.bonds = set()
         
         self.selected       = False
         self.lines          = True
@@ -79,11 +84,17 @@ class Atom:
         self.vdw_spheres    = False
         self.dash           = False
         self.surface        = False
-        self.bonds          = []
         self.isfree         = True
         self.labels         = False
         self.label_text     = None
-        
+    
+    def __repr__(self):
+        output = "Index: {}\t".format(self.index)
+        # output += "Coordinates: {:>7.3f} {:>7.3f} {:>7.3f}\n".format(self.index)
+        output += "Name: {}\t".format(self.name)
+        output += "ID: {}\t".format(self.atom_id)
+        return output
+    
     def _get_symbol(self):
         """ Function doc """
         ATOM_TYPES = self.vm_session.periodic_table.elements_by_symbol
@@ -216,7 +227,6 @@ class Atom:
         return np.array(color, dtype=np.float32)
     
     def generate_atom_unique_color_id(self):
-        ATOM_TYPES = self.vm_session.periodic_table.elements_by_symbol
         """ Function doc """
         r = (self.unique_id & 0x000000FF) >> 0
         g = (self.unique_id & 0x0000FF00) >> 8
@@ -251,7 +261,7 @@ class Atom:
             ball = ATOM_TYPES[self.symbol][6]
         return ball
     
-    def coords(self, frame=None):
+    def get_coords_from_frame(self, frame=None):
         """ 
         frame = int
         
@@ -274,7 +284,7 @@ class Atom:
     
     def get_grid_position(self, gridsize=3, frame=None):
         """ Function doc """
-        coords = self.coords(frame)
+        coords = self.get_coords_from_frame(frame)
         gridpos = (int(coords[0]/gridsize), int(coords[1]/gridsize), int(coords[2]/gridsize))
         return gridpos
     
@@ -628,7 +638,7 @@ class Atom:
 #    
 #    def get_grid_position(self, gridsize=3, frame=None):
 #        """ Function doc """
-#        coords = self.coords(frame)
+#        coords = self.get_coords_from_frame(frame)
 #        gridpos = (int(coords[0]/gridsize), int(coords[1]/gridsize), int(coords[2]/gridsize))
 #        return gridpos
 #    

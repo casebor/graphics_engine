@@ -6,7 +6,7 @@
 import numpy as np
 cimport numpy as np
 
-cpdef my_glSideVectorAbs(in_matrix):
+cpdef my_glSideVectorAbs(np.ndarray in_matrix):
     """ Uses a numpy array as input to obtain the side vector untransformed,
         i.e. when you apply a modification to a vector using a matrix,
         its coordinates are changed, so this function returns the
@@ -20,12 +20,14 @@ cpdef my_glSideVectorAbs(in_matrix):
         Returns:
             side -- Numpy array of 3 elements corresponding to the Side vector.
     """
-    inv_mat = np.matrix(in_matrix, dtype=np.float32).I
-    side = np.array([[1],[0],[0],[1]],dtype=np.float32)
+    assert in_matrix.ndim == 2, "Dimension error: in_matrix must be 2-dimensional"
+    assert in_matrix.size == 16, "Size error: in_matrix must be of size 16"
+    cdef np.ndarray[np.float32_t, ndim=2] inv_mat = np.matrix(in_matrix, dtype=np.float32).I
+    cdef np.ndarray[np.float32_t, ndim=2] side = np.array([[1],[0],[0],[1]], dtype=np.float32)
     side = np.array(inv_mat*side).T
     return side[0,:3]
 
-cpdef my_glUpVectorAbs(in_matrix):
+cpdef my_glUpVectorAbs(np.ndarray in_matrix):
     """ Uses a 4x4 matrix as input to obtain the up vector untransformed,
         i.e. when you apply a modification to a vector using a matrix,
         its coordinates are changed, so this function returns the
@@ -39,12 +41,14 @@ cpdef my_glUpVectorAbs(in_matrix):
         Returns:
             Numpy array of 3 elements corresponding to the Up vector.
     """
-    inv_mat = np.matrix(in_matrix, dtype=np.float32).I
-    side = np.array([[0],[1],[0],[1]],dtype=np.float32)
+    assert in_matrix.ndim == 2, "Dimension error: in_matrix must be 2-dimensional"
+    assert in_matrix.size == 16, "Size error: in_matrix must be of size 16"
+    cdef np.ndarray[np.float32_t, ndim=2] inv_mat = np.matrix(in_matrix, dtype=np.float32).I
+    cdef np.ndarray[np.float32_t, ndim=2] side = np.array([[0],[1],[0],[1]], dtype=np.float32)
     side = np.array(inv_mat*side).T
     return side[0,:3]
 
-cpdef my_glForwardVectorAbs(in_matrix):
+cpdef my_glForwardVectorAbs(np.ndarray in_matrix):
     """ Uses a 4x4 matrix as input to obtain the forward vector untransformed,
         i.e. when you apply a modification to a vector using a matrix,
         its coordinates are changed, so this function returns the
@@ -58,8 +62,10 @@ cpdef my_glForwardVectorAbs(in_matrix):
         Returns:
             Numpy array of 3 elements corresponding to the Forward vector.
     """
-    inv_mat = np.matrix(in_matrix, dtype=np.float32).I
-    side = np.array([[0],[0],[-1],[1]],dtype=np.float32)
+    assert in_matrix.ndim == 2, "Dimension error: in_matrix must be 2-dimensional"
+    assert in_matrix.size == 16, "Size error: in_matrix must be of size 16"
+    cdef np.ndarray[np.float32_t, ndim=2] inv_mat = np.matrix(in_matrix, dtype=np.float32).I
+    cdef np.ndarray[np.float32_t, ndim=2] side = np.array([[0],[0],[-1],[1]], dtype=np.float32)
     side = np.array(inv_mat*side).T
     return side[0,:3]
 
@@ -84,6 +90,10 @@ cpdef my_glTranslatef(np.ndarray in_matrix, np.ndarray position):
         Returns:
             A multiplied 4x4 matrix of [in_matrix] x [trans_matrix].
     """
+    assert in_matrix.ndim == 2, "Dimension error: in_matrix must be 2-dimensional"
+    assert in_matrix.size == 16, "Size error: in_matrix must be of size 16"
+    assert position.ndim == 1, "Dimension error: position must be 1-dimensional"
+    assert position.size == 3, "Size error: position must be of size 3"
     cdef np.ndarray[np.float32_t, ndim=2] trans_matrix = np.identity(4, dtype=np.float32)
     trans_matrix[3,:3] = position
     return my_glMultiplyMatricesf(in_matrix, trans_matrix)
@@ -98,6 +108,10 @@ cpdef my_glMultiplyMatricesf(np.ndarray mat1, np.ndarray mat2):
         Returns:
             result -- a multiplied 4x4 matrix of [mat1] x [mat2].
     """
+    assert mat1.ndim == 2, "Dimension error: mat1 must be 2-dimensional"
+    assert mat1.size == 16, "Size error: mat1 must be of size 16"
+    assert mat2.ndim == 2, "Dimension error: mat2 must be 2-dimensional"
+    assert mat2.size == 16, "Size error: mat2 must be of size 16"
     cdef np.ndarray[np.float32_t, ndim=2] result = np.zeros((4,4), dtype=np.float32)
     result[0,0] = mat1[0,0]*mat2[0,0]+mat1[0,1]*mat2[1,0]+mat1[0,2]*mat2[2,0]+mat1[0,3]*mat2[3,0]
     result[1,0] = mat1[1,0]*mat2[0,0]+mat1[1,1]*mat2[1,0]+mat1[1,2]*mat2[2,0]+mat1[1,3]*mat2[3,0]
@@ -140,9 +154,12 @@ cpdef my_glRotatef(np.ndarray in_matrix, np.float32_t angle, np.ndarray dir_vec)
         Returns:
             A multiplied 4x4 matrix of [in_matrix] x [rot_matrix].
     """
+    assert in_matrix.ndim == 2, "Dimension error: in_matrix must be 2-dimensional"
+    assert in_matrix.size == 16, "Size error: in_matrix must be of size 16"
+    assert dir_vec.ndim == 1, "Dimension error: dir_vec must be 1-dimensional"
+    assert dir_vec.size == 3, "Size error: dir_vec must be of size 3"
     cdef np.ndarray[np.float32_t, ndim=1] vector = np.array(dir_vec, dtype=np.float32)
-    assert(np.linalg.norm(vector)>0.0)
-    #assert(angle>=0.0)
+    assert np.linalg.norm(vector) > 0.0, "Vector error: dir_vec has magnitude of 0"
     angle = angle*np.pi/180.0
     cdef np.float32_t x, y, z
     x, y, z = vector/np.linalg.norm(vector)
@@ -173,8 +190,8 @@ cpdef my_glPerspectivef(np.float32_t fovy, np.float32_t aspect, np.float32_t z_n
         With f = cotangent(fovy/2)
         
     """
-    assert(aspect>0.0)
-    assert(z_far>z_near)
+    assert aspect > 0.0, "Value error: aspect must be different than 0.0"
+    assert z_far > z_near, "Value error: z_far must be greater than z_near"
     cdef np.float32_t f = np.float32(1.0/(np.tan(fovy*np.pi/180.0)))
     cdef np.ndarray[np.float32_t, ndim=2] pers_matrix = np.zeros((4,4), dtype=np.float32)
     pers_matrix[0,0] = f/aspect
@@ -184,39 +201,45 @@ cpdef my_glPerspectivef(np.float32_t fovy, np.float32_t aspect, np.float32_t z_n
     pers_matrix[2,3] = -1.0
     return pers_matrix
 
-cpdef my_glFrustumf(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.float32_t top, np.float32_t near, np.float32_t far):
+cpdef my_glFrustumf(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.float32_t top, np.float32_t z_near, np.float32_t z_far):
     """ Creates a frustrum to use as perspective matrix. Uses the "left" and 
         "right" as leaft and rigth vertical clipping planes of the frustrum.
         The "top" and "bottom" as the top and bottom horizontal clipping planes.
-        The "near" and "far" especify the near and far depth clipping planes.
+        The "z_near" and "z_far" especify the z_near and far depth clipping planes.
         The resulting matrix is constructed in the form:
         
-        |  2.0*near/(rigth-left)                0                         0               0|
-        |            0                2.0*near/(top-bottom)               0               0|
-        |(rigth+left)/(rigth-left)  (top+bottom)/(top-bottom)   (far+near)/(near-far)    -1|
-        |            0                          0              -2.0*near*far/(far-near)   0|
+        |  2.0*z_near/(rigth-left)                0                           0                   0|
+        |            0                2.0*z_near/(top-bottom)                 0                   0|
+        |(rigth+left)/(rigth-left)  (top+bottom)/(top-bottom)   (z_far+z_near)/(z_near-z_far)    -1|
+        |            0                          0              -2.0*z_near*z_far/(z_far-z_near)   0|
         
     """
+    assert (rigth-left) != 0.0, "Value error: rigth-left must be different than 0.0"
+    assert (top-bottom) != 0.0, "Value error: top-bottom must be different than 0.0"
+    assert (z_near-z_far) != 0.0, "Value error: z_near-z_far must be different than 0.0"
     cdef np.ndarray[np.float32_t, ndim=2] frust = np.zeros((4,4), dtype=np.float32)
-    frust[0,0] = 2.0*near/(rigth-left)
-    frust[1,1] = 2.0*near/(top-bottom)
+    frust[0,0] = 2.0*z_near/(rigth-left)
+    frust[1,1] = 2.0*z_near/(top-bottom)
     frust[2,0] = (rigth+left)/(rigth-left)
     frust[2,1] = (top+bottom)/(top-bottom)
-    frust[2,2] = -(far+near)/(far-near)
+    frust[2,2] = -(z_far+z_near)/(z_far-z_near)
     frust[2,3] = -1.0
-    frust[3,2] = -2.0*near*far/(far-near)
+    frust[3,2] = -2.0*z_near*z_far/(z_far-z_near)
     return frust
 
-cpdef my_glOrthof(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.float32_t top, np.float32_t near, np.float32_t far):
+cpdef my_glOrthof(np.float32_t left, np.float32_t rigth, np.float32_t bottom, np.float32_t top, np.float32_t z_near, np.float32_t z_far):
     """ 
     """
+    assert (rigth-left) != 0.0, "Value error: rigth-left must be different than 0.0"
+    assert (top-bottom) != 0.0, "Value error: top-bottom must be different than 0.0"
+    assert (z_near-z_far) != 0.0, "Value error: z_near-z_far must be different than 0.0"
     cdef np.ndarray[np.float32_t, ndim=2] ortho = np.zeros((4,4), dtype=np.float32)
     ortho[0,0] = 2.0/(rigth-left)
     ortho[1,1] = 2.0/(top-bottom)
-    ortho[2,2] = -2.0/(far-near)
+    ortho[2,2] = -2.0/(z_far-z_near)
     ortho[3,0] = (rigth+left)/(left-rigth)
     ortho[3,1] = (top+bottom)/(bottom-top)
-    ortho[3,2] = (far+near)/(near-far)
+    ortho[3,2] = (z_far+z_near)/(z_near-z_far)
     ortho[3,3] = 1.0
     return ortho
 
@@ -224,49 +247,102 @@ cpdef get_xyz_coords(np.ndarray xyz_mat):
     """ Returns the x, y, z position contained in the xyz_mat matrix. The
         input matrix needs to be a 4x4 matrix.
     """
-    assert(xyz_mat.ndim==2)
-    assert(xyz_mat.size==16)
+    assert xyz_mat.ndim == 2, "Dimension error: xyz_mat must be 2-dimensional"
+    assert xyz_mat.size == 16, "Size error: xyz_mat must be of size 16"
     cdef np.ndarray[np.float32_t, ndim=2] rot_mat = xyz_mat[:3,:3]
     cdef np.ndarray[np.float32_t, ndim=1] pos = -xyz_mat[3,:3]
     cdef np.ndarray[np.float32_t, ndim=1] position = pos.dot(rot_mat)
     return position
 
-cpdef get_inverse_matrix(mat):
+cpdef get_inverse_matrix(np.ndarray in_matrix):
     """ Function doc
     """
-    mat_o = np.matrix(np.copy(mat))
-    assert(mat.shape == (4,4))
+    assert in_matrix.ndim == 2, "Dimension error: in_matrix must be 2-dimensional"
+    assert in_matrix.size == 16, "Size error: in_matrix must be of size 16"
+    cdef np.ndarray[np.float32_t, ndim=2] mat_o = np.asmatrix(np.copy(in_matrix))
     return np.array(mat_o.I)
 
-cpdef angle(v0, v1):
+cpdef get_angle_rad(np.ndarray v0, np.ndarray v1):
     """ Return angle [0..pi] between two vectors."""
-    try:
-        v0 = np.array(v0, dtype=np.float32)
-        v1 = np.array(v1, dtype=np.float32)
-        v0 /= np.linalg.norm(v0)
-        v1 /= np.linalg.norm(v1)
-        return np.acos(np.dot(v0, v1))
-    except:
-        return False
+    v0 = np.array(v0, dtype=np.float32)
+    v1 = np.array(v1, dtype=np.float32)
+    assert np.linalg.norm(v0) != 0.0, "Value error: magnitude of v0 cannot be 0.0"
+    assert np.linalg.norm(v1) != 0.0, "Value error: magnitude of v1 cannot be 0.0"
+    v0 /= np.linalg.norm(v0)
+    v1 /= np.linalg.norm(v1)
+    return np.arccos(np.clip(np.dot(v0, v1), -1.0, 1.0))
 
-cpdef dihedral(p0, p1, p2, p3):
+cpdef get_angle_deg(np.ndarray v0, np.ndarray v1):
+    """ Return angle [0..pi] between two vectors."""
+    v0 = np.array(v0, dtype=np.float32)
+    v1 = np.array(v1, dtype=np.float32)
+    assert np.linalg.norm(v0) != 0.0, "Value error: magnitude of v0 cannot be 0.0"
+    assert np.linalg.norm(v1) != 0.0, "Value error: magnitude of v1 cannot be 0.0"
+    v0 /= np.linalg.norm(v0)
+    v1 /= np.linalg.norm(v1)
+    return np.degrees(np.arccos(np.clip(np.dot(v0, v1), -1.0, 1.0)))
+
+cpdef get_dihedral_rad(np.ndarray p0, np.ndarray p1, np.ndarray p2, np.ndarray p3):
     """ Return angle [0..2*pi] formed by vertices p0-p1-p2-p3."""
+    assert p0.shape == p1.shape == p2.shape == p3.shape, "Shape mismatch: p0, p1, p2, p3 must have the same shape"
     p0 = np.array(p0, dtype=np.float32)
     p1 = np.array(p1, dtype=np.float32)
     p2 = np.array(p2, dtype=np.float32)
     p3 = np.array(p3, dtype=np.float32)
-    v01 = p0 - p1
-    v32 = p3 - p2
-    v12 = p1 - p2
-    v0 = np.cross(v12, v01)
-    v3 = np.cross(v12, v32)
+    cdef np.ndarray[np.float32_t, ndim=1] v01 = p0 - p1
+    cdef np.ndarray[np.float32_t, ndim=1] v32 = p3 - p2
+    cdef np.ndarray[np.float32_t, ndim=1] v12 = p1 - p2
+    cdef np.ndarray[np.float32_t, ndim=1] v0 = np.cross(v12, v01)
+    cdef np.ndarray[np.float32_t, ndim=1] v3 = np.cross(v12, v32)
     # The cross product vectors are both normal to the axis
     # vector v12, so the angle between them is the dihedral
     # angle that we are looking for.  However, since "angle"
     # only returns values between 0 and pi, we need to make
     # sure we get the right sign relative to the rotation axis
-    a = angle(v0, v3)
+    cdef np.float32_t a = get_angle_rad(v0, v3)
     if np.dot(np.cross(v0, v3), v12) > 0:
         a = -a
     return a
 
+cpdef get_dihedral_deg(np.ndarray p0, np.ndarray p1, np.ndarray p2, np.ndarray p3):
+    """ Return angle [0..2*pi] formed by vertices p0-p1-p2-p3."""
+    assert p0.shape == p1.shape == p2.shape == p3.shape, "Shape mismatch: p0, p1, p2, p3 must have the same shape"
+    p0 = np.array(p0, dtype=np.float32)
+    p1 = np.array(p1, dtype=np.float32)
+    p2 = np.array(p2, dtype=np.float32)
+    p3 = np.array(p3, dtype=np.float32)
+    cdef np.ndarray[np.float32_t, ndim=1] v01 = p0 - p1
+    cdef np.ndarray[np.float32_t, ndim=1] v32 = p3 - p2
+    cdef np.ndarray[np.float32_t, ndim=1] v12 = p1 - p2
+    cdef np.ndarray[np.float32_t, ndim=1] v0 = np.cross(v12, v01)
+    cdef np.ndarray[np.float32_t, ndim=1] v3 = np.cross(v12, v32)
+    # The cross product vectors are both normal to the axis
+    # vector v12, so the angle between them is the dihedral
+    # angle that we are looking for.  However, since "angle"
+    # only returns values between 0 and pi, we need to make
+    # sure we get the right sign relative to the rotation axis
+    cdef np.float32_t a = get_angle_deg(v0, v3)
+    if np.dot(np.cross(v0, v3), v12) > 0:
+        a = -a
+    return a
+
+cpdef get_euclidean(np.ndarray p0, np.ndarray p1):
+    """ Returns the distance between two points in R3
+    """
+    assert p0.size <= 3, "Size error: vector p0 has size higher than 3"
+    assert p1.size <= 3, "Size error: vector p1 has size higher than 3"
+    if len(p0) == 1:
+        p0 = np.array([p0[0], 0.0, 0.0], dtype=np.float32)
+    if len(p0) == 2:
+        p0 = np.array([p0[0], p0[1], 0.0], dtype=np.float32)
+    if len(p1) == 1:
+        p1 = np.array([p1[0], 0.0, 0.0], dtype=np.float32)
+    if len(p1) == 2:
+        p1 = np.array([p1[0], p1[1], 0.0], dtype=np.float32)
+    return np.sqrt((p1[0]-p0[0])**2 + (p1[1]-p0[1])**2 + (p1[2]-p0[2])**2)
+
+cpdef get_unit_vector(np.ndarray vector):
+    """ Returns the unit vector of vector.
+    """
+    assert np.linalg.norm(vector) > 0.0, "Vector error: vector has magnitude of 0"
+    return vector / np.linalg.norm(vector)

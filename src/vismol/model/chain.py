@@ -18,6 +18,7 @@ class Chain:
         self.name = name
         self.backbone_pair_indexes_full = []
         self.backbone_pair_indexes_show = []
+        self.has_altloc = False
     
     def get_CA_list(self):
         """ Function doc """

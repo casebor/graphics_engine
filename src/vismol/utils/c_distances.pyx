@@ -82,19 +82,24 @@ cpdef list calculate_grid_offset(gridsize, maxbond=2.6):
     # |-1,-1,1| 0,-1,1| 1,-1,1| 2,-1,1|
     # |-------|-------|-------|-------|
     
-    excluded_list = [] 
-    n = 0
+    # excluded_list = [] 
+    # n = 0
+    # for i in range (-borderGrid, borderGrid + 1):
+    #     for j in range(-borderGrid, borderGrid + 1):
+            
+    #         for k in range(1, borderGrid + 1):
+    #         #for k in range(0, borderGrid + 1):
+    #             if [i, j,  k] in excluded_list:
+    #                 pass
+    #             else:
+    #                 grid_offset_full.append([i,j,k])
+    #                 #print([i,j,k], n+1)
+    #             n+=1
+    
     for i in range (-borderGrid, borderGrid + 1):
         for j in range(-borderGrid, borderGrid + 1):
-            
             for k in range(1, borderGrid + 1):
-            #for k in range(0, borderGrid + 1):
-                if [i, j,  k] in excluded_list:
-                    pass
-                else:
-                    grid_offset_full.append([i,j,k])
-                    #print([i,j,k], n+1)
-                n+=1
+                grid_offset_full.append([i,j,k])
     return grid_offset_full
 
 cpdef double calculate_sqrt_distance(int i, int j, coords):

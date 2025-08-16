@@ -5,13 +5,8 @@
 import os
 import numpy as np
 from logging import getLogger
-from vismol.model.atom import Atom
-# from vismol.model.residue import Residue
-# from vismol.model.chain import Chain
-# from vismol.model.molecule import Molecule
-# from vismol.utils.elements import PeriodicTable
 from vismol.utils import parser
-# import vismol.utils.parser_builder as PB
+from vismol.model.atom import Atom
 from vismol.core.vismol_object import VismolObject
 from vismol.core.vismol_session import VismolSession
 
@@ -62,7 +57,7 @@ class VismolSessionBuilder(VismolSession):
                 a VismolWidgetMain object.
     """
     
-    def __init__(self, vismol_widget: "VismolGTKWidget"=None, vismol_config: "VismolConfig"=None):
+    def __init__(self, vismol_widget: "VismolGTKWidget", vismol_config: "VismolConfig"):
         """
         Args:
             toolkit (str): The window manager library employed to build the GUI.
@@ -77,31 +72,18 @@ class VismolSessionBuilder(VismolSession):
         """
         
         super(VismolSessionBuilder, self).__init__(vismol_widget, vismol_config)
-        
-        # TODO: Add support for Qt5? This parameter is only used for the
-        #       center_on_coordinates function in VismolGLMain class.
+        """
+        """
         self.atom_ids = 0
-        # self.toolkit = "Gtk_3.0"
-        # self.vm_config = vismol_config
-        # self.vm_widget = vismol_widget
-        # self.selection_box_frame = None
-        # self.vm_glcore = self.vm_widget.vm_glcore
-        # self.vm_glcore.queue_draw()
-        # self.frame = 0
-        # self.vm_objects_dic = {}
-        # self.atom_dic_id = {}
-        # self.atom_id_counter = np.uint32(0)
-        # vm_object = VismolObject(self, index=0, name="Builder")
-        # vm_object.molecule = Molecule(self, name="Molecule", trajectory=np.zeros([1,3], dtype=np.float32))
-        # self.vm_objects_dic[0] = vm_object
     
     def add_new_atom(self, coords: np.array) -> None:
         if len(self.vm_objects_dic) == 0:
             vm_object = VismolObject(self, index=0, name="Builder")
             vm_object.set_model_matrix(self.vm_widget.vm_glcore.model_mat)
-            atom = Atom(vm_object, name="X", index=self.atom_ids,
-                        atom_id=self.atom_ids, pos=coords)
+            atom = Atom(vm_object, name="C", index=self.atom_ids,
+                        atom_id=self.atom_ids, coords=coords)
             atom.spheres = True
+            atom.sticks = True
             atom.unique_id = self.atom_ids
             self.atom_dic_id[atom.unique_id] = atom
             vm_object.add_new_atom(atom, self.atom_ids)
@@ -109,20 +91,24 @@ class VismolSessionBuilder(VismolSession):
             vm_object.active = True
             self.vm_objects_dic[0] = vm_object
         else:
-            atom = Atom(self.vm_objects_dic[0], name="X", index=self.atom_ids,
-                        atom_id=self.atom_ids, pos=coords)
+            atom = Atom(self.vm_objects_dic[0], name="C", index=self.atom_ids,
+                        atom_id=self.atom_ids, coords=coords)
             atom.spheres = True
+            atom.sticks = True
             atom.unique_id = self.atom_ids
             self.atom_dic_id[atom.unique_id] = atom
             self.vm_objects_dic[0].add_new_atom(atom, self.atom_ids)
             self.vm_objects_dic[0].generate_color_vectors()
             self.vm_objects_dic[0].active = True
         
-        self.vm_objects_dic[0].create_representation(rep_type="spheres")
-        self.vm_objects_dic[0].representations["spheres"].define_new_indexes_to_vbo(list(self.atom_dic_id.keys()))
-        self.vm_objects_dic[0].representations["spheres"].was_rep_ind_modified = True
-        
         self.atom_ids += 1
+        self.vm_objects_dic[0].create_representation(rep_type="spheres")
+        self.vm_objects_dic[0].create_representation(rep_type="sticks")
+        self.vm_objects_dic[0].representations["spheres"].define_new_indexes_to_vbo(list(self.atom_dic_id.keys()))
+        self.vm_objects_dic[0].representations["sticks"].define_new_indexes_to_vbo(list(self.atom_dic_id.keys()))
+        self.vm_objects_dic[0].representations["spheres"].was_rep_ind_modified = True
+        self.vm_objects_dic[0].representations["sticks"].was_rep_ind_modified = True
+        
         self.vm_glcore.queue_draw()
     
 

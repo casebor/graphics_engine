@@ -6,8 +6,6 @@ import time
 import numpy as np
 from OpenGL import GL
 from logging import getLogger
-# from vismol.libgl.glaxis import GLAxis
-# from vismol.libgl.glcamera import GLCamera
 from vismol.libgl.vismol_font import VismolFont
 from vismol.libgl.selection_box import SelectionBox
 from vismol.libgl.vismol_gl_core import VismolGLCore
@@ -636,9 +634,6 @@ class VismolGLMain(VismolGLCore):
     def create_gl_programs(self):
         """ Function doc
         """
-        # logger.info("OpenGL version: {}".format(GL.glGetString(GL.GL_VERSION)))
-        # logger.info("OpenGL major version: {}".format(GL.glGetDoublev(GL.GL_MAJOR_VERSION)))
-        # logger.info("OpenGL minor version: {}".format(GL.glGetDoublev(GL.GL_MINOR_VERSION)))
         self._compile_shader_picking_dots()
         self._compile_shader_freetype()
         for rep in self.vm_config.representations_available:
@@ -906,7 +901,7 @@ class VismolGLMain(VismolGLCore):
                 for index, atom in vm_object.molecule.atoms.items():
                     text = atom.residue.name +'/'+ atom.name+'/'+str(atom.index)
                     frame = self._get_vismol_object_frame(atom.vm_object)
-                    x, y, z = atom.coords(frame)
+                    x, y, z = atom.get_coords_from_frame(frame)
                     point = np.array([x, y, z, 1], dtype=np.float32)
                     point = np.dot(point, self.model_mat)
                     GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font.texture_id)
@@ -965,7 +960,7 @@ class VismolGLMain(VismolGLCore):
         #self.vm_font_dist.char_height = 0.15
         text =  '{:.2f}'.format(vm_object.dist)
         #frame = self._get_vismol_object_frame(atom.vm_object)
-        #x, y, z = atom.coords(frame)
+        #x, y, z = atom.get_coords_from_frame(frame)
         x, y, z = vm_object.midpoint[0],vm_object.midpoint[1],vm_object.midpoint[2]
 
         point = np.array([x, y, z, 1], dtype=np.float32)
@@ -1091,7 +1086,7 @@ class VismolGLMain(VismolGLCore):
             if atom:
                 text = "#" + str(number)
                 frame = self._get_vismol_object_frame(atom.vm_object)
-                x, y, z = atom.coords(frame)
+                x, y, z = atom.get_coords_from_frame(frame)
                 
 
                 point = np.array([x, y, z, 1], dtype=np.float32)
@@ -1146,8 +1141,8 @@ class VismolGLMain(VismolGLCore):
         # this should be a new function later
         if atomlist[0] and atomlist[1]:
             
-            crd1 = atomlist[0].coords(frame)
-            crd2 = atomlist[1].coords(frame)
+            crd1 = atomlist[0].get_coords_from_frame(frame)
+            crd2 = atomlist[1].get_coords_from_frame(frame)
             d1 = ((crd2[0]-crd1[0])**2+ 
                  (crd2[1]-crd1[1])**2+ 
                  (crd2[2]-crd1[2])**2)**0.5
@@ -1157,7 +1152,7 @@ class VismolGLMain(VismolGLCore):
             
             if atomlist[2]:
                 #print('distance #1 - #2: ', d)
-                crd3 = atomlist[2].coords(frame)
+                crd3 = atomlist[2].get_coords_from_frame(frame)
                 
                 d2 = ((crd2[0]-crd3[0])**2+ 
                      ( crd2[1]-crd3[1])**2+ 
@@ -1395,30 +1390,11 @@ class VismolGLMain(VismolGLCore):
             frame = self.vm_session.frame
         return frame
     
-    def get_viewport_pos(self, x, y):
-        """ Function doc """
-        px = (2.0 * x - self.width) / self.width
-        py = (2.0 * y - self.height) / self.height
-        return np.array([px, -py], dtype=np.float32)
-    
-    # def _mouse_pos(self, x, y):
-    #     """
-    #     Use the ortho projection and viewport information
-    #     to map from mouse co-ordinates back into world
-    #     co-ordinates
-    #     """
-    #     px = x / self.width
-    #     py = y / self.height
-    #     px = self.left + px * (self.right - self.left)
-    #     py = self.top + py * (self.bottom - self.top)
-    #     pz = self.glcamera.z_near
-    #     return px, py, pz
-    
     def center_on_atom(self, atom):
         """ Function doc
         """
         frame_index = self._get_vismol_object_frame(atom.vm_object)
-        self.center_on_coordinates(atom.vm_object, atom.coords(frame_index))
+        self.center_on_coordinates(atom.vm_object, atom.get_coords_from_frame(frame_index))
     
     def center_on_coordinates(self, vismol_object, target):
         """ Takes the coordinates of an atom in absolute coordinates and first
@@ -1476,6 +1452,3 @@ class VismolGLMain(VismolGLCore):
             #self.dragging = True
             self.parent_widget.queue_draw()
     
-    # def queue_draw(self):
-    #     """ Function doc """
-    #     self.parent_widget.queue_draw()

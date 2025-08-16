@@ -354,7 +354,7 @@ def cartoon(visObj, spline_detail=3, SSE_list = []):
     
     calphas = []
     for atom in visObj.c_alpha_atoms:
-        #print(atom.index, atom.name, atom.resn, atom.resi, atom.coords())
+        #print(atom.index, atom.name, atom.resn, atom.resi, atom.get_coords_from_frame())
         calphas.append(atom.coords())
     calphas = np.array(calphas, dtype = np.float32)
     #print(calphas, type(calphas), len(calphas))
@@ -504,23 +504,23 @@ def calculate_secondary_structure(visObj):
             #print ('CA1 = CA2')
             
             # distances
-            d2i  = CA0.coords(), CA3.coords()
+            d2i  = CA0.get_coords_from_frame(), CA3.get_coords_from_frame()
             d2i  = np.linalg.norm(d2i)
             
-            d3i  = CA0.coords(), CA5.coords()
+            d3i  = CA0.get_coords_from_frame(), CA5.get_coords_from_frame()
             d3i  = np.linalg.norm(d3i)
             
-            d4i  = CA0.coords(), CA7.coords()
+            d4i  = CA0.get_coords_from_frame(), CA7.get_coords_from_frame()
             d4i  = np.linalg.norm(d4i)
             
             # angle
-            v0   = CA1.coords(),CA0.coords()
-            v1   = CA1.coords(), CA3.coords()
+            v0   = CA1.get_coords_from_frame(),CA0.get_coords_from_frame()
+            v1   = CA1.get_coords_from_frame(), CA3.get_coords_from_frame()
             
             ti   = 57.295779513*(mop.angle(v0, v1))
             
             # dihedral 
-            ai   = 57.295779513*(mop.dihedral(CA0.coords(), CA1.coords(), CA3.coords(), CA5.coords()))
+            ai   = 57.295779513*(mop.dihedral(CA0.get_coords_from_frame(), CA1.get_coords_from_frame(), CA3.get_coords_from_frame(), CA5.get_coords_from_frame()))
             
             
             

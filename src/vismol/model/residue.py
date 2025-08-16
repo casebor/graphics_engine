@@ -24,6 +24,7 @@ class Residue:
         self.is_solvent = False
         self._is_protein()
         self.topology = {}
+        self.has_altloc = False
     
     def _is_protein(self):
         """ Function doc """
@@ -64,7 +65,7 @@ class Residue:
             frame = len(self.vm_object.frames)-1
         gc = np.zeros(3, dtype=np.float32)
         for atom in self.atoms.values():
-            gc += atom.coords(frame)
+            gc += atom.get_coords_from_frame(frame)
         gc /= len(self.atoms.values())
         return gc
     
@@ -83,7 +84,7 @@ class Residue:
         sum_z = 0.0
         
         for atom in self.atoms.values():
-            coord = atom.coords (frame)
+            coord = atom.get_coords_from_frame(frame)
             sum_x += coord[0]
             sum_y += coord[1]
             sum_z += coord[2]
@@ -99,6 +100,6 @@ class Residue:
                              } 
             print(self.name,self.index) 
             for atom in self.atoms:
-                print(self.name, atom.name, atom.symbol, atom.coords(), atom.bonds, atom.connected2 )
+                print(self.name, atom.name, atom.symbol, atom.get_coords_from_frame(), atom.bonds, atom.connected2 )
         else:
             pass

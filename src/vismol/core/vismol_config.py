@@ -26,7 +26,7 @@ class VismolConfig:
         Args:
             vm_session (VismolSession): The VismolSession object.
         """
-        # self.vm_session = vm_session
+        self.console_log_level = "INFO"
         self.gl_parameters = {"antialias": True,
                               "background_color": [0.0, 0.0, 0.0, 1.0],
                               "bond_tolerance": 1.4,
@@ -68,7 +68,7 @@ class VismolConfig:
                               "sticks_type": 0}
         self.n_proc = 2
         if builder:
-            self.representations_available = {"spheres"}
+            self.representations_available = {"spheres", "sticks"}
         else:
             self.representations_available = {"dots", "lines", "nonbonded",
                 "impostor","dash", "sticks", "spheres", "ribbons", "dynamic",

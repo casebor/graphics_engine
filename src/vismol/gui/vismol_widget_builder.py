@@ -19,29 +19,14 @@ class VismolWidgetBuilder(VismolGTKWidget):
         add a function to change the shaders.
     """
     
-    def __init__(self, vismol_config, width, height):
+    def __init__(self, vismol_config: "VismolConfig", width: int, height: int):
         """ Class initialiser
         """
         super(VismolWidgetBuilder, self).__init__(vismol_config, width, height)
         self.vm_glcore = VismolGLBuilder(self, vismol_config, width, height)
-        # self.connect("realize", self.initialize)
-        # self.connect("render", self.render)
-        # self.connect("resize", self.reshape)
-        # self.connect("key-press-event", self.key_pressed)
-        # self.connect("key-release-event", self.key_released)
-        # self.connect("button-press-event", self.mouse_pressed)
-        # self.connect("button-release-event", self.mouse_released)
-        # self.connect("motion-notify-event", self.mouse_motion)
-        # self.connect("scroll-event", self.mouse_scroll)
-        # self.show()
-        # self.grab_focus()
-        # self.set_events(self.get_events() | Gdk.EventMask.SCROLL_MASK
-        #                 | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK
-        #                 | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK
-        #                 | Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK)
         self.vm_session = None
     
-    def initialize(self, widget):
+    def initialize(self, widget: Gtk.GLArea) -> None:
         """ Enables the buffers and other charasteristics of the OpenGL context.
             sets the initial projection and view matrix
             
@@ -54,7 +39,11 @@ class VismolWidgetBuilder(VismolGTKWidget):
             Gtk.main_quit()
         self.vm_glcore.initialize_builder()
     
-    def _pressed_p(self):
+    def _pressed_Escape(self, widget: Gtk.GLArea) -> None:
+        """ Function doc """
+        pass
+    
+    def _pressed_p(self) -> None:
         """ Function doc """
         for atom in self.vm_session.vm_objects_dic[0].molecule.atoms.values():
             print(atom, atom.coords())

@@ -4,6 +4,7 @@
 
 import os
 import numpy as np
+# from typing import List
 from logging import getLogger
 from vismol.utils.elements import PeriodicTable
 
@@ -79,6 +80,8 @@ class VismolSession:
         self.frame = 0
         self.vm_objects_dic = {}
         self.atom_dic_id = {}
+        # TODO: Is this variable needed? This number can be obtained from the
+        #       len(self.vm_objects_dic)
         self.atom_id_counter = np.uint32(0)
         # self.picking_selection_mode = False
         # self.selections = {"sel_00": VMSele(self)}
@@ -88,7 +91,8 @@ class VismolSession:
         # self.vm_geometric_object_dic = {"pk1pk2":None, "pk2pk3":None,
         #         "pk3pk4":None, "pk1":None, "pk2":None, "pk3":None, "pk4":None}
     
-    def _change_attributes_for_atoms(self, atoms, rep_type, show):
+    def _change_attributes_for_atoms(self, atoms: list, rep_type: str,
+                                     show: bool) -> None:
         """ Function doc """
         for atom in atoms:
             try:
@@ -97,54 +101,54 @@ class VismolSession:
                 else:
                     setattr(atom, rep_type, False)
             except AttributeError as ae:
-                logger.error("Representation of type {} not implemented".format(rep_type))
+                logger.error("Representation type {} not implemented".format(rep_type))
                 logger.error(ae)
     
-    def hide_axes (self):
+    def hide_axis(self) -> None:
         """ Function doc """
         self.vm_glcore.show_axis = False
     
-    def show_axes (self):
+    def show_axis(self) -> None:
         """ Function doc """
         self.vm_glcore.show_axis = True
     
-    def _add_vismol_object(self, vismol_object, show_molecule, autocenter):
+    def _add_vismol_object(self, vismol_object: "VismolObject",
+                           show_molecule: bool, autocenter: bool) -> None:
         logger.critical("NotImplementedError, the child class must implement _add_vismol_object")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def load_molecule(self, infile):
+    def load_molecule(self, infile: str) -> None:
         logger.critical("NotImplementedError, the child class must implement load_molecule")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def show_or_hide(self, rep_type, selection, show):
+    def show_or_hide(self, rep_type: str, vmv_selection: "VismolViewingSelection",
+                     show: bool) -> "VismolViewingSelection":
         logger.critical("NotImplementedError, the child class must implement show_or_hide")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def forward_frame(self):
+    def forward_frame(self) -> None:
         logger.critical("NotImplementedError, the child class must implement forward_frame")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def reverse_frame(self):
+    def reverse_frame(self) -> None:
         logger.critical("NotImplementedError, the child class must implement reverse_frame")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def set_frame(self, frame=0):
+    def set_frame(self, frame: int=0) -> None:
         logger.critical("NotImplementedError, the child class must implement set_frame")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def get_frame(self):
+    def get_frame(self) -> int:
         logger.critical("NotImplementedError, the child class must implement get_frame")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def _selection_function_set(self, selected, _type, disable):
+    def _selection_function_set(self, selected: set, disable: bool) -> None:
+        # TODO: the selected parameter should be an integer, since it is
+        #       only one ID. Discuss it with Bachega
         logger.critical("NotImplementedError, the child class must implement _selection_function_set")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def viewing_selection_mode(self, sel_type):
+    def viewing_selection_mode(self, sel_type: str) -> None:
         logger.critical("NotImplementedError, the child class must implement viewing_selection_mode")
-        raise NotImplementedError("Subclasses must implement this method")
-    
-    def define_dynamic_bonds(self, selection):
-        logger.critical("NotImplementedError, the child class must implement define_dynamic_bonds")
         raise NotImplementedError("Subclasses must implement this method")
     

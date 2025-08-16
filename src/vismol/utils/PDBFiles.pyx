@@ -13,7 +13,9 @@ from vismol.model.atom import Atom
 from vismol.model.residue import Residue
 from vismol.model.chain import Chain
 from vismol.model.molecule import Molecule
+from vismol.model.topology import Topology
 from vismol.core.vismol_object import VismolObject
+import vismol.utils.molecular_operations as molop
 
 
 logger = getLogger(__name__)
@@ -28,6 +30,7 @@ cpdef get_list_of_atoms_from_rawframe(raw_frames):
         if line[:4] == "ATOM" or line[:6] == "HETATM":
             at_index = index
             at_name = line[12:16].strip()
+            at_altloc = line[16]
             at_resn = line[17:20].strip()
             at_ch = line[20:22].strip()
             at_resi = np.int32(line[22:27])
@@ -37,7 +40,7 @@ cpdef get_list_of_atoms_from_rawframe(raw_frames):
             atoms.append({"name": at_name, "resn": at_resn, "chain": at_ch,
                           "resi": at_resi, "occupancy": at_occup,
                           "bfactor": at_bfactor, "charge": at_charge,
-                          "index": index})
+                          "index": index, "at_altloc": at_altloc})
             index += 1
     return atoms
 
@@ -54,7 +57,7 @@ cpdef get_atoms_info_and_frames(infile):
         else:
             raw_frames = pdbtext.split("END")
     atoms_info = get_list_of_atoms_from_rawframe(raw_frames[0])
-    logger.debug("Time used to parse the topology: {:>8.5f} secs".format(time.time() - initial))
+    logger.debug("Time used to get atom information: {:>8.5f} secs".format(time.time() - initial))
     return atoms_info, raw_frames
 
 
@@ -148,14 +151,16 @@ cpdef load_pdb_file(vm_session, infile):
                              name=vm_object_name)
     vm_object.molecule = Molecule(vm_object)
     _mol = vm_object.molecule
+    topo = Topology(molecule=_mol)
+    _mol.topology = topo
     unique_id = len(vm_session.atom_dic_id)
     initial = time.time()
     atom_id = 0
     
+    cov_radii_array = np.empty(len(atoms_info), dtype=np.float32)
+    atom_ids = np.empty(len(atoms_info), dtype=np.int32)
+    
     for _atom in atoms_info:
-        # if vm_object.molecule is None:
-        #     vm_object.molecule = Molecule(vm_object)
-        # _mol = vm_object.molecule
         
         if _atom["chain"] not in _mol.chains:
             _mol.chains[_atom["chain"]] = Chain(vm_object, name=_atom["chain"],
@@ -163,9 +168,8 @@ cpdef load_pdb_file(vm_session, infile):
         _chain = _mol.chains[_atom["chain"]]
         
         if _atom["resi"] not in _chain.residues:
-            _res = Residue(vm_object, name=_atom["resn"], index=_atom["resi"],
-                           chain=_chain)
-            _chain.residues[_atom["resi"]] = _res
+            _chain.residues[_atom["resi"]] = Residue(vm_object,
+                        name=_atom["resn"], index=_atom["resi"], chain=_chain)
         _residue = _chain.residues[_atom["resi"]]
         
         atom = Atom(vm_object, name=_atom["name"], index=_atom["index"],
@@ -173,7 +177,13 @@ cpdef load_pdb_file(vm_session, infile):
                     occupancy=_atom["occupancy"], bfactor=_atom["bfactor"],
                     charge=_atom["charge"], molecule=_mol)
         atom.unique_id = unique_id
-        # atom._generate_atom_unique_color_id()
+        if _atom["at_altloc"] != " ":
+            atom.altloc = _atom["at_altloc"]
+            _residue.has_altloc = True
+            _chain.has_altloc = True
+            _mol.has_altloc = True
+        cov_radii_array[atom_id] = atom.cov_rad
+        atom_ids[atom_id] = atom_id
         _residue.atoms[atom_id] = atom
         _mol.atoms[atom_id] = atom
         atom_id += 1
@@ -182,6 +192,15 @@ cpdef load_pdb_file(vm_session, infile):
     logger.debug("Time used to build the tree: {:>8.5f} secs".format(time.time() - initial))
     _mol.frames = get_coords_from_raw_frames(rawframes, atom_id,
                                              vm_session.vm_config.n_proc)
-    _mol.geom_center = np.mean(_mol.frames[0], axis=0)
-    _mol.build_bonded_and_nonbonded_atoms()
+    _mol.cov_radii_array = cov_radii_array
+    index_bonds = molop.get_bond_pairs(molecule=_mol,
+                                       atom_ids=atom_ids,
+                                       cov_radii_array=cov_radii_array,
+                                       gridsize=1.2, maxbond=2.4, tolerance=1.4)
+    bonds_from_pairs = molop.bonds_from_pair_of_indexes_list(molecule=_mol,
+                                                        index_bonds=index_bonds)
+    topo.bonds_pair_of_indexes = bonds_from_pairs
+    nonbonded_atoms = molop.get_non_bonded_from_bonded_list(molecule=_mol,
+                                                    index_bonds=bonds_from_pairs)
+    topo.non_bonded_atoms = nonbonded_atoms
     return vm_object

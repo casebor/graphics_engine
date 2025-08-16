@@ -549,7 +549,7 @@ class SticksRepresentation(Representation):
             GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.molecule.index_bonds)), GL.GL_UNSIGNED_INT, None)
         else:
             #normal rep
-            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.molecule.index_bonds)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_LINES, int(len(self.vm_object.molecule.topology.bonds_pair_of_indexes)), GL.GL_UNSIGNED_INT, None)
         
         GL.glBindVertexArray(0)
         self._disable_anti_alias_to_lines()
@@ -1212,7 +1212,7 @@ class LabelRepresentation:
             
             
             frame = self.vm_glcore._get_vismol_object_frame(atom.vm_object)
-            x, y, z = atom.coords(frame)
+            x, y, z = atom.get_coords_from_frame(frame)
             point = np.array([x, y, z, 1], dtype=np.float32)
             point = np.dot(point, self.vm_glcore.model_mat)
             GL.glBindTexture(GL.GL_TEXTURE_2D, self.vm_font.texture_id)

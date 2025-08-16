@@ -47,7 +47,6 @@ class VismolViewingSelection:
         self.selected_atom_ids = set()
         self.selected_coords = None
     
-    
     def _clear_selection_buffer(self) -> None:
         """
         Clears all the atoms selected in the system if this selection is
@@ -89,7 +88,7 @@ class VismolViewingSelection:
         for atom in self.selected_atoms:
             self.selected_objects.add(atom.vm_object)
     
-    def selection_function_viewing_set(self, selected, _type=None, disable=True):
+    def selection_function_viewing_set(self, selected: set, disable=True):
         """ Takes a selected atom and passes it to the appropriate selection function.
         """
         if selected is None:
@@ -265,12 +264,12 @@ class VismolViewingSelection:
             visited.add(selected_atom.vm_object)
             if selected_atom in self.selected_atoms:
                 if disable:
-                    for atom in selected_atom.vm_object.atoms.values():
+                    for atom in selected_atom.vm_object.molecule.atoms.values():
                         if atom in self.selected_atoms:
                             self.selected_atoms.remove(atom)
                             atom.selected = False
             else:
-                for atom in selected_atom.vm_object.atoms.values():
+                for atom in selected_atom.vm_object.molecule.atoms.values():
                     self.selected_atoms.add(atom)
                     atom.selected = True
     
@@ -288,10 +287,10 @@ class VismolViewingSelection:
         """ not workign """
         if vismol_object is None:
             for vm_object in self.vm_session.vm_objects_dic.values():
-                for atom in vm_object.atoms.values():
+                for atom in vm_object.molecule.atoms.values():
                     atom.selected = not atom.selected
         else:
-            for atom in vismol_object.atoms.values():
+            for atom in vismol_object.molecule.atoms.values():
                 atom.selected = not atom.selected
         
         self._build_selection_buffer()
@@ -301,7 +300,7 @@ class VismolViewingSelection:
         """ Function doc """
         self.selected_atoms.clear()
         for vm_object in self.vm_session.vm_objects_dic.values():
-            for atom in vm_object.atoms.values():
+            for atom in vm_object.molecule.atoms.values():
                 if atom.selected:
                     self.selected_atoms.add(atom)
     
@@ -413,21 +412,21 @@ class VismolPickingSelection:
         if atom1 and atom2:
             self.generate_pki_pkj_representations(vobj_label="pk1pk2", atom1=atom1, atom2=atom2)
             self.vm_session.vm_geometric_object_dic["pk1pk2"].representations["dash"].active = True
-            self.xyz1 = atom1.coords()
-            self.xyz2 = atom2.coords()
+            self.xyz1 = atom1.get_coords_from_frame()
+            self.xyz2 = atom2.get_coords_from_frame()
             self.dist_pk1_pk2, self.mid_point_pk1_pk2 = self.get_dist ( self.xyz1, self.xyz2)
             self.vm_session.vm_geometric_object_dic["pk1pk2"].midpoint = self.mid_point_pk1_pk2
             self.vm_session.vm_geometric_object_dic["pk1pk2"].dist = self.dist_pk1_pk2
 
             if atom3:
-                self.xyz3 = atom3.coords()
+                self.xyz3 = atom3.get_coords_from_frame()
 
                 self.get_angle_pk1_pk2_pk3()
                 print ("Angle: ", self.theta_deg)
                 text =  "Angle: "+ str(self.theta_deg)
 
                 if atom4:
-                    self.xyz4 = atom4.coords()
+                    self.xyz4 = atom4.get_coords_from_frame()
                     angle = mop.dihedral(self.xyz1, self.xyz2, self.xyz3, self.xyz4)
                     print ("Dihedral: ", angle*57.297)
         else:
@@ -435,8 +434,8 @@ class VismolPickingSelection:
                 self.vm_session.vm_geometric_object_dic["pk1pk2"].representations["dash"].active = False
 
         if atom2 and atom3:
-            self.xyz2 = atom2.coords()
-            self.xyz3 = atom3.coords()
+            self.xyz2 = atom2.get_coords_from_frame()
+            self.xyz3 = atom3.get_coords_from_frame()
             self.generate_pki_pkj_representations(vobj_label="pk2pk3", atom1 = atom2, atom2 = atom3)
             self.vm_session.vm_geometric_object_dic["pk2pk3"].representations["dash"].active = True
             
@@ -480,7 +479,8 @@ class VismolPickingSelection:
         """ Function doc """
 
         if atom:
-            xyz1 = atom.coords()
+            print(atom, "<===========")
+            xyz1 = atom.get_coords_from_frame(0)
             coords  = np.empty([1, 2, 3], dtype=np.float32)
             x = np.float32(xyz1[0])
             y = np.float32(xyz1[1])
@@ -493,7 +493,7 @@ class VismolPickingSelection:
             
             self.vobject_picking = VismolObject(name                  = "pk1", 
                                                 index                 = -1,
-                                                vm_session        = self.vm_session)
+                                                vismol_session        = self.vm_session)
                                                 # trajectory            = coords,
                                                 # bonds_pair_of_indexes = [])
             
@@ -531,8 +531,8 @@ class VismolPickingSelection:
 
     def generate_pki_pkj_representations(self, vobj_label="pk1pk2", atom1=None, atom2=None):
         """ Function doc """
-        xyz1 = atom1.coords()
-        xyz2 = atom2.coords()
+        xyz1 = atom1.get_coords_from_frame()
+        xyz2 = atom2.get_coords_from_frame()
         frame = np.array([xyz1 , xyz2], dtype=np.float32)
 
         self.vobject_picking = VismolObject(name="UNK", index=-1,
@@ -608,7 +608,7 @@ class VismolPickingSelection:
             label = "pk"+str(n)
             if atom:
                 coords  = np.empty([1, 2, 3], dtype=np.float32)
-                xyz1 = atom.coords()
+                xyz1 = atom.get_coords_from_frame()
                 x = np.float32(xyz1[0])
                 y = np.float32(xyz1[1])
                 z = np.float32(xyz1[2])
@@ -626,8 +626,8 @@ class VismolPickingSelection:
 
         #'''        
         if atom1 and atom2:
-            self.xyz1 = atom1.coords()
-            self.xyz2 = atom2.coords()
+            self.xyz1 = atom1.get_coords_from_frame()
+            self.xyz2 = atom2.get_coords_from_frame()
             coords  = np.empty([1, 2, 3], dtype=np.float32)
             x = np.float32(self.xyz1[0])
             y = np.float32(self.xyz1[1])
@@ -647,9 +647,9 @@ class VismolPickingSelection:
             self.vm_session.vm_geometric_object_dic["pk1pk2"].dist = self.dist_pk1_pk2
 
             if atom3:
-                self.xyz3 = atom3.coords()
+                self.xyz3 = atom3.get_coords_from_frame()
                 if atom4:
-                    self.xyz4 = atom4.coords()
+                    self.xyz4 = atom4.get_coords_from_frame()
 
         else:
             pass
@@ -732,8 +732,8 @@ class VismolPickingSelection:
                     frame = self.vm_session.get_frame()
 
                     # Get the coordinates of the selected atoms at the current frame (frame=None means current frame)
-                    coords1 = atom1.coords(frame=None)
-                    coords2 = atom2.coords(frame=None)
+                    coords1 = atom1.get_coords_from_frame(frame=None)
+                    coords2 = atom2.get_coords_from_frame(frame=None)
 
                     # Calculate the Euclidean distance between the selected atoms
                     dist = np.linalg.norm(coords1 - coords2)

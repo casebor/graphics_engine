@@ -106,8 +106,10 @@ class VismolGLCore():
             self.parent_widget.queue_draw()
     
     def get_viewport_pos(self, x, y):
-        logger.critical("NotImplementedError, the child class must implement get_viewport_pos")
-        raise NotImplementedError("Subclasses must implement this method")
+        """ Function doc """
+        px = (2.0*x - self.width) / self.width
+        py = (self.height - 2.0*y) / self.height
+        return [px, py, self.glcamera.z_near]
     
     def _mouse_pos(self, x, y):
         """
@@ -148,6 +150,10 @@ class VismolGLCore():
     
     def create_gl_programs(self):
         logger.critical("NotImplementedError, the child class must implement create_gl_programs")
+        raise NotImplementedError("Subclasses must implement this method")
+    
+    def _safe_frame_coords(self):
+        logger.critical("NotImplementedError, the child class must implement _safe_frame_coords")
         raise NotImplementedError("Subclasses must implement this method")
     
     def load_shaders(self, vertex, fragment, geometry=None):

@@ -64,27 +64,22 @@ class Molecule:
         self.name = name
         self.frames = trajectory
         self.chains = {}
-        self.geom_center = np.zeros(3, dtype=np.float32)
+        self.residues = {}
         self.atoms = {}
         self.atom_unique_id_dic = {}
-        
-        
+        self.geom_center = np.zeros(3, dtype=np.float32)
+        self.cov_radii_array = None  # a list of covalent radius values for all  --> will be used to calculate de bonds
+                                     # List of covalent radius values for all atoms (not yet defined in the code)
+        self.has_altloc = False
+        self.topology = None
+        # TODO: All these attributes should be inside the Topology object.
         self.bonds = None       # Bond objects representing connections between atoms
         self.index_bonds = None # Pair of atoms, something like: [1, 3, 1, 17, 3, 4, 4, 20]
                                 # Pair of atoms used to define bonds (set as None if not provided)
-        
         self.non_bonded_atoms = None # Array of indexes
                                      # Array of indexes for non-bonded atoms (not yet defined in the code)
-                                     
-        self.cov_radii_array = None  # a list of covalent radius values for all  --> will be used to calculate de bonds
-                                     # List of covalent radius values for all atoms (not yet defined in the code)
-        
-          
-        self.topology = {} # {92: [93, 99], 93: [92, 94, 96, 100], 99: [92],...}
-                           # important to define molecules
-                           
     
-    def _is_protein(self):
+    def _is_protein(self) -> None:
         """ Function doc """
         # is it a protein residue?
         if self.name in residues_dictionary.keys():
@@ -93,16 +88,15 @@ class Molecule:
         if self.name in solvent_dictionary.keys():
             self.is_solvent = True
     
-    def geometry_center(self, frame=0):
+    def get_geometry_center(self, frame: np.int32=0) -> np.ndarray:
         """ Function doc """
-        if frame > len(self.vm_object.frames)-1:
-            frame = len(self.vm_object.frames)-1
-        gc = np.zeros(3, dtype=np.float32)
-        for atom in self.atoms.values():
-            gc += atom.coords(frame)
-        gc /= len(self.atoms.values())
-        return gc
+        if frame > len(self.frames)-1:
+            frame = len(self.frames)-1
+        return np.mean(self.frames[frame], axis=0)
     
+    # TODO: Redo this function, since now is the center of geometry. To be the
+    #       center of mass, it should give some weight function each atom
+    #       depending on its mass.
     def get_center_of_mass(self, mass=False, frame=0):
         """ Function doc """
         frame_size = len(self.vm_object.frames)-1
@@ -118,22 +112,14 @@ class Molecule:
         sum_z = 0.0
         
         for atom in self.atoms.values():
-            coord = atom.coords (frame)
+            coord = atom.get_coords_from_frame(frame)
             sum_x += coord[0]
             sum_y += coord[1]
             sum_z += coord[2]
         
         self.geom_center = np.array([sum_x / total,
-                                     sum_y / total, 
+                                     sum_y / total,
                                      sum_z / total])
-    
-    def _get_center_of_mass(self, frame=0):
-        """ Function doc """
-        if frame >= self.frames.shape[0]:
-            logger.info("Frame {} is out of range for trajectory of size {}. \
-                Using the last frame.".format(frame, self.frames.shape[0] - 1))
-            frame = self.frames.shape[0] - 1
-        return np.mean(self.frames[frame], axis=0)
     
     def define_bonds_from_external(self, index_bonds = [], internal = True):
         """ Function doc """
@@ -195,9 +181,9 @@ class Molecule:
         """
         # Check if internal is True and there is already information about contacts.
         if self.index_bonds is not None:
-            logger.critical("It seems that there is already information about "\
-                "the contacts in this VismolObject, trying to override the data "\
-                "can produce serious problems :(")
+            logger.warning("It seems that there is already information about "\
+                "the contacts in this VismolObject, overwriting the data can "\
+                "produce serious problems :(, unless this is the builder :)")
         
         # Initialize variables and data structures
         initial = time.time()
@@ -224,6 +210,7 @@ class Molecule:
         self.index_bonds = cdist.get_atomic_bonds_from_grid(indexes, coords,
                                         cov_rads, gridpos_list, gridsize,
                                         maxbond, tolerance)
+        # print(self.index_bonds)
         msg = """Building grid elements  :
     Total number of Atoms   : {}
     Gridsize                : {}
@@ -241,7 +228,7 @@ class Molecule:
         # Generate atom topology from index_bonds
         # TODO: bachega's code
         initial = time.time()
-        self._generate_topology_from_index_bonds()
+        # self._generate_topology_from_index_bonds()
         
         # Define molecules based on the atom topology
         # self.define_molecules()
@@ -355,7 +342,7 @@ class Molecule:
             
             is_excluded = False
             
-            for excluded_bond in exclude_list: 
+            for excluded_bond in exclude_list:
                 if self.atoms[index_i].symbol in excluded_bond and self.atoms[index_j].symbol in excluded_bond:
                     is_excluded = True
             
@@ -495,7 +482,7 @@ class Molecule:
         #except:
         #    print('Failure to determine the list of molecules!')
             
-    def define_Calpha_backbone (self):
+    def define_Calpha_backbone(self):
         """ Function doc 
         Verifica quais conexões entre c_alphas são válidas.
         """

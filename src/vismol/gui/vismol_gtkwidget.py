@@ -17,10 +17,11 @@ class VismolGTKWidget(Gtk.GLArea):
         add a function to change the shaders.
     """
     
-    def __init__(self, vismol_config, width, height):
+    def __init__(self, vismol_config: "VismolConfig", width: int, height: int):
         """ Class initialiser
         """
         super(VismolGTKWidget, self).__init__()
+        self.vm_config = vismol_config
         self.connect("realize", self.initialize)
         self.connect("render", self.render)
         self.connect("resize", self.reshape)
@@ -36,68 +37,12 @@ class VismolGTKWidget(Gtk.GLArea):
                         | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK
                         | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK
                         | Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK)
-        # self.vm_objects_list_store = Gtk.ListStore(bool,  # visible? 
-        #                                            str,  # id
-        #                                            str,  # name
-        #                                            str,  # num of atoms
-        #                                            str)  # num of frames
-        # self.vm_selection_modes_list_store = Gtk.ListStore(str)
-        # self.vm_session = vismol_session
-        # self.vm_glcore = VismolGLMain(self, vismol_session, width, height)
-        # self.glmenu_bg = None
-        # self.glmenu_sele = None
-        # self.glmenu_obj = None
-        # self.glmenu_pick = None
-        # self.filechooser = None
-        # self.selection_box_frame = None
-
-    def initialize(self, widget):
+    
+    def initialize(self, widget: Gtk.GLArea) -> None:
         logger.critical("NotImplementedError, the child class must implement initialize")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def reshape(self, widget, width, height):
-        """ Resizing function, takes the widht and height of the widget
-            and modifies the view in the camera acording to the new values
-        
-            Keyword arguments:
-            widget -- The widget that is performing resizing
-            width -- Actual width of the window
-            height -- Actual height of the window
-        """
-        self.vm_glcore.resize_window(width, height)
-        self.queue_draw()
-    
-    def render(self, area, context):
-        """ This is the function that will be called everytime the window
-            needs to be re-drawed.
-        """
-        self.vm_glcore.render()
-    
-    def mouse_pressed(self, widget, event):
-        """ Function doc """
-        self.vm_glcore.mouse_pressed(event.button, event.x, event.y)
-    
-    def mouse_released(self, widget, event):
-        """ Function doc """
-        self.vm_glcore.mouse_released(event.button, event.x, event.y)
-    
-    def mouse_motion(self, widget, event):
-        """ Function doc """
-        self.vm_glcore.mouse_motion(event.x, event.y)
-    
-    def mouse_scroll(self, widget, event):
-        """ Function doc
-        """
-        if event.direction == Gdk.ScrollDirection.UP:
-            self.vm_glcore.mouse_scroll(1)
-        if event.direction == Gdk.ScrollDirection.DOWN:
-            self.vm_glcore.mouse_scroll(-1)
-    
-    def open_file(self, widget):
-        logger.critical("NotImplementedError, the child class must implement open_file")
-        raise NotImplementedError("Subclasses must implement this method")
-    
-    def key_pressed(self, widget, event):
+    def key_pressed(self, widget: Gtk.GLArea, event: Gdk.EventKey) -> None:
         """ The key_pressed function serves, as the names states, to catch
             events in the keyboard, e.g. letter "l" pressed, "backslash"
             pressed. Note that there is a difference between "A" and "a".
@@ -112,9 +57,9 @@ class VismolGTKWidget(Gtk.GLArea):
         except AttributeError as ae:
             logger.debug("Press key {} has not been assigned to a handler "\
                          "yet".format(Gdk.keyval_name(event.keyval)))
-            logger.error(ae)
-
-    def key_released(self, widget, event):
+            logger.debug(ae)
+    
+    def key_released(self, widget: Gtk.GLArea, event: Gdk.EventKey) -> None:
         """ Used to indicates a key has been released.
         """
         try:
@@ -123,13 +68,47 @@ class VismolGTKWidget(Gtk.GLArea):
         except AttributeError as ae:
             logger.debug("Release key {} has not been assigned to a handler "\
                          "yet".format(Gdk.keyval_name(event.keyval)))
-            logger.error(ae)
+            logger.debug(ae)
     
-    def _pressed_Escape(self):
-        logger.critical("NotImplementedError, the child class must implement _pressed_Escape")
+    def mouse_motion(self, widget: Gtk.GLArea, event: Gdk.EventMotion) -> None:
+        """ Function doc """
+        self.vm_glcore.mouse_motion(event.x, event.y)
+    
+    def mouse_pressed(self, widget: Gtk.GLArea, event: Gdk.EventButton) -> None:
+        """ Function doc """
+        self.vm_glcore.mouse_pressed(event.button, event.x, event.y)
+    
+    def mouse_released(self, widget: Gtk.GLArea, event: Gdk.EventButton) -> None:
+        """ Function doc """
+        self.vm_glcore.mouse_released(event.button, event.x, event.y)
+    
+    def mouse_scroll(self, widget: Gtk.GLArea, event: Gdk.EventScroll) -> None:
+        """ Function doc
+        """
+        if event.direction == Gdk.ScrollDirection.UP:
+            self.vm_glcore.mouse_scroll(1)
+        if event.direction == Gdk.ScrollDirection.DOWN:
+            self.vm_glcore.mouse_scroll(-1)
+    
+    def open_file(self, widget: Gtk.GLArea) -> None:
+        logger.critical("NotImplementedError, the child class must implement open_file")
         raise NotImplementedError("Subclasses must implement this method")
     
-    def quit(self):
-        logger.critical("NotImplementedError, the child class must implement quit")
-        raise NotImplementedError("Subclasses must implement this method")
+    def render(self, area: Gtk.GLArea, context: gi.repository.GdkX11.X11GLContext) -> bool:
+        """ This is the function that will be called everytime the window
+            needs to be re-drawed.
+        """
+        self.vm_glcore.render()
+    
+    def reshape(self, widget: Gtk.GLArea, width: int, height: int) -> None:
+        """ Resizing function, takes the widht and height of the widget
+            and modifies the view in the camera acording to the new values
+        
+            Keyword arguments:
+            widget -- The widget that is performing resizing
+            width -- Actual width of the window
+            height -- Actual height of the window
+        """
+        self.vm_glcore.resize_window(width, height)
+        self.queue_draw()
     
