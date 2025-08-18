@@ -365,7 +365,12 @@ class LinesRepresentation(Representation):
     def __init__(self, vismol_object, vismol_glcore, indexes, active=True):
         """ Class initialiser """
         super(LinesRepresentation, self).__init__(vismol_object, vismol_glcore, "lines", active, indexes)
-    
+        
+        #self.elements = np.uint32(self.indexes.shape[0])
+        self.size_vbo  =  None
+        self.ratio_vbo =  None
+        #print(self.vm_object.cov_radii_array)
+
     def draw_representation(self):
         """ Function doc """
         self._check_vao_and_vbos()
@@ -377,10 +382,23 @@ class LinesRepresentation(Representation):
         self.vm_glcore.load_matrices(self.shader_program, self.vm_object.model_mat)
         self.vm_glcore.load_fog(self.shader_program)
         GL.glBindVertexArray(self.vao)
+        #print(self.vm_object.cov_radii_array)
         
+        '''simples bonds  or multiple bonds'''
+        if self.ratio_vbo == None:
+            self.vm_object._get_covalent_radii()
+            self.size_vbo, self.ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
+        else:
+            pass
+            #self.size_vbo, self.ratio_vbo = self._make_gl_impostor_buffer(self.vm_object.cov_radii_array, self.shader_program)
+
+
+
         if self.was_rep_coord_modified:
             self._load_coord_vbo(coord_vbo=True)
             self.was_rep_coord_modified = False
+            
+            #
         if self.was_rep_ind_modified:
             self._load_ind_vbo(ind_vbo=True)
             self.was_rep_ind_modified = False

@@ -132,6 +132,8 @@ class VismolObject:
           
         self.topology = {} # {92: [93, 99], 93: [92, 94, 96, 100], 99: [92],...}
                            # important to define molecules
+        
+        self.rings = [] # [[1,2,3,4], [5,5,6,7], ...] each element is list of indexes and a ring
                            
         self.representations = {}# Dictionary to store different visualization representations for the object
         # (initialized with None values for each representation type)
@@ -376,6 +378,7 @@ class VismolObject:
             self._get_non_bonded_from_bonded_list()
             
             self._generate_topology_from_index_bonds()
+            #self.find_rings(self.topology)
             self.define_molecules()
             self.define_Calpha_backbone()
         else:
@@ -526,6 +529,14 @@ class VismolObject:
             #'''
             return index_bonds
     
+    def _get_covalent_radii (self):
+        """ Function doc """
+        if self.cov_radii_array is None:
+            self.cov_radii_array = np.empty(len(self.atoms), dtype=np.float32)
+            for i, atom in self.atoms.items():
+                self.cov_radii_array[i] = atom.cov_rad
+
+
     def _bonds_from_pair_of_indexes_list(self, exclude_list = [['H','H']]):
         """ 
         Creates Bond objects based on pairs of indexes in self.index_bonds list.
@@ -642,6 +653,50 @@ class VismolObject:
                 topology[bond[1]] = []
                 topology[bond[1]].append(bond[0])
         self.topology = topology
+        #self.find_rings(topology)
+        
+        
+    def find_rings(self, graph):
+        '''
+        The algorithm traverses all paths using DFS (depth-first search).
+        A ring is identified when we return to the starting node after passing through at least two other nodes (len(path) > 2).
+        After the search, it removes duplicates based on the set of nodes in each ring.
+        Expected output:
+
+        csharp
+        Copy
+        Edit
+        Cycles found:
+        [92, 93, 99]
+        [93, 96, 100]
+        '''
+        rings = []
+
+        def dfs(current, start, path, visited):
+            path.append(current)
+            visited.add(current)
+
+            for neighbor in graph[current]:
+                if neighbor == start and len(path) > 2:
+                    ring = sorted(path)
+                    if ring not in rings:
+                        rings.append(ring[:])
+                elif neighbor not in visited:
+                    dfs(neighbor, start, path, visited)
+
+            path.pop()
+            visited.remove(current)
+
+        for node in graph:
+            dfs(node, node, [], set())
+
+        # Eliminate duplicates (same cycle in different orders)
+        unique_rings = []
+        for ring in rings:
+            if not any(set(ring) == set(c) for c in unique_rings):
+                unique_rings.append(ring)
+        self.rings = unique_rings
+        return unique_rings
 
     def define_molecules (self):
         """ Function doc 
